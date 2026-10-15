@@ -1,0 +1,5 @@
+openai>=1.40
+pyyaml>=6.0
+matplotlib>=3.8
+jupyterlab>=4.0
+jupyterlab-rise>=0.42   # present notebooks/live/ as a live slideshow (RISE)

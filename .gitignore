@@ -1,0 +1,13 @@
+config.yaml
+.env
+traces/
+mock/koda.db
+mock/company/
+__pycache__/
+.vscode/
+# derived from the notebooks, regenerate on demand: never commit
+*.html
+*_files/
+.ipynb_checkpoints/
+notebooks/assets/
+notebooks/__marimo__/

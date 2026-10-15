@@ -1,0 +1,44 @@
+name: deploy-pages
+# Builds the interactive (WASM) take-home from its .py source and publishes to GitHub Pages.
+# Nothing derived (the HTML or the 27 MB runtime) is committed: CI regenerates it on every push.
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install marimo
+      - name: Export the interactive module to _site
+        run: |
+          mkdir -p _site
+          python -m marimo export html-wasm notebooks/04_poisoned_retrieval_marimo.py \
+            -o _site/index.html --mode run --no-show-code
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

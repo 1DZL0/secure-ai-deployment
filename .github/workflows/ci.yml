@@ -1,0 +1,17 @@
+name: injection-eval
+# Runs the deterministic policy / injection eval suite on every push and PR.
+# No model, no API key, no credits: it dispatches each attack vector straight at the
+# hardened policy layer and fails if any one is no longer blocked.
+on:
+  push:
+  pull_request:
+jobs:
+  policy-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install pyyaml
+      - run: python test_lab.py

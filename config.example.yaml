@@ -1,0 +1,35 @@
+# Copy this to config.yaml (which is gitignored) and put your key there.
+#   cp config.example.yaml config.yaml
+# config.yaml holds your real key and is never committed. This example is.
+model:
+  base_url: https://openrouter.ai/api/v1   # OpenRouter (OpenAI-compatible). Local: http://localhost:1234/v1
+  name: openai/gpt-4o-mini                  # an OpenRouter model id, or a local model name
+  api_key: ""                               # paste your key here in config.yaml, OR leave blank and set the env var below
+  api_key_env: OPENROUTER_API_KEY           # used only if api_key is blank
+  temperature: 0
+  seed: 42
+
+profile: unsafe   # unsafe | hardened  (overridden by --profile)
+
+# What differs between the two profiles. This is the whole lesson.
+profiles:
+  unsafe:
+    tools: [read_file, write_file, query_db, lookup_customer, remember, fetch_url, scan_network]
+    fs_root: /                # can read anything
+    db_readonly: false
+    approve_destructive: false
+    tool_results_trusted: true
+    memory_gated: false
+    egress_allowlist: null    # any host, incl. the link-local metadata endpoint
+    block_pii_egress: false   # no data-flow check: a loaded record field may ride out inside a URL
+    network_isolated: false   # shares a network with the production DB
+  hardened:
+    tools: [read_file, write_file, query_db, lookup_customer, remember, fetch_url, scan_network]   # no run_shell
+    fs_root: /company/shared  # canonicalised prefix check
+    db_readonly: true
+    approve_destructive: true
+    tool_results_trusted: false   # tool output (incl. a peer's dead-drop) wrapped as data
+    memory_gated: true
+    egress_allowlist: ["config.koda-internal"]   # host allowlist; metadata + crm-mirror hosts NOT on it
+    block_pii_egress: true    # taint check: a record field just loaded may not appear in an outbound URL
+    network_isolated: true    # own network, no route to the DB
