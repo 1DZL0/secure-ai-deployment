@@ -24,11 +24,13 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install marimo uv   # uv is required by marimo's html-wasm export
-      - name: Export the interactive module to _site
+      - name: Export the interactive modules to _site
         run: |
-          mkdir -p _site
+          mkdir -p _site/prompt-injection
           python -m marimo export html-wasm notebooks/04_poisoned_retrieval_marimo.py \
             -o _site/index.html --mode run --no-show-code
+          python -m marimo export html-wasm notebooks/02_prompt_injection_marimo.py \
+            -o _site/prompt-injection/index.html --mode run --no-show-code
       - uses: actions/upload-pages-artifact@v3
         with:
           path: _site
