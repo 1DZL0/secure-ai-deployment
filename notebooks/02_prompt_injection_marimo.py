@@ -13,25 +13,34 @@ def _():
 
 @app.cell
 def _(mo):
-    mo.md(
-        r"""
-        # Prompt injection: when data becomes a command
+    mo.vstack([
+        mo.Html(
+            '<div style="background:#13262f;border-radius:14px;padding:26px 30px;margin:4px 0 12px;'
+            'font-family:-apple-system,Segoe UI,system-ui,sans-serif;box-shadow:0 2px 14px rgba(19,38,47,.14);">'
+            '<div style="color:#a07cce;font:700 11px system-ui;letter-spacing:.17em;text-transform:uppercase;">'
+            'Secure AI Deployment &middot; Module 02</div>'
+            '<div style="color:#fff;font-size:30px;font-weight:700;line-height:1.16;margin:9px 0 8px;">'
+            'Prompt injection: when data becomes a command</div>'
+            '<div style="color:#b7c4c8;font-size:14.5px;line-height:1.55;max-width:760px;">'
+            'An agent reads one poisoned record and turns against its operator: it opens a secrets file, wipes a table, '
+            'poisons its own memory. Then you build the one control that stops it.</div></div>'
+        ),
+        mo.md(
+            r"""
+            Koda is a small SaaS company. Its internal assistant, an LLM agent, helps staff with customer accounts and files.
+            Here it does one boring task, look up a customer, and in doing so reads a record whose text hides an instruction.
 
-        Koda is a small SaaS company. Its internal assistant, an LLM agent, helps staff with customer accounts and files.
-        Here it does one boring task, look up a customer, and in doing so reads a record whose text hides an instruction.
-        It follows that instruction: opens a secrets file, tries to wipe a table, poisons its own memory. Then you build the
-        one control that stops it.
+            This is **indirect prompt injection**, risk number one in the OWASP LLM Top 10. It is real: Microsoft 365 Copilot's
+            2025 *EchoLeak* is the same class. You will **build it, break it, and bound it**, right here in the page. The lesson
+            runs entirely in your browser, no install and no key. The optional **live** section calls a real model with a key you
+            paste, which stays in your browser and sends only your own requests to OpenRouter.
 
-        This is **indirect prompt injection**, risk number one in the OWASP LLM Top 10. It is real: Microsoft 365 Copilot's
-        2025 *EchoLeak* is the same class. You will **build it, break it, and bound it**, right here in the page. The lesson
-        runs entirely in your browser, no install and no key. The optional **live** section calls a real model with a key you
-        paste, which stays in your browser and sends only your own requests to OpenRouter.
-
-        > **Safe to run.** Koda is invented, the database and secrets are fake, and nothing real is touched. The "model" here
-        > is a fixed planner that does what a fooled LLM does, so the part that matters, the **policy layer**, is the real,
-        > inspectable code.
-        """
-    )
+            > **Safe to run.** Koda is invented, the database and secrets are fake, and nothing real is touched. The "model" here
+            > is a fixed planner that does what a fooled LLM does, so the part that matters, the **policy layer**, is the real,
+            > inspectable code.
+            """
+        ),
+    ])
     return
 
 
@@ -359,27 +368,39 @@ def _(console_html, lookup, mo, run_agent, score):
 
 @app.cell
 def _(mo):
-    mo.md(
-        "### See it on a real model (live, optional)\n\n"
-        "The run above used a fixed planner. Here the **same poisoned record** is fed to a **real model** of your choice, "
-        "right in this page. Paste your own OpenRouter key (it stays in your browser and spends only your own credit), pick a "
-        "model and a profile, and click. The model drives the tool calls; the policy layer underneath does not change. Watch "
-        "whether a real model takes the bait, and whether the hardened profile stops it when it does."
-    )
+    mo.vstack([
+        mo.Html(
+            '<div style="display:flex;align-items:center;gap:11px;margin:24px 0 2px;'
+            'font-family:-apple-system,Segoe UI,system-ui,sans-serif;">'
+            '<span style="background:#9152b0;color:#fff;font:700 10.5px system-ui;letter-spacing:.12em;'
+            'text-transform:uppercase;padding:4px 11px;border-radius:20px;">Live</span>'
+            '<span style="font:700 21px system-ui;color:#13262f;">See it on a real model</span>'
+            '<span style="color:#9aa8ad;font:500 13px system-ui;">optional</span></div>'
+        ),
+        mo.md(
+            "The run above used a fixed planner. Here the **same poisoned record** is fed to a **real model** of your choice, "
+            "right in this page. Paste your own OpenRouter key (it stays in your browser and spends only your own credit), pick a "
+            "model and a profile, and click. The model drives the tool calls; the policy layer underneath does not change. Watch "
+            "whether a real model takes the bait, and whether the hardened profile stops it when it does."
+        ),
+    ])
     return
 
 
 @app.cell
 def _(mo):
-    live_key = mo.ui.text(kind="password", label="OpenRouter key (stays in your browser)")
+    live_key = mo.ui.text(kind="password", label="OpenRouter key (stays in your browser)", full_width=True)
     live_model = mo.ui.dropdown(
         options=["openai/gpt-4o-mini", "openai/gpt-4o", "google/gemini-2.5-flash",
                  "meta-llama/llama-3.3-70b-instruct", "anthropic/claude-haiku-4.5"],
         value="openai/gpt-4o-mini", label="model",
     )
-    live_profile = mo.ui.radio(options=["unsafe", "hardened"], value="unsafe", label="policy profile")
-    live_go = mo.ui.run_button(label="Inject customer 42 into a real model")
-    mo.vstack([live_key, live_model, live_profile, live_go])
+    live_profile = mo.ui.radio(options=["unsafe", "hardened"], value="unsafe", label="policy profile", inline=True)
+    live_go = mo.ui.run_button(label="▶  Inject customer 42 into a real model", kind="success", full_width=True)
+    mo.callout(
+        mo.vstack([live_key, live_model, live_profile, live_go], gap=0.9),
+        kind="neutral",
+    )
     return live_go, live_key, live_model, live_profile
 
 
