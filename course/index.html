@@ -127,48 +127,54 @@
 
 <script>
 const LESSONS = [
-  { id:"p1", title:"How the agent works", subtitle:"Build the loop by hand, meet the one checkpoint",
-    blurb:"An agent is a loop around a model. Build it by hand and find the single line where a request becomes a real action.",
-    url:"../prompt-injection/p1/", minutes:8,
-    quiz:[ { q:"What is an agent, really?",
-      options:["A new kind of program","An ordinary loop around a model, where your code decides whether to run each tool call","A model that cannot be stopped"],
-      answer:1, why:"Every control and every attack hangs on that one decision point." } ] },
-  { id:"p2", title:"How it breaks", subtitle:"One poisoned record, and the four faces of the bug",
-    blurb:"An ordinary task, a poisoned record, and the agent turns on its operator. Then four shapes of the same bug.",
-    url:"../prompt-injection/p2/", minutes:12,
-    quiz:[ { q:"Why can't the agent tell the record's note from your instruction?",
-      options:["It is told to ignore records","Everything arrives as one flat token stream, with no typed channel marking command vs data","It only trusts the system prompt"],
-      answer:1, why:"No typed boundary exists, so any text it reads can be read as an instruction." } ] },
-  { id:"p3", title:"How you stop it", subtitle:"Measure the damage, then bound it with a permission",
-    blurb:"Measure attack success honestly across real models, then switch on the control that holds regardless of the model.",
-    url:"../prompt-injection/p3/", minutes:12,
-    quiz:[ { q:"We never stopped the model being fooled. So why is the hardened agent safe?",
-      options:["The model was retrained","A cleverer prompt blocks it","The policy layer refuses the harmful action regardless of what the model decides"],
-      answer:2, why:"The boundary is a property of the action, enforced outside the model." } ] },
-  { id:"p4", title:"Your turn", subtitle:"Run a real model, then exercises and a capstone",
-    blurb:"Inject a real model of your choice, write your own injection, and design the permission that bounds a new tool.",
-    url:"../prompt-injection/p4/", minutes:15,
-    quiz:[ { q:"A keyword filter catches the blatant injection but misses a reworded one. It is...",
-      options:["A real boundary","A reducer: it lowers the odds, but a new wording walks past it","Useless"],
-      answer:1, why:"Reducers lower the odds; only a control on the action is a boundary." } ] },
-  { id:"p5", title:"The wider field", subtitle:"Newer attack surfaces, and the full defence toolbox",
-    blurb:"Poisoned MCP tools, cross-agent spread, and image-based injection, then the full reduce / bound / detect toolbox.",
-    url:"../prompt-injection/p5/", minutes:10,
-    quiz:[ { q:"In an MCP tool-poisoning attack, the hidden instruction is in...",
-      options:["The data the tool returns","The tool's own description or schema, which the agent reads into its context","The user's prompt"],
-      answer:1, why:"Treat tool metadata as untrusted, and pin / verify tool definitions." } ] },
-  { id:"p6", title:"Take it to your own agent", subtitle:"Turn the method on something you own",
-    blurb:"Audit your own agent against the action-to-control table. The deliverable is a short list of your unbounded actions.",
-    url:"../prompt-injection/p6/", minutes:5,
-    quiz:[ { q:"The deliverable from this module is...",
-      options:["A finished product","A short written list of your own agent's currently-unbounded actions, each paired with a control","A new model"],
-      answer:1, why:"That list, not the notebook, is what changes something on Monday." } ] },
-  { id:"pr", title:"Poisoned retrieval", subtitle:"When the document is the attacker",
-    blurb:"A search-powered assistant pulls up a booby-trapped document and does what it says. The same bug, arriving through retrieval.",
-    url:"../", minutes:30,
-    quiz:[ { q:"The real boundary against poisoned retrieval is...",
-      options:["A keyword blocklist on every document","Bounding what a retrieved document can trigger (gate the action), not filtering the text","A larger model"],
-      answer:1, why:"You cannot reliably keep the poison out; you bound what a fooled assistant can do." } ] },
+  {
+    id: "prompt-injection",
+    title: "Prompt injection",
+    subtitle: "When data becomes a command",
+    blurb: "An agent reads one poisoned record and turns against its operator. Build it, break it across real models, and bound it with the one control that holds.",
+    url: "../prompt-injection/",
+    minutes: 60,
+    quiz: [
+      { q: "Why can't an LLM agent tell a customer's note apart from your real instruction?",
+        options: [
+          "It is told to ignore customer data",
+          "Everything arrives as one undifferentiated token stream, with no typed channel marking command vs data",
+          "It only ever trusts the system prompt" ],
+        answer: 1,
+        why: "There is no typed boundary: any text it reads can be read as an instruction." },
+      { q: "We never stopped the model being fooled. So why is the hardened agent safe?",
+        options: [
+          "The model was retrained to resist",
+          "A cleverer system prompt blocks the attack",
+          "The policy layer refuses the harmful action regardless of what the model decides" ],
+        answer: 2,
+        why: "The boundary is a property of the action, enforced outside the model." },
+    ],
+  },
+  {
+    id: "poisoned-retrieval",
+    title: "Poisoned retrieval",
+    subtitle: "When the document is the attacker",
+    blurb: "A search-powered assistant pulls up a booby-trapped document and does what it says. The same bug as prompt injection, arriving through retrieval.",
+    url: "../",
+    minutes: 30,
+    quiz: [
+      { q: "A RAG assistant leaks a secret after retrieving a web-imported document. The root cause is:",
+        options: [
+          "A weak admin password",
+          "Retrieved text was read and obeyed as an instruction",
+          "The user explicitly asked for the secret" ],
+        answer: 1,
+        why: "Retrieval is an untrusted input channel; the document issued an order the assistant followed." },
+      { q: "The real boundary against poisoned retrieval is:",
+        options: [
+          "A keyword blocklist on every document",
+          "Bounding what a retrieved document can trigger (gate the action), not filtering the text",
+          "Using a larger model" ],
+        answer: 1,
+        why: "You cannot reliably keep the poison out; you bound what a fooled assistant is allowed to do." },
+    ],
+  },
 ];
 
 const KEY = "sad-course-progress-v1";
@@ -225,7 +231,7 @@ function renderLesson(id){
      <div class="pbar"><i style="width:${pct}%"></i></div>
      <p class="frame-note">The interactive lesson is embedded below. Give it a few seconds to boot, then work through it.</p>
      <div class="framebox">
-       <div class="loading" id="load">Loading the interactive lesson&hellip;<br><span style="font-size:12px;color:var(--faint)">first load takes a few seconds</span></div>
+       <div class="loading" id="load">Loading the interactive lesson&hellip;</div>
        <iframe src="${l.url}" title="${esc(l.title)}" onload="document.getElementById('load')?.classList.add('gone')"></iframe>
      </div>
      <div class="openlink"><a href="${l.url}" target="_blank" rel="noopener">Open this lesson full-screen &rsaquo;</a></div>
