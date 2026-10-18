@@ -251,7 +251,9 @@ def _(mo):
     CONTROLS = ["read-only credential, or human approval of the literal action", "egress allowlist, network isolation",
                 "gated or reviewed writes", "path and scope checks, least privilege",
                 "nothing is bounded yet: move the control onto the action", "a keyword filter on the text"]
-    match_picks = mo.ui.dictionary({_a: mo.ui.dropdown(options=CONTROLS, full_width=True) for _a in ACTIONS})
+    # a markdown template with the widgets embedded reads as a form; .value is a dict keyed m0..m4
+    match_picks = mo.md("\n".join(f"**{_a}**  \n{{m{_i}}}\n" for _i, _a in enumerate(ACTIONS))).batch(
+        **{f"m{_i}": mo.ui.dropdown(options=CONTROLS, full_width=True) for _i in range(len(ACTIONS))})
     mo.vstack([mo.md("### Match the control to the action\n\nYou never have to guess which defence to use. Read the action the agent is "
                      "about to take and pick its boundary, one per row."), match_picks])
     return ACTIONS, CONTROLS, match_picks
@@ -262,8 +264,9 @@ def _(ACTIONS, CONTROLS, match_picks, mo, results_table):
     _exp = CONTROLS[:5]
     _why = ["you cannot undo it", "exfiltration and SSRF both leave through here", "it outlives the session", "blast radius",
             "a filter reduces the odds; it bounds nothing"]
-    _rows = [(_a.split(" (")[0], (match_picks.value[_a] or "&mdash;"), None if match_picks.value[_a] is None else match_picks.value[_a] == _e, _w)
-             for _a, _e, _w in zip(ACTIONS, _exp, _why)]
+    _picked = [match_picks.value[f"m{_i}"] for _i in range(len(ACTIONS))]
+    _rows = [(_a.split(" (")[0], (_v or "&mdash;"), None if _v is None else _v == _e, _w)
+             for _a, _v, _e, _w in zip(ACTIONS, _picked, _exp, _why)]
     _n = sum(1 for _r in _rows if _r[2])
     _table = ("| If the action is... | the risk is... | the boundary is... |\n|---|---|---|\n"
               "| Destructive or irreversible (delete, overwrite, pay) | you cannot undo it | read-only credential, or human approval |\n"
@@ -1072,7 +1075,8 @@ def _(divider, mo):
 def _(mo):
     SORT = ["keyword blocklist", "prompt-injection classifier", "spotlighting / data marking", "read-only credential",
             "egress allowlist", "approval of the literal action", "capability-scoped tools", "output DLP scan"]
-    sort_picks = mo.ui.dictionary({_s: mo.ui.radio(options=["Reducer", "Boundary", "Detect"], inline=True) for _s in SORT})
+    sort_picks = mo.md("\n".join(f"- **{_s}** &nbsp; {{r{_i}}}" for _i, _s in enumerate(SORT))).batch(
+        **{f"r{_i}": mo.ui.radio(options=["Reducer", "Boundary", "Detect"], inline=True) for _i in range(len(SORT))})
     mo.vstack([mo.md("### Reducer, boundary, or detect?\n\nThe one distinction that matters: does a control *reduce the odds* an attack lands, *bound* "
                      "what a landed attack can do, or *detect* it after the fact? Sort these eight."),
                sort_picks])
@@ -1086,8 +1090,8 @@ def _(SORT, mo, results_table, sort_picks):
             "delimits untrusted text, still relies on the model obeying", "the delete cannot happen, however the model was fooled",
             "it cuts where data can go, whatever the model was told", "a human gates the literal irreversible action, outside the model",
             "you cannot be tricked into an action your tools cannot express", "pattern-based, and it fires after the model already acted"]
-    _rows = [(_s, sort_picks.value[_s] or "&mdash;", None if sort_picks.value[_s] is None else sort_picks.value[_s] == _e, _w)
-             for _s, _e, _w in zip(SORT, _exp, _why)]
+    _picked = [sort_picks.value[f"r{_i}"] for _i in range(len(SORT))]
+    _rows = [(_s, _v or "&mdash;", None if _v is None else _v == _e, _w) for _s, _v, _e, _w in zip(SORT, _picked, _exp, _why)]
     _n = sum(1 for _r in _rows if _r[2])
     mo.vstack([
         mo.hstack([mo.stat(f"{_n}/8", label="sorted right", bordered=True)], justify="start"),
