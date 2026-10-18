@@ -408,25 +408,19 @@ def _(mo):
 
 
 @app.cell
-def _(mo):
-    lookup = mo.ui.dropdown(
-        options={"Customer 1, an ordinary record": 1, "Customer 42, the poisoned record": 42},
-        value="Customer 42, the poisoned record", label="Run a lookup on:",
+def _(console_html, mo, run_agent, score):
+    def _panel(cid):
+        _steps = run_agent(cid, "unsafe")
+        _got = [k for k, v in score(_steps).items() if v]
+        _msg = ("🟢 **benign**, the two panels agree. It did only what you asked, nothing is coloured red or amber."
+                if cid == 1 else
+                "🔴 **the hidden note got through.** You asked for a lookup; the record's text made the agent also: "
+                + ", ".join(_got) + ". The system prompt forbade the delete and the secrets file in plain English. It obeyed the record instead.")
+        return mo.vstack([mo.Html(console_html(_steps, cid, "unsafe")), mo.md(_msg)])
+    mo.ui.tabs(
+        {"Customer 1 (ordinary record)": _panel(1), "Customer 42 (poisoned record)": _panel(42)},
+        value="Customer 42 (poisoned record)",
     )
-    lookup
-    return (lookup,)
-
-
-@app.cell
-def _(console_html, lookup, mo, run_agent, score):
-    _steps = run_agent(lookup.value, "unsafe")
-    _s = score(_steps)
-    _got = [k for k, v in _s.items() if v]
-    _msg = ("🟢 **benign**, the two panels agree. It did only what you asked, nothing is coloured red or amber."
-            if lookup.value == 1 else
-            "🔴 **the hidden note got through.** You asked for a lookup; the record's text made the agent also: "
-            + ", ".join(_got) + ". The system prompt forbade the delete and the secrets file in plain English. It obeyed the record instead.")
-    mo.vstack([mo.Html(console_html(_steps, lookup.value, "unsafe")), mo.md(_msg)])
     return
 
 
@@ -485,22 +479,16 @@ def _(mo):
 
 
 @app.cell
-def _(FACES, mo):
-    face = mo.ui.dropdown(options=list(FACES.keys()), value="Destruction", label="Explore a face of the bug:")
-    face
-    return (face,)
-
-
-@app.cell
-def _(FACES, face, face_proof, mo):
-    _v = FACES[face.value]
-    mo.vstack([
-        mo.md(f"**{face.value}**\n\n"
-              f"- **Channel / how it gets in:** {_v['how']}\n"
-              f"- **Action:** `{_v['action']}`\n"
-              f"- **The boundary:** {_v['boundary']}"),
-        mo.Html(face_proof(face.value)),
-    ])
+def _(FACES, face_proof, mo):
+    mo.ui.tabs({
+        _name: mo.vstack([
+            mo.md(f"- **Channel / how it gets in:** {_v['how']}\n"
+                  f"- **Action:** `{_v['action']}`\n"
+                  f"- **The boundary:** {_v['boundary']}"),
+            mo.Html(face_proof(_name)),
+        ])
+        for _name, _v in FACES.items()
+    })
     return
 
 
@@ -1149,28 +1137,19 @@ def _(mo):
 
 @app.cell
 def _(mo):
-    control = mo.ui.dropdown(
-        options=["Keyword blocklist", "Prompt-injection classifier", "Egress allowlist",
-                 "Read-only credential", "Output DLP scan", "Human approval for deletes"],
-        value="Egress allowlist", label="Control:",
-    )
-    control
-    return (control,)
-
-
-@app.cell
-def _(control, mo):
     _KIND = {
-        "Keyword blocklist": ("Reducer", "a reworded attack walks straight past it"),
-        "Prompt-injection classifier": ("Reducer", "itself foolable by a wording it never saw"),
-        "Egress allowlist": ("Boundary", "it cuts where data can go, whatever the model was told"),
-        "Read-only credential": ("Boundary", "the delete cannot happen, however the model was fooled"),
-        "Output DLP scan": ("Detect / reduce", "pattern-based, and it fires after the model already acted"),
-        "Human approval for deletes": ("Boundary", "a human gates the irreversible action, outside the model"),
+        "Blocklist": ("Keyword blocklist", "Reducer", "a reworded attack walks straight past it"),
+        "Classifier": ("Prompt-injection classifier", "Reducer", "itself foolable by a wording it never saw"),
+        "Egress allowlist": ("Egress allowlist", "Boundary", "it cuts where data can go, whatever the model was told"),
+        "Read-only cred.": ("Read-only credential", "Boundary", "the delete cannot happen, however the model was fooled"),
+        "Output DLP": ("Output DLP scan", "Detect / reduce", "pattern-based, and it fires after the model already acted"),
+        "Human approval": ("Human approval for deletes", "Boundary", "a human gates the irreversible action, outside the model"),
     }
-    _k, _why = _KIND[control.value]
-    _color = {"Boundary": "#2e8b6f", "Reducer": "#b07d2b", "Detect / reduce": "#b07d2b"}[_k]
-    mo.md(f"**{control.value}** &rarr; <span style='color:{_color};font-weight:700;'>{_k}</span>, {_why}.")
+    def _panel(short):
+        _full, _k, _why = _KIND[short]
+        _color = {"Boundary": "#2e8b6f", "Reducer": "#b07d2b", "Detect / reduce": "#b07d2b"}[_k]
+        return mo.md(f"**{_full}** &rarr; <span style='color:{_color};font-weight:700;'>{_k}</span>, {_why}.")
+    mo.ui.tabs({_s: _panel(_s) for _s in _KIND}, value="Egress allowlist")
     return
 
 
