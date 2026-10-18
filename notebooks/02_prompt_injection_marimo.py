@@ -871,7 +871,7 @@ async def _(CUSTOMERS, PROFILES, TOOL_SCHEMAS, console_html, dispatch, live_go, 
             mo.Html(console_html(_steps, 42, _profile, user=_task, reply=_reply)),
             mo.md(_summary + f"  \n*model: `{live_model.value}`, {len(_steps)} tool calls*"),
         ]))
-    mo.vstack(_views)
+    mo.hstack(_views, widths="equal", gap=1, align="start", wrap=True)   # unsafe and hardened side by side
     return
 
 
