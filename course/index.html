@@ -34,6 +34,8 @@
   .side .continue:hover{text-decoration:underline}
   .side .continue.alldone{color:var(--green)}
   nav{padding:6px 10px 14px}
+  .side .tools{padding:0 10px 10px}
+  .side .tools .refs-h{padding:0 11px}
   .side .refs{margin-top:auto;padding:14px 20px 20px;border-top:1px solid #1b4a54}
   .side .refs-h{color:#6f98a6;font:700 10px var(--sans);letter-spacing:.12em;text-transform:uppercase;margin:0 0 7px}
   .side .refs a{display:block;color:#cdd8db;font:500 12.5px var(--sans);padding:4px 0;text-decoration:none}
@@ -139,6 +141,13 @@
     <div class="bar"><i id="sidefill"></i></div>
     <div class="prog" id="prog"></div>
     <nav id="nav"></nav>
+    <div class="tools">
+      <div class="refs-h">Tools</div>
+      <div class="lrow" id="tool-benchmark" onclick="location.hash='#/tool/benchmark'">
+        <div class="num">&#9881;</div>
+        <div class="meta"><b>Model benchmark</b><span>Run the attack set on your own model</span></div>
+      </div>
+    </div>
     <div class="refs">
       <div class="refs-h">Standards &amp; reference</div>
       <a href="https://genai.owasp.org/llm-top-10/" target="_blank" rel="noopener">OWASP LLM Top 10 <span class="ext">&#8599;</span></a>
@@ -307,6 +316,10 @@ const MODULES = [
   },
 ];
 const LIVE = MODULES.filter(m => !m.coming);
+// pages that are tools, not lessons: no number, no quiz, no progress
+const TOOLS = {
+  benchmark: { title: "Model benchmark", subtitle: "Run module 02's attack set against your own model, on your own OpenRouter key", url: "../benchmark/" },
+};
 
 const KEY = "sad-course-progress-v1";
 function loadDone(){ try { return new Set(JSON.parse(localStorage.getItem(KEY) || "[]")); } catch(e){ return new Set(); } }
@@ -330,6 +343,7 @@ function renderSidebar(currentId){
     `<div class="prog-line">${doneLive} of ${MODULES.length} done <span class="dot">&middot;</span> ${timeStr}</div>`
     + (next ? `<a class="continue" href="#/lesson/${next.id}">Continue: ${esc(next.title)} &rarr;</a>`
             : `<span class="continue alldone">&#10003; You&rsquo;re all caught up</span>`);
+  document.getElementById("tool-benchmark").classList.toggle("active", currentId === "tool:benchmark");
   document.getElementById("nav").innerHTML = MODULES.map(m => {
     if (m.coming) return `<div class="lrow coming">
          <div class="num">${m.num}</div>
@@ -397,6 +411,22 @@ function renderLesson(id){
   document.querySelector("main").scrollTop = 0; window.scrollTo(0,0);
 }
 
+function renderTool(id){
+  const t = TOOLS[id]; if (!t) { location.hash = "#/"; return; }
+  renderSidebar("tool:" + id);
+  document.getElementById("view").innerHTML =
+    `<div class="crumbs"><a href="#/">Course</a> &rsaquo; ${esc(t.title)}</div>
+     <div class="lhead"><h2>${esc(t.title)}</h2><div class="of">Tool</div></div>
+     <p class="lsub">${esc(t.subtitle)}</p>
+     <p class="frame-note">Needs an OpenRouter key, which stays in your browser. Give the page a few seconds to boot.</p>
+     <div class="framebox">
+       <div class="loading" id="load">Loading the benchmark&hellip;</div>
+       <iframe src="${t.url}" title="${esc(t.title)}" onload="document.getElementById('load')?.classList.add('gone')"></iframe>
+     </div>
+     <div class="openlink"><a href="${t.url}" target="_blank" rel="noopener">Open full-screen &rsaquo;</a></div>`;
+  document.querySelector("main").scrollTop = 0; window.scrollTo(0,0);
+}
+
 function quizHtml(l){
   return `<div class="quiz">
     <h3>Checkpoint &nbsp;<span style="font:600 12px var(--sans);color:var(--faint)">${l.quiz.length} questions</span></h3>
@@ -439,6 +469,8 @@ function maybeComplete(lid){
 
 function route(){
   const h = location.hash || "#/";
+  const t = h.match(/^#\/tool\/(.+)$/);
+  if (t) { renderTool(decodeURIComponent(t[1])); return; }
   const m = h.match(/^#\/lesson\/(.+)$/);
   if (m) renderLesson(decodeURIComponent(m[1])); else renderHome();
 }

@@ -8,6 +8,7 @@ pip install -r requirements.txt           # openai, pyyaml, matplotlib, jupyter
 cp config.example.yaml config.yaml         # then put your key in model.api_key, or set OPENROUTER_API_KEY
 python mock/seed.py                        # build the mock company (SQLite DB + file share)
 python test_lab.py                         # policy layer checks, no model needed
+python notebooks/koda_lab.py               # the browser course's lab (shared by module 02 and the model benchmark), same idea
 python -m lab.agent --profile unsafe   "Look up customer 42 for me"
 python -m lab.agent --profile hardened "Look up customer 42 for me"
 python -m lab.agent --replay traces/<file>.jsonl   # stage fallback to a video demo

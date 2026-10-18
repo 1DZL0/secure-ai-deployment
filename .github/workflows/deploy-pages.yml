@@ -23,16 +23,19 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: pip install marimo uv   # uv is required by marimo's html-wasm export
+      - run: pip install marimo==0.25.1 uv   # uv is required by marimo's html-wasm export (and to bundle notebooks/koda_lab.py as a wheel)
+      - run: python notebooks/koda_lab.py     # the shared lab's self-check, no model needed
       - name: Export the interactive modules to _site
         run: |
-          mkdir -p _site/prompt-injection _site/foundations
+          mkdir -p _site/prompt-injection _site/foundations _site/benchmark
           python -m marimo export html-wasm notebooks/04_poisoned_retrieval_marimo.py \
             -o _site/index.html --mode run --no-show-code
           python -m marimo export html-wasm notebooks/02_prompt_injection_marimo.py \
             -o _site/prompt-injection/index.html --mode run --no-show-code
           python -m marimo export html-wasm notebooks/01_foundations_marimo.py \
             -o _site/foundations/index.html --mode run --no-show-code
+          python -m marimo export html-wasm notebooks/benchmark_marimo.py \
+            -o _site/benchmark/index.html --mode run --no-show-code
           cp -r course _site/course   # the course shell (sidebar, progress, quizzes) that wraps the modules
       - uses: actions/upload-pages-artifact@v3
         with:

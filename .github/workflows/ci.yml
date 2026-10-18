@@ -15,3 +15,4 @@ jobs:
           python-version: "3.12"
       - run: pip install pyyaml
       - run: python test_lab.py
+      - run: python notebooks/koda_lab.py   # the browser lab's policy layer and graders
