@@ -27,8 +27,18 @@
   .side .brand p{font-size:12px;color:#9fb0b6;margin:0}
   .side .bar{height:5px;background:#1b4a54;border-radius:3px;margin:12px 20px 4px;overflow:hidden}
   .side .bar > i{display:block;height:100%;background:var(--green);width:0;transition:width .3s}
-  .side .barlbl{color:#9fb0b6;font:600 10.5px var(--sans);letter-spacing:.04em;padding:0 20px 8px}
-  nav{padding:6px 10px 20px}
+  .side .prog{padding:0 20px 10px}
+  .side .prog-line{color:#cdd8db;font:600 12px var(--sans)}
+  .side .prog-line .dot{color:#6f98a6;margin:0 3px}
+  .side .continue{display:inline-block;margin-top:7px;color:var(--steel-light);font:700 12px var(--sans);text-decoration:none}
+  .side .continue:hover{text-decoration:underline}
+  .side .continue.alldone{color:var(--green)}
+  nav{padding:6px 10px 14px}
+  .side .refs{margin-top:auto;padding:14px 20px 20px;border-top:1px solid #1b4a54}
+  .side .refs-h{color:#6f98a6;font:700 10px var(--sans);letter-spacing:.12em;text-transform:uppercase;margin:0 0 7px}
+  .side .refs a{display:block;color:#cdd8db;font:500 12.5px var(--sans);padding:4px 0;text-decoration:none}
+  .side .refs a:hover{color:#fff}
+  .side .refs a .ext{color:#6f98a6;font-size:9px;vertical-align:1px}
   .lrow{display:flex;gap:11px;align-items:flex-start;padding:10px 11px;border-radius:9px;cursor:pointer;color:#cdd8db}
   .lrow:hover{background:#17424b}
   .lrow.active{background:#17424b}
@@ -127,8 +137,14 @@
       <p>Break it, then bound it. Runs in your browser.</p>
     </a>
     <div class="bar"><i id="sidefill"></i></div>
-    <div class="barlbl" id="sidelbl">0% complete</div>
+    <div class="prog" id="prog"></div>
     <nav id="nav"></nav>
+    <div class="refs">
+      <div class="refs-h">Standards &amp; reference</div>
+      <a href="https://genai.owasp.org/llm-top-10/" target="_blank" rel="noopener">OWASP LLM Top 10 <span class="ext">&#8599;</span></a>
+      <a href="https://genai.owasp.org/2025/12/09/owasp-top-10-for-agentic-applications-the-benchmark-for-agentic-security-in-the-age-of-autonomous-ai/" target="_blank" rel="noopener">OWASP Agentic Top 10 <span class="ext">&#8599;</span></a>
+      <a href="#/lesson/foundations">The method: bound the action</a>
+    </div>
   </aside>
 
   <main>
@@ -304,9 +320,16 @@ const liveIdx = id => LIVE.findIndex(l => l.id === id);
 function renderSidebar(currentId){
   const done = loadDone();
   const doneLive = LIVE.filter(m => done.has(m.id)).length;
-  const pct = Math.round(100 * doneLive / LIVE.length);
+  const pct = Math.round(100 * doneLive / MODULES.length);
   document.getElementById("sidefill").style.width = pct + "%";
-  document.getElementById("sidelbl").textContent = pct + "% complete";
+  const minsLeft = LIVE.filter(m => !done.has(m.id)).reduce((s, m) => s + (m.minutes || 0), 0);
+  const timeStr = minsLeft <= 0 ? "all live lessons done"
+    : (minsLeft >= 60 ? "~" + Math.round(minsLeft / 60) + " h left" : "~" + minsLeft + " min left");
+  const next = LIVE.find(m => !done.has(m.id));
+  document.getElementById("prog").innerHTML =
+    `<div class="prog-line">${doneLive} of ${MODULES.length} done <span class="dot">&middot;</span> ${timeStr}</div>`
+    + (next ? `<a class="continue" href="#/lesson/${next.id}">Continue: ${esc(next.title)} &rarr;</a>`
+            : `<span class="continue alldone">&#10003; You&rsquo;re all caught up</span>`);
   document.getElementById("nav").innerHTML = MODULES.map(m => {
     if (m.coming) return `<div class="lrow coming">
          <div class="num">${m.num}</div>
