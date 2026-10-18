@@ -11,3 +11,5 @@ __pycache__/
 .ipynb_checkpoints/
 notebooks/assets/
 notebooks/__marimo__/
+# the course shell is hand-written static HTML (not a notebook export), so keep it
+!course/*.html
