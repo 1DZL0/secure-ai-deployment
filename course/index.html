@@ -20,7 +20,8 @@
   /* sidebar */
   .side{width:272px;flex:0 0 272px;background:var(--slate);color:#eef2f3;display:flex;flex-direction:column;
         position:sticky;top:0;height:100vh;overflow-y:auto}
-  .side .brand{padding:18px 20px 12px}
+  .side .brand{padding:18px 20px 12px;display:block;cursor:pointer;text-decoration:none}
+  .side .brand:hover{opacity:.85}
   .side .eyebrow{color:var(--steel-light);font:700 10.5px var(--sans);letter-spacing:.16em;text-transform:uppercase}
   .side .brand h1{font-size:17px;margin:7px 0 2px;line-height:1.2;color:#fff}
   .side .brand p{font-size:12px;color:#9fb0b6;margin:0}
@@ -120,11 +121,11 @@
 </head>
 <body>
   <aside class="side" id="side">
-    <div class="brand">
+    <a class="brand" href="#/" aria-label="Back to the course home">
       <div class="eyebrow">Secure AI Deployment</div>
       <h1>AI security, hands-on</h1>
       <p>Break it, then bound it. Runs in your browser.</p>
-    </div>
+    </a>
     <div class="bar"><i id="sidefill"></i></div>
     <div class="barlbl" id="sidelbl">0% complete</div>
     <nav id="nav"></nav>
