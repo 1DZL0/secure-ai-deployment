@@ -13,6 +13,20 @@ def _():
 
 @app.cell
 def _(mo):
+    # page polish: cap the reading width, tighten marimo's loose per-cell spacing, hide the cell minimap
+    mo.Html(
+        "<style>"
+        "[class*='top-[25vh]']{display:none !important;}"          # marimo's right-edge cell minimap
+        ":root{--content-width-medium:900px !important;}"          # comfortable reading measure, was ~1080px
+        ".output.block{margin-top:7px !important;margin-bottom:7px !important;}"  # was 14.4px each side
+        ".marimo-cell blockquote{margin-top:12px !important;}"
+        "</style>"
+    )
+    return
+
+
+@app.cell
+def _(mo):
     mo.vstack([
         mo.Html(
             '<div style="background:#13262f;border-radius:14px;padding:26px 30px;margin:4px 0 12px;'
