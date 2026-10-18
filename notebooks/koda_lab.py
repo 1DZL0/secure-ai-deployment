@@ -73,7 +73,7 @@ def plan(customer_id):
     return calls
 
 def run_agent(customer_id, profile):
-    prof = PROFILES[profile]
+    prof = PROFILES[profile] if isinstance(profile, str) else profile   # a profile name, or a custom dict of boundaries
     rec = CUSTOMERS[customer_id]
     loaded_pii, steps = set(), []
     for tool, args in plan(customer_id):
