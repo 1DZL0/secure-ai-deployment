@@ -26,12 +26,16 @@ jobs:
       - run: pip install marimo uv   # uv is required by marimo's html-wasm export
       - name: Export the interactive modules to _site
         run: |
+          python tools/split_02.py   # regenerate the six Part files + lab02.py from the single source module
           mkdir -p _site/prompt-injection
-          python -m marimo export html-wasm notebooks/04_poisoned_retrieval_marimo.py \
-            -o _site/index.html --mode run --no-show-code
-          python -m marimo export html-wasm notebooks/02_prompt_injection_marimo.py \
-            -o _site/prompt-injection/index.html --mode run --no-show-code
-          cp -r course _site/course   # the course shell (sidebar, progress, quizzes) that wraps the modules
+          # run from notebooks/ so the part files resolve their shared `lab02` import (marimo bundles it)
+          ( cd notebooks
+            python -m marimo export html-wasm 04_poisoned_retrieval_marimo.py -o ../_site/index.html --mode run --no-show-code
+            python -m marimo export html-wasm 02_prompt_injection_marimo.py -o ../_site/prompt-injection/index.html --mode run --no-show-code
+            for n in 1 2 3 4 5 6; do
+              python -m marimo export html-wasm part$n.py -o ../_site/prompt-injection/p$n/index.html --mode run --no-show-code
+            done )
+          cp -r course _site/course   # the course shell (sidebar, progress, quizzes) that wraps the lessons
       - uses: actions/upload-pages-artifact@v3
         with:
           path: _site
