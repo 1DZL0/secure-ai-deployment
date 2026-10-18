@@ -59,29 +59,6 @@ def _(mo):
 
 
 @app.cell
-def _(mo):
-    mo.Html(
-        '<div style="border:1px solid #d7dee0;border-radius:12px;overflow:hidden;'
-        'font-family:-apple-system,Segoe UI,system-ui,sans-serif;margin:8px 0;max-width:760px;">'
-        '<div style="background:#13262f;padding:10px 16px;color:#fff;font:700 13px system-ui;">'
-        'Course map &nbsp;<span style="color:#9aa8ad;font-weight:500;">6 parts, about an hour, self-paced</span></div>'
-        '<div style="padding:2px 0 6px;">'
-        + ''.join('<div style="display:flex;gap:12px;align-items:baseline;padding:7px 16px;border-top:1px solid #f0f3f3;">'
-                  f'<span style="color:#2f6f8f;font:700 13px system-ui;flex-shrink:0;width:48px;">Part {n}</span>'
-                  f'<span style="color:#1b2a30;font-size:13.5px;flex:1;"><b>{t}.</b> {d}</span></div>'
-                  for n, t, d in [
-                      (1, "How the agent works", "build the loop by hand, meet the one checkpoint"),
-                      (2, "How it breaks", "one poisoned record, and the four faces of the bug"),
-                      (3, "How you stop it", "measure the damage, then bound it with a permission"),
-                      (4, "Your turn", "run a real model, then exercises and a capstone"),
-                      (5, "The wider field", "the full defence toolbox and where to read next"),
-                      (6, "Take it to your own agent", "turn the method on something you own")])
-        + '</div></div>'
-    )
-    return
-
-
-@app.cell
 def _(re):
     # ---- the lab (hidden): a tiny deterministic agent and its policy layer ----
     # There is no model and no network. plan() returns the tool calls a fooled LLM makes;
@@ -347,7 +324,7 @@ def _(re):
 
 @app.cell
 def _(divider, mo):
-    mo.Html(divider(1, "How the agent works", "An agent is a loop around a model. Build it by hand, and meet the one checkpoint that will matter later."))
+    mo.Html(divider(1, "Recap, and the one checkpoint", "You built the agent loop in Module 01. Here is the single checkpoint every tool call passes through, the seam where the whole defence will live."))
     return
 
 
@@ -355,18 +332,13 @@ def _(divider, mo):
 def _(mo):
     mo.md(
         r"""
-        An agent is not a new kind of program. It is an ordinary loop wrapped around one model call:
+        **Recap from <a href="../course/#/lesson/foundations" target="_top">Module 01</a>.** An agent is an ordinary loop
+        around a model: you send the conversation and a menu of tools, the model answers or *asks* to use a tool, and **your
+        code decides whether to run it.** A tool call is a request, not an action; nothing happens until a single checkpoint
+        lets it through. If that is new, do Module 01 first.
 
-        1. send the conversation, plus a menu of tools, to the model,
-        2. the model either answers, or it asks to use a tool,
-        3. **if it asks, your code decides whether to run the tool** and appends the result,
-        4. call the model again, and repeat until it answers.
-
-        That is the whole mechanism. When you call a model with tools, the reply has two fields that matter: the text answer,
-        and a list of *tool calls* it wants to run. On a real first turn the text often comes back empty and the model simply
-        asks for a tool. **That is the one idea the whole module rests on: a tool call is a request, not an action.** Nothing
-        happens until your code chooses to run it. Whether "read the secrets file" or "wipe the table" actually runs is not up
-        to the model, it is up to the single checkpoint every call passes through. Build that checkpoint next.
+        This module takes that exact loop and shows what one poisoned input does to it, then builds the checkpoint that holds.
+        That checkpoint, the one function every tool call passes through, is where the whole lesson lives. Build it next.
         """
     )
     return
@@ -423,8 +395,8 @@ def _(check_code, mo, results_table):
 
 @app.cell
 def _(mo):
-    mo.callout(mo.md("**Part 1 in a sentence.** An agent is a loop around a model, and the one checkpoint every tool call "
-                     "passes through is where a request becomes a real action."), kind="success")
+    mo.callout(mo.md("**Part 1 in a sentence.** The one checkpoint every tool call passes through is where a request becomes "
+                     "a real action, and it is the seam the rest of this module defends."), kind="success")
     return
 
 

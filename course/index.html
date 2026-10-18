@@ -58,6 +58,14 @@
   .card .body p{margin:3px 0 0;color:var(--muted);font-size:13.5px}
   .card .tag{font:600 11px var(--sans);color:var(--faint);white-space:nowrap}
   .card.done .tag{color:var(--green)}
+  /* planned-but-not-yet-live modules: shown in the map, not clickable */
+  .lrow.coming{opacity:.5;cursor:default}
+  .lrow.coming:hover{background:transparent}
+  .lrow .soon{margin-left:auto;align-self:center;font:600 9px var(--sans);color:#9fb0b6;border:1px solid #2a5a64;
+              padding:2px 7px;border-radius:10px;text-transform:uppercase;letter-spacing:.05em;white-space:nowrap}
+  .card.coming{cursor:default;opacity:.6}
+  .card.coming:hover{box-shadow:none;border-color:var(--line)}
+  .card.coming .tag{color:var(--faint)}
 
   /* lesson */
   .crumbs{font:600 12px var(--sans);color:var(--faint);margin-bottom:6px}
@@ -127,8 +135,41 @@
   </main>
 
 <script>
-const LESSONS = [
+const MODULES = [
   {
+    num: "01",
+    id: "foundations",
+    title: "Foundations",
+    subtitle: "How agents work, and why they're attackable",
+    blurb: "What an agent actually is, the one principle every later module rests on, and how to spot a dangerous agent before any attack.",
+    url: "../foundations/",
+    minutes: 25,
+    quiz: [
+      { q: "What are the three parts of an AI agent?",
+        options: [
+          "A model, a database, and a user interface",
+          "A model, a set of tools, and a loop that decides when to run them",
+          "A prompt, a fine-tune, and a vector store" ],
+        answer: 1,
+        why: "The loop sends the conversation and a tool menu; the model answers or asks for a tool; your code decides whether to run it." },
+      { q: "Why can an agent always be fooled by a malicious input?",
+        options: [
+          "Models are not trained well enough yet",
+          "Instructions and data reach the model as one token stream, with no typed channel separating command from data",
+          "It only happens with cheap models" ],
+        answer: 1,
+        why: "There is no boundary inside the stream, so any text can be read as an instruction. You bound the action instead of trusting the model." },
+      { q: "An agent reads untrusted email, can open a customer's private records, and can send email anywhere. What does the lethal trifecta say?",
+        options: [
+          "It is fine as long as the model is aligned",
+          "All three legs are present, so one crafted input can exfiltrate data; drop a leg or add a human",
+          "Only two of the legs ever matter" ],
+        answer: 1,
+        why: "Untrusted input + private data + external comms is the lethal trifecta (Willison); Meta's Rule of Two says keep it to at most two per session." },
+    ],
+  },
+  {
+    num: "02",
     id: "prompt-injection",
     title: "Prompt injection",
     subtitle: "When data becomes a command",
@@ -174,6 +215,14 @@ const LESSONS = [
     ],
   },
   {
+    num: "03",
+    coming: true,
+    title: "Tools & excessive agency",
+    subtitle: "The agent's own tools as the risk",
+    blurb: "Permissions, the confused deputy, and MCP tool poisoning: when the agent's own tools carry, or over-grant, the authority an attacker needs.",
+  },
+  {
+    num: "04",
     id: "poisoned-retrieval",
     title: "Poisoned retrieval",
     subtitle: "When the document is the attacker",
@@ -204,7 +253,43 @@ const LESSONS = [
         why: "Filter outbound links and images in answers, and keep secrets out of the answer path." },
     ],
   },
+  {
+    num: "05",
+    coming: true,
+    title: "Data leakage & output handling",
+    subtitle: "Keeping secrets out of the answer path",
+    blurb: "Sensitive data crossing the egress boundary in an answer, a link, or an image, and how to stop it (the EchoLeak class).",
+  },
+  {
+    num: "06",
+    coming: true,
+    title: "Isolated code execution",
+    subtitle: "Sandboxing what the agent runs",
+    blurb: "When the agent writes and runs code, how to keep that execution inside a box it cannot break out of.",
+  },
+  {
+    num: "07",
+    coming: true,
+    title: "Memory & persistence",
+    subtitle: "When an attack outlives the session",
+    blurb: "A planted memory re-fires an attack in later sessions with no poison in sight: gating and reviewing durable writes.",
+  },
+  {
+    num: "08",
+    coming: true,
+    title: "Multi-agent systems",
+    subtitle: "Injection that spreads between agents",
+    blurb: "One agent's injected output becomes another's instruction. No transitive trust, signed messages, and bounded blast radius.",
+  },
+  {
+    num: "09",
+    coming: true,
+    title: "Monitoring, evaluation & governance",
+    subtitle: "Detect, respond, and the rules you answer to",
+    blurb: "Logging and anomaly detection, injection eval suites in CI, incident response, and OWASP / NIST / EU AI Act obligations.",
+  },
 ];
+const LIVE = MODULES.filter(m => !m.coming);
 
 const KEY = "sad-course-progress-v1";
 function loadDone(){ try { return new Set(JSON.parse(localStorage.getItem(KEY) || "[]")); } catch(e){ return new Set(); } }
@@ -213,18 +298,26 @@ function isDone(id){ return loadDone().has(id); }
 function markDone(id){ const s = loadDone(); s.add(id); saveDone(s); }
 
 const esc = s => s.replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-const idx = id => LESSONS.findIndex(l => l.id === id);
+const liveIdx = id => LIVE.findIndex(l => l.id === id);
 
 function renderSidebar(currentId){
   const done = loadDone();
-  const pct = Math.round(100 * [...done].filter(id => LESSONS.some(l=>l.id===id)).length / LESSONS.length);
+  const doneLive = LIVE.filter(m => done.has(m.id)).length;
+  const pct = Math.round(100 * doneLive / LIVE.length);
   document.getElementById("sidefill").style.width = pct + "%";
   document.getElementById("sidelbl").textContent = pct + "% complete";
-  document.getElementById("nav").innerHTML = LESSONS.map((l,i) =>
-    `<div class="lrow ${done.has(l.id)?"done":""} ${l.id===currentId?"active":""}" onclick="location.hash='#/lesson/${l.id}'">
-       <div class="num">${done.has(l.id)?"&#10003;":i+1}</div>
-       <div class="meta"><b>${esc(l.title)}</b><span>${esc(l.subtitle)}</span></div>
-     </div>`).join("");
+  document.getElementById("nav").innerHTML = MODULES.map(m => {
+    if (m.coming) return `<div class="lrow coming">
+         <div class="num">${m.num}</div>
+         <div class="meta"><b>${esc(m.title)}</b><span>${esc(m.subtitle)}</span></div>
+         <span class="soon">Soon</span>
+       </div>`;
+    const d = done.has(m.id);
+    return `<div class="lrow ${d?"done":""} ${m.id===currentId?"active":""}" onclick="location.hash='#/lesson/${m.id}'">
+       <div class="num">${d?"&#10003;":m.num}</div>
+       <div class="meta"><b>${esc(m.title)}</b><span>${esc(m.subtitle)}</span></div>
+     </div>`;
+  }).join("");
 }
 
 function renderHome(){
@@ -238,24 +331,31 @@ function renderHome(){
           you break a real agent, then build the control that bounds it. No install, no account.</p>
      </div>
      <div class="cards">
-       ${LESSONS.map((l,i) =>
-         `<div class="card ${done.has(l.id)?"done":""}" onclick="location.hash='#/lesson/${l.id}'">
-            <div class="n">${done.has(l.id)?"&#10003;":i+1}</div>
-            <div class="body"><b>${esc(l.title)}</b><p>${esc(l.blurb)}</p></div>
-            <div class="tag">${done.has(l.id)?"Completed":"~"+l.minutes+" min"}</div>
-          </div>`).join("")}
+       ${MODULES.map(m => {
+         if (m.coming) return `<div class="card coming">
+            <div class="n">${m.num}</div>
+            <div class="body"><b>${esc(m.title)}</b><p>${esc(m.blurb)}</p></div>
+            <div class="tag">Coming soon</div>
+          </div>`;
+         const d = done.has(m.id);
+         return `<div class="card ${d?"done":""}" onclick="location.hash='#/lesson/${m.id}'">
+            <div class="n">${d?"&#10003;":m.num}</div>
+            <div class="body"><b>${esc(m.title)}</b><p>${esc(m.blurb)}</p></div>
+            <div class="tag">${d?"Completed":"~"+m.minutes+" min"}</div>
+          </div>`;
+       }).join("")}
      </div>`;
 }
 
 function renderLesson(id){
-  const i = idx(id); if (i < 0) { location.hash = "#/"; return; }
-  const l = LESSONS[i];
+  const i = liveIdx(id); if (i < 0) { location.hash = "#/"; return; }
+  const l = LIVE[i];
   renderSidebar(id);
-  const prev = LESSONS[i-1], next = LESSONS[i+1];
-  const pct = Math.round(100 * (i) / LESSONS.length);
+  const prev = LIVE[i-1], next = LIVE[i+1];
+  const pct = Math.round(100 * i / LIVE.length);
   document.getElementById("view").innerHTML =
     `<div class="crumbs"><a href="#/">Course</a> &rsaquo; ${esc(l.title)}</div>
-     <div class="lhead"><h2>${esc(l.title)}</h2><div class="of">Lesson ${i+1} of ${LESSONS.length}</div></div>
+     <div class="lhead"><h2>${esc(l.title)}</h2><div class="of">Module ${l.num}</div></div>
      <p class="lsub">${esc(l.subtitle)}</p>
      <div class="pbar"><i style="width:${pct}%"></i></div>
      <p class="frame-note">The interactive lesson is embedded below. Give it a few seconds to boot, then work through it.</p>
