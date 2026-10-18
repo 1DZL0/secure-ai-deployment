@@ -39,7 +39,7 @@
 
   /* main */
   main{flex:1;min-width:0;display:flex;flex-direction:column;min-height:100vh}
-  .wrap{max-width:900px;width:100%;margin:0 auto;padding:30px 28px 60px}
+  .wrap{max-width:1160px;width:100%;margin:0 auto;padding:30px 30px 60px}
 
   /* home */
   .hero{background:var(--slate);border-radius:14px;padding:28px 30px;color:#fff;box-shadow:0 2px 14px rgba(19,38,47,.14)}
@@ -62,16 +62,17 @@
   /* lesson */
   .crumbs{font:600 12px var(--sans);color:var(--faint);margin-bottom:6px}
   .crumbs a{color:var(--faint)}
-  .lhead{display:flex;align-items:baseline;justify-content:space-between;gap:16px;flex-wrap:wrap}
-  .lhead h2{font-size:24px;margin:2px 0 2px}
-  .lhead .of{font:600 12px var(--sans);color:var(--steel);white-space:nowrap}
-  .lsub{color:var(--muted);font-size:14px;margin:0 0 12px}
+  .lhead{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;
+         border-left:4px solid var(--steel);padding-left:15px;margin-top:8px}
+  .lhead h2{font-size:31px;margin:0;letter-spacing:-.01em;color:var(--slate)}
+  .lhead .of{font:700 10.5px var(--sans);letter-spacing:.07em;text-transform:uppercase;color:#fff;
+             background:var(--steel);padding:6px 13px;border-radius:20px;white-space:nowrap}
+  .lsub{color:var(--muted);font-size:16px;margin:6px 0 16px;padding-left:19px}
   .pbar{height:6px;background:#eef2f3;border-radius:3px;overflow:hidden;margin:4px 0 16px}
   .pbar > i{display:block;height:100%;background:var(--steel);transition:width .3s}
   .frame-note{font:12px var(--sans);color:var(--faint);margin:0 0 6px}
-  .framebox{position:relative;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--panel);
-            box-shadow:0 2px 10px rgba(19,38,47,.07)}
-  iframe{display:block;width:100%;height:78vh;border:0;background:#fff}
+  .framebox{position:relative;overflow:hidden;background:#fff;border-top:1px solid var(--line)}
+  iframe{display:block;width:100%;height:84vh;border:0;background:#fff}
   .loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--muted);
            font:14px var(--sans);background:var(--panel);pointer-events:none;transition:opacity .4s}
   .loading.gone{opacity:0}
@@ -149,6 +150,27 @@ const LESSONS = [
           "The policy layer refuses the harmful action regardless of what the model decides" ],
         answer: 2,
         why: "The boundary is a property of the action, enforced outside the model." },
+      { q: "The four faces (destruction, exfiltration, persistence, filter-bypass) are each bounded by...",
+        options: [
+          "The same keyword filter",
+          "A different control matched to the action: a read-only credential, an egress allowlist, a gated memory write, and so on",
+          "A more capable model" ],
+        answer: 1,
+        why: "Read the action the agent is about to take, and the boundary follows." },
+      { q: "What did the honest model sweep show about relying on a better model as your defence?",
+        options: [
+          "A good-enough model fully stops prompt injection",
+          "Cheaper and older models fall, and even frontier models leak on a harmless-looking exfiltration, so the model is not a boundary",
+          "Every model is equally vulnerable to everything" ],
+        answer: 1,
+        why: "A stronger model raises the bar against crude attacks but never closes the door." },
+      { q: "The module's one line: because you cannot stop an AI being tricked, you...",
+        options: [
+          "Keep trying new system prompts until it stops",
+          "Limit what a tricked AI is allowed to reach: a permission, not a cleverer prompt",
+          "Stop using agents entirely" ],
+        answer: 1,
+        why: "Bound the action outside the model; the wording of the injection cannot reach that boundary." },
     ],
   },
   {
@@ -173,6 +195,13 @@ const LESSONS = [
           "Using a larger model" ],
         answer: 1,
         why: "You cannot reliably keep the poison out; you bound what a fooled assistant is allowed to do." },
+      { q: "In the EchoLeak class, the stolen data leaves through...",
+        options: [
+          "A visible error message the user reads",
+          "A link or image URL the answer renders, which the client loads automatically",
+          "The user manually copying it out" ],
+        answer: 1,
+        why: "Filter outbound links and images in answers, and keep secrets out of the answer path." },
     ],
   },
 ];
@@ -246,8 +275,8 @@ function renderLesson(id){
 
 function quizHtml(l){
   return `<div class="quiz">
-    <h3>Checkpoint</h3>
-    <p class="qp">Answer both to mark the lesson complete. The sidebar remembers your progress on this device.</p>
+    <h3>Checkpoint &nbsp;<span style="font:600 12px var(--sans);color:var(--faint)">${l.quiz.length} questions</span></h3>
+    <p class="qp">Answer all ${l.quiz.length} to mark the lesson complete. Your progress is remembered on this device.</p>
     ${l.quiz.map((q,qi) =>
       `<div class="q" data-ans="${q.answer}" data-l="${l.id}">
          <p>${qi+1}. ${esc(q.q)}</p>

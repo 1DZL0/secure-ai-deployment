@@ -17,7 +17,7 @@ def _(mo):
     mo.Html(
         "<style>"
         "[class*='top-[25vh]']{display:none !important;}"          # marimo's right-edge cell minimap
-        ":root{--content-width-medium:900px !important;}"          # comfortable reading measure, was ~1080px
+        ":root{--content-width-medium:1040px !important;}"         # wider measure so it fills the course frame
         ".output.block{margin-top:7px !important;margin-bottom:7px !important;}"  # was 14.4px each side
         ".marimo-cell blockquote{margin-top:12px !important;}"
         "</style>"
