@@ -199,7 +199,7 @@ const MODULES = [
     id: "prompt-injection",
     title: "Prompt injection",
     subtitle: "When data becomes a command",
-    blurb: "An agent reads one poisoned record and turns against its operator. Build it, break it across real models, and bound it with the one control that holds.",
+    blurb: "An agent reads one poisoned record and turns against its operator. Break it, bound it with permissions you flip yourself, then see how real models fare on the benchmark.",
     url: "../prompt-injection/",
     minutes: 60,
     quiz: [
@@ -224,7 +224,7 @@ const MODULES = [
           "A more capable model" ],
         answer: 1,
         why: "Read the action the agent is about to take, and the boundary follows." },
-      { q: "What did the honest model sweep show about relying on a better model as your defence?",
+      { q: "What does the model sweep (the benchmark linked from this lesson) show about relying on a better model as your defence?",
         options: [
           "A good-enough model fully stops prompt injection",
           "Cheaper and older models fall, and even frontier models leak on a harmless-looking exfiltration, so the model is not a boundary",
