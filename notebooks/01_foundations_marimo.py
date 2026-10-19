@@ -30,7 +30,7 @@ def _(mo):
         mo.Html(
             '<div style="background:#13262f;border-radius:14px;padding:26px 30px;margin:4px 0 12px;'
             'font-family:-apple-system,Segoe UI,system-ui,sans-serif;box-shadow:0 2px 14px rgba(19,38,47,.14);">'
-            '<div style="color:#7fb0c8;font:700 11px system-ui;letter-spacing:.17em;text-transform:uppercase;">'
+            '<div style="color:#f2a65a;font:700 11px system-ui;letter-spacing:.17em;text-transform:uppercase;">'
             'Secure AI Deployment &middot; Module 01</div>'
             '<div style="color:#fff;font-size:30px;font-weight:700;line-height:1.16;margin:9px 0 8px;">'
             'How agents work, and why that makes them a security problem</div>'
@@ -56,7 +56,7 @@ def _(mo):
 def _(mo):
     mo.Html(
         '<div style="font-family:-apple-system,Segoe UI,system-ui,sans-serif;max-width:860px;margin:6px 0 2px;">'
-        '<div style="font:700 11px system-ui;color:#2f6f8f;letter-spacing:.14em;text-transform:uppercase;">Section 1</div>'
+        '<div style="font:700 11px system-ui;color:#b05a00;letter-spacing:.14em;text-transform:uppercase;">Section 1</div>'
         '<div style="font:700 22px system-ui;color:#13262f;margin:2px 0 10px;">What this course is, and what it is not</div>'
         '<div style="display:flex;gap:14px;flex-wrap:wrap;">'
         '<div style="flex:1 1 320px;border:1px solid #cfe3da;border-radius:11px;padding:14px 16px;background:#f4faf7;">'
@@ -140,7 +140,7 @@ def _():
         return steps
 
     def loop_trace_html(steps):
-        _c = {"you": "#2f6f8f", "model": "#b07d2b", "your code": "#2e8b6f"}
+        _c = {"you": "#13262f", "model": "#b07d2b", "your code": "#2e8b6f"}   # "you" stays neutral: copper would blur into the amber "model"
         _rows = ""
         for _actor, _text, _note in steps:
             _col = _c.get(_actor, "#5e7278")
@@ -259,9 +259,9 @@ async def _(live_go, live_key, live_model, mo):
         'font-family:-apple-system,Segoe UI,system-ui,sans-serif;box-shadow:0 2px 10px rgba(19,38,47,.07);">'
         '<div style="background:#13262f;color:#fff;padding:7px 13px;font:600 12px system-ui;">saved example: a real reply</div>'
         '<div style="padding:11px 13px;font:11.5px/1.6 Consolas,monospace;color:#44555c;background:#fafcfc;">'
-        'reply.<span style="color:#2f6f8f;">content</span>: <b>null</b>'
+        'reply.<span style="color:#b05a00;">content</span>: <b>null</b>'
         '<span style="color:#9aa8ad;">   &larr; no answer yet</span><br>'
-        'reply.<span style="color:#2f6f8f;">tool_calls</span>: [ get_weather({"city": "Nicosia"}) ]'
+        'reply.<span style="color:#b05a00;">tool_calls</span>: [ get_weather({"city": "Nicosia"}) ]'
         '<span style="color:#9aa8ad;">   &larr; a request</span></div></div>'
     )
     if not live_go.value:
@@ -295,8 +295,8 @@ async def _(live_go, live_key, live_model, mo):
                     'font-family:-apple-system,Segoe UI,system-ui,sans-serif;box-shadow:0 2px 10px rgba(19,38,47,.07);">'
                     f'<div style="background:#13262f;color:#fff;padding:7px 13px;font:600 12px system-ui;">real reply from {live_model.value}</div>'
                     '<div style="padding:11px 13px;font:11.5px/1.6 Consolas,monospace;color:#44555c;background:#fafcfc;word-break:break-word;">'
-                    f'reply.<span style="color:#2f6f8f;">content</span>: <b>{_content[:160]}</b><br>'
-                    f'reply.<span style="color:#2f6f8f;">tool_calls</span>: {_calltxt}</div></div>'
+                    f'reply.<span style="color:#b05a00;">content</span>: <b>{_content[:160]}</b><br>'
+                    f'reply.<span style="color:#b05a00;">tool_calls</span>: {_calltxt}</div></div>'
                 )
         except Exception as _e:
             _view = mo.vstack([mo.md(f"⚠️ the request failed (`{_e}`). The saved example makes the same point:"), _saved])
@@ -412,7 +412,7 @@ def _(mo):
 
 @app.cell
 def _(mo, tf_ext, tf_priv, tf_unt):
-    _legs = [("private data", tf_priv.value, "#2f6f8f"),
+    _legs = [("private data", tf_priv.value, "#13262f"),   # neutral, so it never reads as the amber/red legs beside it
              ("untrusted content", tf_unt.value, "#b07d2b"),
              ("external comms", tf_ext.value, "#c8553d")]
     _on = sum(1 for _, _v, _ in _legs if _v)

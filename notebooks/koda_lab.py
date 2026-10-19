@@ -160,13 +160,13 @@ def bars_html(rows, kind):
     if kind == "destructive":
         out += ('<div style="display:flex;gap:8px;font:600 11px system-ui;margin:0 0 6px;">'
                 '<span style="width:140px;"></span><span style="color:#c8553d;">blatant wording</span>'
-                '<span style="color:#2f6f8f;margin-left:16px;">subtle wording</span></div>')
+                '<span style="color:#13262f;margin-left:16px;">subtle wording</span></div>')   # neutral beside the red series
         for name, bl, su in rows:
             out += ('<div style="display:flex;align-items:center;gap:8px;margin:3px 0;">'
                     f'<span style="width:140px;font:12px Consolas,monospace;color:#13262f;">{name}</span>'
                     '<div style="flex:1;display:flex;gap:4px;align-items:center;">'
                     f'<div style="height:14px;width:{max(bl,1)}%;background:#c8553d;border-radius:3px;"></div>'
-                    f'<div style="height:14px;width:{max(su,1)}%;background:#2f6f8f;border-radius:3px;"></div></div>'
+                    f'<div style="height:14px;width:{max(su,1)}%;background:#13262f;border-radius:3px;"></div></div>'
                     f'<span style="width:72px;text-align:right;font:11px system-ui;color:#5e7278;">{bl}% / {su}%</span></div>')
     else:
         for name, hit in rows:
@@ -189,7 +189,7 @@ def console_html(steps, customer_id, profile, user=None, reply=None):
         _reply = "All done. I looked up the account and took care of the housekeeping the record mentioned."
     else:
         _reply = "I looked up the account. Nothing else was needed."
-    _chat = (f'<div style="text-align:right;margin:8px 0;"><span style="background:#2f6f8f;color:#fff;'
+    _chat = (f'<div style="text-align:right;margin:8px 0;"><span style="background:#b05a00;color:#fff;'
              f'padding:8px 12px;border-radius:14px 14px 4px 14px;display:inline-block;max-width:88%;'
              f'font-size:12.5px;line-height:1.5;">{_h.escape(_user)}</span></div>'
              f'<div style="text-align:center;color:#9aa8ad;font:11px system-ui;margin:4px 0;">'
@@ -218,7 +218,7 @@ def console_html(steps, customer_id, profile, user=None, reply=None):
     return ('<div style="border:1px solid #d7dee0;border-radius:12px;overflow:hidden;'
             'font-family:-apple-system,Segoe UI,system-ui,sans-serif;margin:10px 0;box-shadow:0 2px 10px rgba(19,38,47,.08);">'
             '<div style="background:#13262f;padding:9px 14px;display:flex;align-items:center;gap:7px;">'
-            '<span style="width:10px;height:10px;border-radius:50%;background:#2f6f8f;"></span>'
+            '<span style="width:10px;height:10px;border-radius:50%;background:#b05a00;"></span>'
             '<span style="width:10px;height:10px;border-radius:50%;background:#54646b;"></span>'
             '<span style="width:10px;height:10px;border-radius:50%;background:#54646b;"></span>'
             '<span style="color:#fff;font:600 13px system-ui;margin-left:6px;">Koda assistant</span>'
@@ -234,7 +234,7 @@ def console_html(steps, customer_id, profile, user=None, reply=None):
 def divider(n, title, teaser):
     return ('<hr style="border:none;border-top:2px solid #d7dee0;margin:16px 0 2px;">'
             '<div style="font-family:-apple-system,Segoe UI,system-ui,sans-serif;">'
-            f'<div style="color:#2f6f8f;font:700 11px system-ui;letter-spacing:.14em;text-transform:uppercase;">Part {n}</div>'
+            f'<div style="color:#b05a00;font:700 11px system-ui;letter-spacing:.14em;text-transform:uppercase;">Part {n}</div>'
             f'<div style="font:700 22px system-ui;color:#13262f;margin:2px 0 1px;">{title}</div>'
             f'<div style="color:#5e7278;font-size:14px;">{teaser}</div></div>')
 
@@ -297,7 +297,7 @@ def hero(eyebrow, title, blurb):
     # the dark header card every page opens with
     return ('<div style="background:#13262f;border-radius:14px;padding:26px 30px;margin:4px 0 12px;'
             'font-family:-apple-system,Segoe UI,system-ui,sans-serif;box-shadow:0 2px 14px rgba(19,38,47,.14);">'
-            f'<div style="color:#7fb0c8;font:700 11px system-ui;letter-spacing:.17em;text-transform:uppercase;">{eyebrow}</div>'
+            f'<div style="color:#f2a65a;font:700 11px system-ui;letter-spacing:.17em;text-transform:uppercase;">{eyebrow}</div>'
             f'<div style="color:#fff;font-size:30px;font-weight:700;line-height:1.16;margin:9px 0 8px;">{title}</div>'
             f'<div style="color:#b7c4c8;font-size:14.5px;line-height:1.55;max-width:760px;">{blurb}</div></div>')
 

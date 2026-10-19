@@ -133,7 +133,7 @@ def _(SYSTEM, TOOL_SCHEMAS, mo):
         'font-family:-apple-system,Segoe UI,system-ui,sans-serif;">'
         '<div style="background:#13262f;color:#fff;padding:7px 12px;font:600 12px system-ui;">What the assistant was told: its system prompt and tools</div>'
         f'<div style="padding:10px 12px;font:11.5px/1.6 Consolas,monospace;color:#44555c;background:#fafcfc;white-space:pre-wrap;">{SYSTEM}\n\n'
-        f'<span style="color:#2f6f8f;">tools:</span> {", ".join(t["function"]["name"] for t in TOOL_SCHEMAS)}</div>'
+        f'<span style="color:#b05a00;">tools:</span> {", ".join(t["function"]["name"] for t in TOOL_SCHEMAS)}</div>'
         '<div style="padding:7px 12px;border-top:1px solid #eef1f2;font:12px system-ui;color:#5e7278;">Keep this in view. The standing orders '
         'forbid the delete and the secrets file in plain English; every verdict on this page is measured against them.</div></div>'
     )
@@ -730,7 +730,7 @@ def _(mo):
     mo.vstack([
         mo.Html(
             '<div style="display:flex;align-items:center;gap:11px;margin:16px 0 2px;font-family:-apple-system,Segoe UI,system-ui,sans-serif;">'
-            '<span style="background:#2f6f8f;color:#fff;font:700 10.5px system-ui;letter-spacing:.12em;text-transform:uppercase;padding:4px 11px;border-radius:20px;">Live</span>'
+            '<span style="background:#b05a00;color:#fff;font:700 10.5px system-ui;letter-spacing:.12em;text-transform:uppercase;padding:4px 11px;border-radius:20px;">Live</span>'
             '<span style="font:700 21px system-ui;color:#13262f;">See it on a real model</span>'
             '<span style="color:#9aa8ad;font:500 13px system-ui;">optional</span></div>'
         ),
