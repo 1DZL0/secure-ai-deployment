@@ -192,7 +192,7 @@ def console_html(steps, customer_id, profile, user=None, reply=None):
     _chat = (f'<div style="text-align:right;margin:8px 0;"><span style="background:#b05a00;color:#fff;'
              f'padding:8px 12px;border-radius:14px 14px 4px 14px;display:inline-block;max-width:88%;'
              f'font-size:12.5px;line-height:1.5;">{_h.escape(_user)}</span></div>'
-             f'<div style="text-align:center;color:#9aa8ad;font:11px system-ui;margin:4px 0;">'
+             f'<div style="text-align:center;color:#5e7278;font:11px system-ui;margin:4px 0;">'
              f'the assistant made {_n} tool call{"s" if _n != 1 else ""}</div>'
              f'<div style="margin:8px 0;"><span style="background:#eef2f3;color:#1b2a30;padding:8px 12px;'
              f'border-radius:14px 14px 14px 4px;display:inline-block;max-width:88%;font-size:12.5px;line-height:1.5;">{_h.escape(_reply)}</span></div>')
@@ -225,18 +225,21 @@ def console_html(steps, customer_id, profile, user=None, reply=None):
             f'<span style="margin-left:auto;background:{_pc};color:#fff;font:600 11px system-ui;padding:3px 11px;border-radius:12px;">{profile}</span></div>'
             '<div style="display:flex;background:#fff;align-items:stretch;flex-wrap:wrap;">'
             '<div style="flex:1 1 260px;min-width:0;padding:10px 14px;border-right:1px solid #eef1f2;background:#fafcfc;">'
-            '<div style="font:600 10px system-ui;color:#9aa8ad;letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px;">What the user sees</div>'
+            '<div style="font:600 10px system-ui;color:#5e7278;letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px;">What the user sees</div>'
             f'{_chat}</div>'
             '<div style="flex:1.2 1 300px;min-width:0;padding:10px 14px;">'
-            '<div style="font:600 10px system-ui;color:#9aa8ad;letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px;">What actually happened</div>'
+            '<div style="font:600 10px system-ui;color:#5e7278;letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px;">What actually happened</div>'
             f'{_rows}</div></div></div>')
 
 def divider(n, title, teaser):
+    # "You will do: ... You will have: ..." teasers render as two labelled lines
+    _t = teaser.replace("You will do:", "<b style='color:#13262f;'>You will do:</b>").replace(
+        " You will have:", "<br><b style='color:#13262f;'>You will have:</b>")
     return ('<hr style="border:none;border-top:2px solid #d7dee0;margin:16px 0 2px;">'
             '<div style="font-family:-apple-system,Segoe UI,system-ui,sans-serif;">'
             f'<div style="color:#b05a00;font:700 11px system-ui;letter-spacing:.14em;text-transform:uppercase;">Part {n}</div>'
-            f'<div style="font:700 22px system-ui;color:#13262f;margin:2px 0 1px;">{title}</div>'
-            f'<div style="color:#5e7278;font-size:14px;">{teaser}</div></div>')
+            f'<div style="font:700 24px system-ui;color:#13262f;margin:2px 0 3px;">{title}</div>'
+            f'<div style="color:#44555c;font-size:14px;line-height:1.55;">{_t}</div></div>')
 
 WATCH = {  # doorways that get a catalogue entry rather than a card of their own (2025-26)
     "Calendar invites and email subjects": {
@@ -277,20 +280,81 @@ def results_table(title, rows):
                   '<span style="color:#9aa8ad;">&rarr;</span>'
                   f'<code style="color:{_col if _ok is not None else "#1b2a30"};font-weight:700;">{_r[1]}</code>'
                   f'<span style="color:{_col};width:12px;">{_mark}</span>'
-                  f'<span style="color:#9aa8ad;font:11.5px system-ui;flex:1;">{_rnote}</span></div>')
+                  f'<span style="color:#5e7278;font:11.5px system-ui;flex:1;">{_rnote}</span></div>')
     return ('<div style="border:1px solid #e3e9ea;border-radius:8px;padding:9px 13px;margin:6px 0 2px;background:#fafcfc;'
             'font:12.5px Consolas,monospace;max-width:620px;overflow-x:auto;">'
-            f'<div style="font:600 10px system-ui;color:#9aa8ad;letter-spacing:.05em;text-transform:uppercase;margin-bottom:5px;">{title}</div>'
+            f'<div style="font:600 10px system-ui;color:#5e7278;letter-spacing:.05em;text-transform:uppercase;margin-bottom:5px;">{title}</div>'
             f'{_body}</div>')
 
 # ---- shared page chrome ----
+# marimo draws every widget inside a shadow root, where page CSS cannot reach. It copies any
+# <style title="marimo..."> into each widget's shadow root when the widget mounts, so these rules
+# restyle the widgets themselves: radios as boxes (inline ones as chips), switches as toggle pills,
+# dropdowns and text boxes with the course border and copper focus, dark accordion headers.
+_SELECT_ARROW = ("url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' "
+                 "fill='none' stroke='%235e7278' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E"
+                 "%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E\")")
+_RG = "[data-testid=marimo-plugin-radio]"
+WIDGET_CSS = (
+    ".mo-label > [part=label] label{font-size:14.5px;font-weight:600;color:#13262f;line-height:1.45;}"
+    # radios: each option a full-width-clickable box (the label's ::after stretches its hit area)
+    f"{_RG}{{gap:7px;margin-top:4px;min-width:min(340px,100%);}}"
+    f"{_RG} > div{{position:relative;align-items:center;gap:10px;padding:9px 14px;border:1px solid #d7dee0;border-radius:10px;"
+    "background:#fff;transition:border-color .15s,background-color .15s;}"
+    f"{_RG} > div > *{{margin:0 !important;}}"
+    f"{_RG} > div:hover{{border-color:#b05a00;background:#fff8f0;}}"
+    f"{_RG} > div:has(> [data-state=checked]){{border-color:#b05a00;background:#fdf1e4;box-shadow:inset 0 0 0 1px #b05a00;}}"
+    f"{_RG} > div:has(> :focus-visible){{outline:2px solid #b05a00;outline-offset:2px;}}"
+    f"{_RG} label{{font-size:14px;color:#1b2a30;line-height:1.4;cursor:pointer;}}"
+    f"{_RG} label::after{{content:'';position:absolute;inset:0;border-radius:inherit;}}"
+    f"{_RG} button[role=radio]{{position:relative;z-index:1;border-color:#9aa8ad;}}"
+    f"{_RG} button[role=radio][data-state=checked]{{border-color:#b05a00;}}"
+    f"{_RG} button[role=radio] svg{{fill:#b05a00;color:#b05a00;}}"
+    # inline radios: a row of chips under the question, the picked one filled copper
+    ".mo-label:has(> [data-testid=marimo-plugin-radio]){display:flex !important;flex-direction:column !important;"
+    "align-items:flex-start !important;gap:6px !important;}"
+    f"{_RG}.grid-flow-col{{display:flex;flex-wrap:wrap;gap:6px;margin-top:0;min-width:0;}}"
+    f"{_RG}.grid-flow-col > div{{padding:5px 14px;border-radius:999px;}}"
+    f"{_RG}.grid-flow-col button[role=radio]{{position:absolute;opacity:0;width:1px;height:1px;}}"
+    f"{_RG}.grid-flow-col > div:has(> [data-state=checked]){{background:#b05a00;border-color:#b05a00;box-shadow:none;}}"
+    f"{_RG}.grid-flow-col > div:has(> [data-state=checked]) label{{color:#fff;font-weight:600;}}"
+    # switches: a toggle pill, green when the permission is on
+    ".mo-label:has(> button[role=switch]){position:relative;padding:5px 12px 5px 6px;border:1px solid #d7dee0;border-radius:999px;"
+    "background:#fff;gap:8px;transition:border-color .15s,background-color .15s;}"
+    ".mo-label:has(> button[role=switch]):hover{border-color:#2e8b6f;}"
+    ".mo-label:has(> button[role=switch][data-state=checked]){border-color:#2e8b6f;background:#eef7f2;}"
+    ".mo-label:has(> button[role=switch]) label{font-size:13.5px;font-weight:500;color:#1b2a30;margin:0 !important;cursor:pointer;}"
+    ".mo-label:has(> button[role=switch]) label::after{content:'';position:absolute;inset:0;border-radius:999px;}"
+    "button[role=switch]{position:relative;z-index:1;}"
+    "button[role=switch][data-state=checked]{background:#2e8b6f !important;}"
+    "button[role=switch][data-state=unchecked]{background:#c5ced1 !important;}"
+    # dropdowns, multiselects, text boxes
+    "select[data-testid=marimo-plugin-dropdown]{height:34px;padding:0 34px 0 11px;border:1px solid #cfd8db;border-radius:8px;"
+    f"background:#fff {_SELECT_ARROW} no-repeat right 11px center;-webkit-appearance:none;appearance:none;font-size:14px;color:#1b2a30;"
+    "box-shadow:none;margin-bottom:0;}"
+    "select[data-testid=marimo-plugin-dropdown]:hover{border-color:#b05a00;box-shadow:none;}"
+    "select[data-testid=marimo-plugin-dropdown]:focus-visible{border-color:#b05a00;box-shadow:0 0 0 3px rgba(176,90,0,.18);outline:none;}"
+    "[data-slot=select-root] > button{min-height:34px;border-radius:8px;border-color:#cfd8db;box-shadow:none;font-size:14px;}"
+    "textarea,input[type=text],input[type=password]{border-radius:8px !important;border-color:#cfd8db !important;box-shadow:none !important;}"
+    "textarea:focus-visible,input[type=text]:focus-visible,input[type=password]:focus-visible{border-color:#b05a00 !important;"
+    "box-shadow:0 0 0 3px rgba(176,90,0,.18) !important;}"
+    # accordions: marimo greys the whole thing out; make the headers and the body read as text
+    ".text-muted-foreground[data-orientation=vertical]{color:#1b2a30;}"
+    "h3[data-orientation] > button,h3[data-orientation] > button .prose{color:#13262f !important;font-weight:600;font-size:15px;}"
+)
 PAGE_CSS = (
     "<style>"
     "[class*='top-[25vh]']{display:none !important;}"          # marimo's right-edge cell minimap
     ":root{--content-width-medium:1040px !important;}"         # wider measure so it fills the course frame
     ".output.block{margin-top:7px !important;margin-bottom:7px !important;}"  # was 14.4px each side
     ".marimo-cell blockquote{margin-top:12px !important;}"
+    # section headings in the course's sans, closer to the text they introduce (marimo: serif, 21.6px above, 14.4px below)
+    ".markdown h3{font-family:-apple-system,Segoe UI,system-ui,sans-serif !important;font-weight:700 !important;font-size:19px !important;"
+    "color:#13262f !important;margin:18px 0 4px !important;}"
+    ".markdown h3 + .paragraph,.markdown h3 + p{margin-top:2px !important;}"
+    ".markdown .paragraph + ul,.markdown .paragraph + ol,.markdown p + ul,.markdown p + ol{margin-top:4px !important;}"  # was 18px under a 14.4px gap
     "</style>"
+    f'<style title="marimo-course-widgets">{WIDGET_CSS}</style>'
 )
 
 def hero(eyebrow, title, blurb):
