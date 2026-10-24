@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agent tool-misuse case library</title>
+<style>
+  :root{
+    --slate:#0f3a42; --accent:#b05a00; --accent-dark:#934a00; --accent-light:#f2a65a;
+    --green:#2e8b6f; --green-text:#1d6b52; --red:#c8553d; --red-text:#9c3a27; --amber:#b07d2b; --amber-text:#7a5a16;
+    --ink:#1b2a30; --muted:#5e7278; --faint:#64777d; --line:#dde4e7; --panel:#fafcfc; --bg:#ffffff;
+    --sans:-apple-system,"Segoe UI",system-ui,sans-serif; --mono:Consolas,"SFMono-Regular",monospace;
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{margin:0;font:15px/1.55 var(--sans);color:var(--ink);background:var(--bg)}
+  a{color:var(--accent);text-decoration:none} a:hover{text-decoration:underline}
+  a:focus-visible,button:focus-visible,summary:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .wrap{max-width:1000px;margin:0 auto;padding:18px 16px 60px}
+  .hero{background:#13262f;border-radius:14px;padding:22px 26px;margin:2px 0 14px}
+  .hero .eyebrow{color:var(--accent-light);font:700 11px var(--sans);letter-spacing:.17em;text-transform:uppercase}
+  .hero h1{color:#fff;font-size:26px;line-height:1.2;margin:8px 0 8px}
+  .hero p{color:#b7c4c8;margin:0;max-width:760px;font-size:14.5px}
+  .method{font-size:13.5px;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin:0 0 14px}
+  .method b{color:#13262f}
+  .summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;margin:0 0 14px}
+  .box{border:1px solid var(--line);border-radius:10px;padding:10px 14px;background:#fff}
+  .box h2{font:700 11px var(--sans);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:0 0 6px}
+  .bar{display:flex;align-items:center;gap:8px;margin:3px 0;font-size:12.5px}
+  .bar .lab{flex:0 0 150px;color:var(--ink)} .bar .track{flex:1;background:#eef2f3;border-radius:4px;height:11px;overflow:hidden}
+  .bar .fill{display:block;height:100%;background:#13262f;border-radius:4px} .bar .n{flex:0 0 28px;text-align:right;color:var(--muted);font-variant-numeric:tabular-nums}
+  .filters{border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin:0 0 12px;background:var(--panel)}
+  .frow{display:grid;grid-template-columns:130px 1fr;gap:3px 10px;align-items:start;margin:7px 0}
+  .frow .fl{padding-top:5px;font:700 11px var(--sans);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+  .frow .fc{display:flex;flex-wrap:wrap;gap:6px}
+  .chip{display:inline-block;border:1px solid #cfd8db;background:#fff;color:#13262f;font:600 12px var(--sans);padding:3px 11px;border-radius:14px;cursor:pointer;user-select:none}
+  .chip:hover{border-color:#9db0b6} .chip[aria-pressed=true]{background:#13262f;color:#fff;border-color:#13262f}
+  .search{width:100%;max-width:420px;font:14px var(--sans);padding:7px 11px;border:1px solid #cfd8db;border-radius:9px;background:#fff;color:var(--ink)}
+  .count{font:600 13px var(--sans);color:var(--ink);margin:10px 0 6px}
+  .clear{font:600 12px var(--sans);color:var(--accent);background:none;border:none;cursor:pointer;padding:0 0 0 10px}
+  details.case{border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:9px;margin:8px 0;background:#fff}
+  details.case[open]{box-shadow:0 2px 10px rgba(19,38,47,.08)}
+  details.case > summary{list-style:none;cursor:pointer;padding:10px 14px;display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline}
+  details.case > summary::-webkit-details-marker{display:none}
+  .num{flex:0 0 auto;font:700 12px var(--mono);color:#fff;background:#13262f;border-radius:6px;padding:1px 7px}
+  .ttl{flex:1 1 320px;font:700 15px var(--sans);color:#13262f;min-width:0}
+  .dt{flex:0 0 auto;font:12px var(--sans);color:var(--muted)}
+  .tags{flex:1 1 100%;display:flex;flex-wrap:wrap;gap:4px 6px;margin-top:2px}
+  .tag{font:600 11px var(--sans);padding:1px 8px;border-radius:9px;border:1px solid #d7dee0;background:#eef2f3;color:#13262f;white-space:nowrap}
+  .tag.layer{background:#13262f;color:#fff;border-color:#13262f}
+  .tag.ok{background:#e4f3ec;color:var(--green-text);border-color:#b9dccd} .tag.warn{background:#f6eedb;color:var(--amber-text);border-color:#e3d3a8}
+  .tag.t1{background:#fff3e3;color:#7a4300;border-color:#f0cfa4}
+  .detail{padding:2px 16px 14px;border-top:1px solid #eef1f2}
+  .detail h3{font:700 11px var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin:12px 0 2px}
+  .detail p{margin:0;font-size:14px}
+  .src{margin-top:12px;font-size:12.5px;color:var(--muted)} .src a{margin-right:10px;word-break:break-all}
+  .sec{margin-top:26px}
+  .sec h2{font:700 20px var(--sans);color:#13262f;margin:0 0 4px}
+  .sec .sub{color:var(--muted);font-size:13.5px;margin:0 0 10px}
+  ol.pat{padding-left:22px;margin:0} ol.pat li{margin:7px 0;font-size:14px}
+  table.vp{border-collapse:collapse;width:100%;font-size:13.5px} table.vp th,table.vp td{text-align:left;padding:6px 10px;border-top:1px solid #eef1f2;vertical-align:top}
+  table.vp th{font:700 11px var(--sans);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);border-top:none}
+  .none{color:var(--muted);padding:18px 0}
+  @media (max-width:560px){.frow{grid-template-columns:1fr}.frow .fl{padding-top:0}.bar .lab{flex-basis:110px}.hero{padding:18px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hero">
+    <div class="eyebrow">Secure AI Deployment &middot; companion to Module 03</div>
+    <h1>Agent tool-misuse case library</h1>
+    <p>Fifty-four documented cases from 2023 to 2026 in which an agent&rsquo;s tools, credentials, approvals or tool definitions did, or could have done, the damage. Some were breaches, many are vulnerabilities disclosed by researchers, and some are researcher demonstrations. Each is described by mechanism
+       (what text got in, what call resulted, whose authority it used) and mapped to the layer of the Module 03 lab that would have bounded it.</p>
+  </div>
+  <p class="method"><b>How to read this.</b> Not every entry is a breach: each says whether it rests on a vendor advisory, a finder&rsquo;s write-up, an operator&rsquo;s report or press. Every entry was checked on 24 October 2026 against at least one primary or near-primary source: the finder&rsquo;s own write-up, a vendor advisory,
+    a CVE record or the operator&rsquo;s report. <b>Verified</b> means a primary source was read. <b>Corroborated</b> means the original statement could not be read but independent outlets agree.
+    <b>Partial</b> means only secondary reports were readable and a material detail is missing, which the entry states. A finding that rests on one researcher&rsquo;s account says so.
+    No payload text or exploit commands are reproduced. Source pages are third-party material and open in a new tab.</p>
+
+  <div class="summary" id="summary"></div>
+
+  <div class="filters" id="filters" role="group" aria-label="Filters">
+    <div class="frow"><span class="fl">Search</span><input class="search" id="q" type="search" placeholder="product, company, mechanism, CVE" aria-label="Search the case library"></div>
+    <div class="frow"><span class="fl">Kind of excess</span><span class="fc" id="f-sub"></span></div>
+    <div class="frow"><span class="fl">Layer that bounds it</span><span class="fc" id="f-layer"></span></div>
+    <div class="frow"><span class="fl">Theme</span><span class="fc" id="f-theme"></span></div>
+    <div class="frow"><span class="fl">Year</span><span class="fc" id="f-year"></span></div>
+    <div class="frow"><span class="fl">Evidence</span><span class="fc" id="f-status"></span></div>
+    <div class="frow"><span class="fl">Core set</span><span class="fc" id="f-tier"></span></div>
+  </div>
+  <div class="count" id="count" aria-live="polite"></div>
+  <div id="list"></div>
+
+  <div class="sec" id="patterns"><h2>Patterns across the set</h2><p class="sub">What recurs. Counts are by tagging of these entries and are a guide, not a statistic.</p><ol class="pat" id="pat"></ol></div>
+
+  <div class="sec" id="vendors"><h2>What vendors said when told</h2>
+    <p class="sub">Positions recorded in the entries, each as the finder or the press reports it unless the vendor&rsquo;s own words are cited there. Several of these vendors also fixed other issues quickly and openly.</p>
+    <table class="vp"><thead><tr><th>Position</th><th>Who</th><th>Case</th></tr></thead><tbody>
+      <tr><td>&ldquo;a known issue&rdquo;</td><td>Cursor, on the Jira ticket chain</td><td><a href="#case-21" data-case="21">21</a></td></tr>
+      <tr><td>&ldquo;the user&rsquo;s responsibility&rdquo;</td><td>Cursor and GitHub, on rules files</td><td><a href="#case-47" data-case="47">47</a></td></tr>
+      <tr><td>&ldquo;expected behaviour&rdquo;</td><td>Anthropic, on MCP STDIO, as OX Security reports it</td><td><a href="#case-28" data-case="28">28</a></td></tr>
+      <tr><td>&ldquo;documented and expected&rdquo;</td><td>AWS, on AgentCore default roles, as Zenity quotes it</td><td><a href="#case-31" data-case="31">31</a></td></tr>
+      <tr><td>&ldquo;intended&rdquo;</td><td>ServiceNow, on default agent discovery</td><td><a href="#case-40" data-case="40">40</a></td></tr>
+      <tr><td>&ldquo;a duplicate&rdquo;</td><td>Google, on the Antigravity approval prompt, as the finder reports it</td><td><a href="#case-25" data-case="25">25</a></td></tr>
+      <tr><td>&ldquo;working as designed&rdquo;</td><td>Anthropic, on Auto Mode, as the finder reports it</td><td><a href="#case-51" data-case="51">51</a></td></tr>
+      <tr><td>&ldquo;first requires system compromise&rdquo;</td><td>AWS, on the Amazon Q Developer command list, as the finder reports it</td><td><a href="#case-49" data-case="49">49</a></td></tr>
+      <tr><td>&ldquo;outside our threat model&rdquo;</td><td>opencode, on a 2026 advisory</td><td><a href="#case-54" data-case="54">54</a></td></tr>
+      <tr><td>no answer in more than 120 days</td><td>Cognition, to the researcher who reported two Devin issues</td><td><a href="#case-15" data-case="15">15</a>, <a href="#case-33" data-case="33">33</a></td></tr>
+      <tr><td>&ldquo;user access control issue, not an AI autonomy issue&rdquo;</td><td>Amazon, on the Kiro outage report</td><td><a href="#case-18" data-case="18">18</a></td></tr>
+    </tbody></table>
+  </div>
+  <p class="sub" style="margin-top:22px">Part of the <a href="../" target="_top">Secure AI Deployment</a> course.</p>
+</div>
+
+<script>
+const LAYERS = {toolbox:"Tool diet", scope:"Scoped credential", object:"Object check", argument:"Argument check", approval:"Approval gate",
+                vet:"Vet and pin the tool", isolation:"Isolation (Modules 05, 06)", none:"Not a tool-layer case"};
+const SUBS = {F:"Functionality", P:"Permissions", A:"Autonomy"};
+const STATUS = {VERIFIED:"Verified", CORROBORATED:"Corroborated", PARTIAL:"Partial"};
+const LABELS = [["Found by / published","Found by, and where"],["Published by","Published by"],["Target","Target"],["Mechanism","What happened"],
+  ["OWASP LLM06 sub-type","Where it sits in the standards"],["Control that stops it","What would have bounded it"],["Vendor","What the vendor did"],
+  ["Follow-on","Follow-on"],["Verification note","Verification note"],["Teaching hook","Why it matters"]];
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const tick = s => s.replace(/`([^`]+)`/g, "<code>$1</code>");   // `code` spans in the source text
+const link = s => tick(esc(s)).replace(/https?:\/\/[^\s)\]&]+(?:&amp;[^\s)\]&]+)*/g, u => { const clean = u.replace(/[.,;]+$/, ""); return `<a href="${clean}" target="_blank" rel="noopener">${clean.replace(/^https?:\/\/(www\.)?/, "").slice(0, 60)}</a>` + u.slice(clean.length); });
+const year = c => (c.date_iso || "").slice(0, 4);
+let DATA = null;
+const sel = {sub:new Set(), layer:new Set(), theme:new Set(), year:new Set(), status:new Set(), tier:new Set(), q:""};
+
+function labelFor(raw){ for (const [k, v] of LABELS) if (raw.startsWith(k)) return v + (raw.length > k.length && /^\(/.test(raw.slice(k.length).trim()) ? " " + raw.slice(k.length).trim() : ""); return raw; }
+const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+function tidyNote(s){
+  // "(researchers and a commentator); the vendor response is not stated" -> "Researchers and a commentator; the vendor response is not stated"
+  s = (s || "").trim();
+  const m = s.match(/^\((.*?)\)(.*)$/);
+  if (m) { const rest = m[2].replace(/^[;,\s]+/, ""); s = m[1] + (rest ? "; " + rest : ""); }
+  return cap(s);
+}
+function fieldsHtml(c){
+  const order = LABELS.map(l => l[0]);
+  const rank = f => { const i = order.findIndex(k => f[0].startsWith(k)); return i < 0 ? 99 : i; };
+  const fields = c.fields.slice().sort((a, b) => rank(a) - rank(b));
+  return fields.map(f => `<h3>${esc(labelFor(f[0]))}</h3><p>${link(cap(f[1]))}</p>`).join("");
+}
+function card(c){
+  const subs = (c.sub || []).map(s => `<span class="tag">${SUBS[s]}</span>`).join("");
+  const st = `<span class="tag ${c.status === "VERIFIED" ? "ok" : "warn"}" title="${esc(c.status_note || "")}">${STATUS[c.status] || c.status}</span>`;
+  const t1 = c.tier === 1 ? `<span class="tag t1">core set</span>` : "";
+  const tags = c.tags.map(t => `<span class="tag">${esc(t)}</span>`).join("");
+  const srcs = c.urls.map(u => `<a href="${esc(u)}" target="_blank" rel="noopener">${esc(u.replace(/^https?:\/\/(www\.)?/, "").split("/")[0])}</a>`).join("");
+  return `<details class="case" id="case-${c.n}" data-n="${c.n}"><summary><span class="num">${c.n}</span><span class="ttl">${tick(esc(c.title))}</span><span class="dt">${esc(c.date)}</span>
+    <span class="tags"><span class="tag layer">${LAYERS[c.layer]}</span>${subs}${st}${t1}${tags}</span></summary>
+    <div class="detail">${c.status_note ? `<h3>Evidence note</h3><p>${esc(tidyNote(c.status_note))}</p>` : ""}${c.evidence ? `<h3>Source type</h3><p>${esc(cap(c.evidence))}</p>` : ""}${fieldsHtml(c)}<div class="src">Sources (open in a new tab): ${srcs}</div></div></details>`;
+}
+function matches(c){
+  const q = sel.q.trim().toLowerCase();
+  if (q) { const hay = (c.title + " " + c.date + " " + c.tags.join(" ") + " " + c.fields.map(f => f[1]).join(" ")).toLowerCase(); if (!q.split(/\s+/).every(w => hay.includes(w))) return false; }
+  if (sel.sub.size && !(c.sub || []).some(s => sel.sub.has(s))) return false;
+  if (sel.layer.size && !sel.layer.has(c.layer)) return false;
+  if (sel.theme.size && !c.themes.some(t => sel.theme.has(t))) return false;
+  if (sel.year.size && !sel.year.has(year(c))) return false;
+  if (sel.status.size && !sel.status.has(c.status)) return false;
+  if (sel.tier.size && c.tier !== 1) return false;
+  return true;
+}
+function render(){
+  const shown = DATA.cases.filter(matches);
+  document.getElementById("list").innerHTML = shown.length ? shown.map(card).join("") : `<div class="none">No case matches these filters.</div>`;
+  const filtered = shown.length !== DATA.cases.length;
+  document.getElementById("count").innerHTML = `Showing ${shown.length} of ${DATA.cases.length}` + (filtered ? `<button class="clear" id="clear" type="button">Clear filters</button>` : "");
+  const cl = document.getElementById("clear"); if (cl) cl.onclick = () => { Object.values(sel).forEach(v => v instanceof Set && v.clear()); sel.q = ""; document.getElementById("q").value = ""; chips(); render(); };
+}
+function chipGroup(id, key, items){
+  const host = document.getElementById(id);
+  host.innerHTML = items.map(([v, label]) => `<span class="chip" role="button" tabindex="0" aria-pressed="${sel[key].has(v)}" data-k="${key}" data-v="${esc(v)}">${esc(label)}</span>`).join("");
+}
+function chips(){
+  chipGroup("f-sub", "sub", Object.entries(SUBS));
+  chipGroup("f-layer", "layer", Object.entries(LAYERS).filter(([k]) => k !== "none"));
+  chipGroup("f-theme", "theme", DATA.themes.map(t => [t, t]));
+  chipGroup("f-year", "year", [...new Set(DATA.cases.map(year))].sort().map(y => [y, y]));
+  chipGroup("f-status", "status", Object.entries(STATUS));
+  chipGroup("f-tier", "tier", [["1", "Core set only (the 25 strongest)"]]);
+}
+function bars(title, rows, total){
+  const max = Math.max(...rows.map(r => r[1]), 1);
+  return `<div class="box"><h2>${title}</h2>` + rows.map(([l, n]) => `<div class="bar"><span class="lab">${esc(l)}</span><span class="track"><span class="fill" style="width:${Math.round(100 * n / max)}%"></span></span><span class="n">${n}</span></div>`).join("") + `</div>`;
+}
+function summary(){
+  const cs = DATA.cases;
+  const by = f => { const m = {}; cs.forEach(c => f(c).forEach(k => m[k] = (m[k] || 0) + 1)); return m; };
+  const layer = by(c => [c.layer]), sub = by(c => c.sub || []), yr = by(c => [year(c)]);
+  const rows = (m, names) => Object.entries(m).sort((a, b) => b[1] - a[1]).map(([k, n]) => [names[k] || k, n]);
+  document.getElementById("summary").innerHTML =
+    bars("Layer that would have bounded it", rows(layer, LAYERS)) + bars("Kind of excess (an entry can have several)", rows(sub, SUBS)) + bars("Incidents by year", Object.entries(yr).sort());
+}
+function patterns(){
+  const linkCases = t => esc(t).replace(/(\(\d+ cases?: )([0-9, ]+)(\))/g, (m, a, nums, b) => a + nums.split(/,\s*/).map(n => `<a href="#case-${n}" data-case="${n}">${n}</a>`).join(", ") + b)
+                              .replace(/\bCases? (\d+)((?:(?:,| and| to) \d+)*)/g, (m, first, rest) => m.replace(/\d+/g, n => `<a href="#case-${n}" data-case="${n}">${n}</a>`));
+  document.getElementById("pat").innerHTML = DATA.patterns.map(p => `<li>${linkCases(p)}</li>`).join("");
+}
+function openCase(n){
+  sel.q = ""; document.getElementById("q").value = ""; Object.values(sel).forEach(v => v instanceof Set && v.clear()); chips(); render();
+  const el = document.getElementById("case-" + n); if (el) { el.open = true; el.scrollIntoView({block: "start"}); }
+}
+document.addEventListener("click", e => {
+  const chip = e.target.closest(".chip");
+  if (chip) { const k = chip.dataset.k, v = chip.dataset.v; sel[k].has(v) ? sel[k].delete(v) : sel[k].add(v); chips(); render(); return; }
+  const a = e.target.closest("a[data-case]"); if (a) { e.preventDefault(); openCase(a.dataset.case); }
+});
+document.addEventListener("keydown", e => { if ((e.key === "Enter" || e.key === " ") && e.target.classList && e.target.classList.contains("chip")) { e.preventDefault(); e.target.click(); } });
+document.getElementById("q").addEventListener("input", e => { sel.q = e.target.value; render(); });
+fetch("cases.json").then(r => { if (!r.ok) throw new Error(r.status); return r.json(); }).then(d => {
+  DATA = d; summary(); chips(); render(); patterns();
+  if (location.hash.startsWith("#case-")) openCase(location.hash.slice(6));
+}).catch(err => { document.getElementById("list").innerHTML = `<div class="none">The case data could not be loaded (${esc(err.message)}). Open this page through the course site rather than as a local file.</div>`; });
+</script>
+</body>
+</html>

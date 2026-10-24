@@ -13,6 +13,9 @@ U, H = cfg["profiles"]["unsafe"], cfg["profiles"]["hardened"]
 assert "DB_PASSWORD" in tools.dispatch("read_file", {"path": "../secrets/.env"}, U, T())
 assert tools.dispatch("read_file", {"path": "../secrets/.env"}, H, T()).startswith("BLOCKED")
 assert tools.dispatch("read_file", {"path": "targets.txt"}, H, T()).startswith("Q3")
+# a sibling folder that shares the prefix ("shared-archive" vs "shared") is outside the root: compare path parts, not strings
+assert tools.dispatch("read_file", {"path": "../shared-archive/x.txt"}, H, T()).startswith("BLOCKED")
+assert tools.dispatch("write_file", {"path": "../shared-archive/x.txt", "content": "x"}, H, T()).startswith("BLOCKED")
 assert tools.dispatch("query_db", {"sql": "DELETE FROM customers"}, H, T()).startswith("BLOCKED")
 assert "secrets/.env" in tools.dispatch("lookup_customer", {"id": 42}, U, T())   # the poisoned record, either wording
 assert tools.dispatch("remember", {"note": "x"}, H, T()).startswith("BLOCKED")

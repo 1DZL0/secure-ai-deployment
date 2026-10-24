@@ -286,7 +286,7 @@ def _(AMBER, CUSTOMERS, fb_card, field_pick, mo, peek):
 @app.cell
 def _(mo, run_agent):
     _sigs = [s["tool"] + "(" + ", ".join(f"{k}={v!r}" for k, v in s["args"].items()) + ")" for s in run_agent(42, "unsafe")]
-    persist_pick = mo.ui.radio(options={f"`{_s}`": _s for _s in _sigs[1:]},
+    persist_pick = mo.ui.radio(options={_s: _s for _s in _sigs[1:]},
                                label="Which call makes the attack run again tomorrow, after you have cleaned the record and restored the table?")
     mo.vstack([
         mo.md("The console above made four calls. You asked for a lookup and a reply to the customer; nothing you said authorised "

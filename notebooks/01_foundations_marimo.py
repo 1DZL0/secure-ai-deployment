@@ -467,7 +467,7 @@ def _():
          "desc": "Untrusted text in the input stream is read as a command."},
         {"name": "Poisoned retrieval", "layer": 2, "module": "04", "owasp": "OWASP LLM08:2025 / LLM09:2026", "status": "live",
          "desc": "A booby-trapped document, retrieved into context, issues orders."},
-        {"name": "Tools & excessive agency", "layer": 1, "module": "03", "owasp": "OWASP LLM06:2025 / LLM03:2026", "status": "coming",
+        {"name": "Tools & excessive agency", "layer": 1, "module": "03", "owasp": "OWASP LLM06:2025 / LLM03:2026", "status": "live",
          "desc": "The agent's own tools and MCP servers carry, or over-grant, authority."},
         {"name": "Insecure code execution", "layer": 1, "module": "06", "owasp": "OWASP LLM05:2025 / LLM10:2026", "status": "coming",
          "desc": "Model output run as code escapes its sandbox."},
@@ -541,7 +541,7 @@ def _():
     def map_legend_html():
         _rows = [("01", "Foundations: the frame", "course frame", "this module"),
                  ("02", "Prompt injection", "OWASP LLM01:2025 / 2026", "live"),
-                 ("03", "Tools & excessive agency", "OWASP LLM06:2025 / LLM03:2026", "coming"),
+                 ("03", "Tools & excessive agency", "OWASP LLM06:2025 / LLM03:2026", "live"),
                  ("04", "Poisoned retrieval", "OWASP LLM08:2025 / LLM09:2026", "live"),
                  ("05", "Data leakage & output handling", "OWASP LLM02 / LLM05:2025 (LLM10:2026)", "coming"),
                  ("06", "Isolated code execution & sandboxing", "OWASP LLM05:2025 / LLM10:2026", "coming"),
@@ -711,7 +711,8 @@ def _(mo):
 
         - **Next, Module 02, Prompt injection.** It takes the exact loop you built and shows what a poisoned input does to it,
           then builds the checkpoint that holds.
-        - **Then Module 03, Tools and excessive agency,** the seam you saw move into SDKs and MCP servers, and how to bound it.
+        - **Then Module 03, Tools and excessive agency,** the seam you saw move into SDKs and MCP servers: why the agent held that authority at all,
+          and how to size, scope and check it.
         - The rest (data leakage, sandboxing, memory, multi-agent, monitoring and governance) each take one point from the
           map above. Use the course sidebar to see what is live.
 

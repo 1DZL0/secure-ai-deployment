@@ -67,8 +67,8 @@ def t_read_file(a, prof, tr):
     # mock file share is MOCK/company; fs_root in config is expressed relative to it
     company = (MOCK / "company").resolve()
     root = company if prof["fs_root"] == "/" else (company / prof["fs_root"].split("/company/", 1)[-1]).resolve()
-    target = (company / "shared" / a["path"]).resolve() 
-    if not str(target).startswith(str(root)):
+    target = (company / "shared" / a["path"]).resolve()
+    if not target.is_relative_to(root):   # compare path components, not strings: "shared-archive" must not pass for "shared"
         raise PermissionError(f"{a['path']} resolves outside {prof['fs_root']}")
     return target.read_text(encoding="utf-8")
 
@@ -77,7 +77,7 @@ def t_write_file(a, prof, tr):
     company = (MOCK / "company").resolve()
     root = company if prof["fs_root"] == "/" else (company / prof["fs_root"].split("/company/", 1)[-1]).resolve()
     target = (company / "shared" / a["path"]).resolve()
-    if not str(target).startswith(str(root)):
+    if not target.is_relative_to(root):
         raise PermissionError(f"{a['path']} resolves outside {prof['fs_root']}")
     target.write_text(a["content"], encoding="utf-8")
     return "written"

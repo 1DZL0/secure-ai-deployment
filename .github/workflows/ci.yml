@@ -16,3 +16,4 @@ jobs:
       - run: pip install pyyaml
       - run: python test_lab.py
       - run: python notebooks/koda_lab.py   # the browser lab's policy layer and graders
+      - run: python notebooks/koda_toolbox.py   # module 03's toolbox lab: model answers pass, wrong answers fail

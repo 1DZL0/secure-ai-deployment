@@ -155,10 +155,7 @@
     <nav id="nav"></nav>
     <div class="tools">
       <div class="refs-h">Tools</div>
-      <a class="lrow" id="tool-benchmark" href="#/tool/benchmark">
-        <div class="num">&#9881;</div>
-        <div class="meta"><b>Model benchmark</b><span>Run the attack set on your own model</span></div>
-      </a>
+      <div id="toolnav"></div>
     </div>
     <div class="refs">
       <div class="refs-h">Standards &amp; reference</div>
@@ -268,10 +265,56 @@ const MODULES = [
   },
   {
     num: "03",
-    coming: true,
+    id: "tools-agency",
     title: "Tools & excessive agency",
     subtitle: "The agent's own tools as the risk",
-    blurb: "Permissions, the confused deputy, and MCP tool poisoning: when the agent's own tools carry, or over-grant, the authority an attacker needs.",
+    blurb: "Why did the assistant hold that power at all? Audit a toolbox, write the credential, the object check and the approval gate yourself, break a log tool's flag check, and meet the tool supply chain, with real incidents beside every layer.",
+    url: "../tools-agency/",
+    minutes: 70,
+    quiz: [
+      { q: "An assistant is asked to reply to one customer. It holds ten tools and a key with nine scopes. What is the first fix?",
+        options: [
+          "Write a stricter system prompt about which tools to use",
+          "Remove the tools the task does not need and mint a key for the task",
+          "Add a classifier over the customer's note" ],
+        answer: 1,
+        why: "A tool that is absent cannot be asked for, and a key without the scope cannot use it. The prompt and the classifier only lower the odds." },
+      { q: "Working for Alice at one company, the assistant looks up an account that belongs to another company, using its own admin key. Which layer is the one that can see that?",
+        options: [
+          "The scope on the key, because it checks accounts:read",
+          "The object check in the tool, comparing the account's tenant with the tenant the call is for",
+          "The system prompt" ],
+        answer: 1,
+        why: "The scope was legitimate for the reply. Only a check on the object, using a tenant that comes from the credential and not from anything the model wrote, can see whose account it is." },
+      { q: "An approval gate asks a person about every tool call. What goes wrong, and what is the fix?",
+        options: [
+          "People approve nearly every prompt and stop reading; hold only what cannot be undone, and show the literal call",
+          "Models ignore approval prompts, so remove them",
+          "Approvals are slower than a classifier, so replace them with one" ],
+        answer: 0,
+        why: "A gate is only a control while it is rare and readable. A model-written summary of a steered call reads like all the others." },
+      { q: "A log-search tool is protected by a check that refuses the text '--exec'. Why does it fail?",
+        options: [
+          "The tool's parser accepts abbreviations and bundled short options, so the dangerous option has other spellings",
+          "Text cannot be compared reliably",
+          "Attackers do not use command-line flags" ],
+        answer: 0,
+        why: "A rule written on the text has to guess every spelling the parser accepts. An allowlist of whole tokens, or a typed tool with no flags string, removes the guess." },
+      { q: "You approved a third-party tool's description last week, and today it changed. What does pinning its hash catch?",
+        options: [
+          "The change after approval, but not a tool that was already poisoned when you approved it",
+          "Every poisoned tool, however and whenever it was written",
+          "Nothing, because descriptions are not code" ],
+        answer: 0,
+        why: "A pin bounds change. A reach limit, such as a mail tool that only reaches your own domain, is what catches the tool that was poisoned on day one." },
+      { q: "The module's one line is...",
+        options: [
+          "Give the agent every tool and rely on the logs",
+          "Authority is a property of the call, not of the agent: shrink the toolbox, scope the credential to the task and the person, and check every use outside the model",
+          "Use the most capable model and trust its judgement about tools" ],
+        answer: 1,
+        why: "Each clause is a layer you built: the tool diet, the credential and the object check, and the argument check and the gate." },
+    ],
   },
   {
     num: "04",
@@ -344,7 +387,16 @@ const MODULES = [
 const LIVE = MODULES.filter(m => !m.coming);
 // pages that are tools, not lessons: no number, no quiz, no progress
 const TOOLS = {
-  benchmark: { title: "Model benchmark", subtitle: "Run module 02's attack set against your own model, on your own OpenRouter key", url: "../benchmark/" },
+  benchmark: { title: "Model benchmark", short: "Run the attack set on your own model", icon: "&#9881;",
+               subtitle: "Run module 02's attack set against your own model, on your own OpenRouter key", url: "../benchmark/",
+               note: "Needs an OpenRouter key, which stays in your browser. Give the page a few seconds to boot.", loading: "Loading the benchmark…" },
+  cases: { title: "Case library", short: "54 documented agent tool-misuse cases", icon: "&#9888;",
+           subtitle: "Documented cases from 2023 to 2026, by mechanism, with the layer of Module 03 that would have bounded each",
+           url: "cases/", note: "Filter by kind of excess, layer, theme, year or evidence. Every entry links to its sources, which open in a new tab.",
+           loading: "Loading the case library…" },
+  teach: { title: "Teaching notes", short: "Run sheet and answer key, Module 03", icon: "&#9998;",
+           subtitle: "A 70-minute run sheet, a 20-minute stage version, the answer key, the wrong answers learners write, and discussion questions for Module 03",
+           url: "teach/", note: "For the person teaching. The answer key is open on this page.", loading: "Loading the teaching notes…" },
 };
 
 const KEY = "sad-course-progress-v1";
@@ -369,7 +421,11 @@ function renderSidebar(currentId){
     `<div class="prog-line">${doneLive} of ${MODULES.length} done <span class="dot">&middot;</span> ${timeStr}</div>`
     + (next ? `<a class="continue" href="#/lesson/${next.id}">Continue: ${esc(next.title)} &rarr;</a>`
             : `<span class="continue alldone">&#10003; You&rsquo;re all caught up</span>`);
-  document.getElementById("tool-benchmark").classList.toggle("active", currentId === "tool:benchmark");
+  document.getElementById("toolnav").innerHTML = Object.entries(TOOLS).map(([tid, t]) =>
+    `<a class="lrow ${currentId === "tool:" + tid ? "active" : ""}" href="#/tool/${tid}">
+       <div class="num">${t.icon}</div>
+       <div class="meta"><b>${esc(t.title)}</b><span>${esc(t.short)}</span></div>
+     </a>`).join("");
   document.getElementById("nav").innerHTML = MODULES.map(m => {
     if (m.coming) return `<div class="lrow coming">
          <div class="num">${m.num}</div>
@@ -444,9 +500,9 @@ function renderTool(id){
     `<div class="crumbs"><a href="#/">Course</a> &rsaquo; ${esc(t.title)}</div>
      <div class="lhead"><h2>${esc(t.title)}</h2><div class="of">Tool</div></div>
      <p class="lsub">${esc(t.subtitle)}</p>
-     <p class="frame-note">Needs an OpenRouter key, which stays in your browser. Give the page a few seconds to boot.</p>
+     <p class="frame-note">${esc(t.note)}</p>
      <div class="framebox">
-       <div class="loading" id="load">Loading the benchmark&hellip;</div>
+       <div class="loading" id="load">${esc(t.loading)}</div>
        <iframe src="${t.url}" title="${esc(t.title)}" onload="document.getElementById('load')?.classList.add('gone')"></iframe>
      </div>
      <div class="openlink"><a href="${t.url}" target="_blank" rel="noopener">Open full-screen &rsaquo;</a></div>`;
