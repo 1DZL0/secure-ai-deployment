@@ -262,10 +262,14 @@ def console_html(steps, customer_id, profile, user=None, reply=None, planted=Non
     _rec = CUSTOMERS.get(customer_id, CUSTOMERS[42])
     for s in steps:
         _sig = s["tool"] + "(" + ", ".join(f"{k}={v!r}" for k, v in s["args"].items()) + ")"
-        # badges: green BLOCKED = the checkpoint held; amber = this call brought untrusted text in; red RAN = a call
+        # badges: green BLOCKED = the checkpoint held; blue HELD = the call waits for a person (Module 03's approval gate);
+        # amber = this call brought untrusted text in; red RAN = a call
         # that counts as a harmful outcome went through (the grader's verdict for that one step, under any profile);
         # grey OK = an allowed call that did no harm. A step may declare itself with "untrusted" or "harmful".
-        if s["blocked"]:
+        if s["blocked"] and s.get("layer") == "approval":
+            _edge, _label = "#3d5a80", "HELD"                   # nothing ran: it waits for a person, who may still approve it
+            _body = f'waits for a person &middot; {_h.escape(s["blocked"])}'
+        elif s["blocked"]:
             _edge, _label = "#2e8b6f", "BLOCKED"
             _body = f'policy refused &middot; {_h.escape(s["blocked"])}'
         else:
@@ -277,7 +281,8 @@ def console_html(steps, customer_id, profile, user=None, reply=None, planted=Non
                 _edge, _label = "#c8553d", "RAN"
             else:
                 _edge, _label = "#5e7278", "OK"
-            _body = _h.escape(_res[:150]) + ("&hellip;" if len(_res) > 150 else "")
+            _cap = s.get("limit", 150)                          # a step may ask to show more of a long result
+            _body = _h.escape(_res[:_cap]) + ("&hellip;" if len(_res) > _cap else "")
         _status = (f'<span style="background:{_edge};color:#fff;font:600 10px system-ui;padding:2px 7px;'
                    f'border-radius:10px;white-space:nowrap;">{_label}</span>')
         _rows += (f'<div style="border:1px solid {_edge}33;border-left:3px solid {_edge};border-radius:7px;margin:6px 0;overflow:hidden;">'
@@ -472,6 +477,7 @@ PAGE_CSS = (
     ":root{--content-width-medium:1040px !important;}"         # wider measure so it fills the course frame
     ".output.block{margin-top:7px !important;margin-bottom:7px !important;}"  # was 14.4px each side
     ".marimo-cell blockquote{margin-top:12px !important;}"
+    ".markdown pre{margin-top:10px !important;margin-bottom:10px !important;}"        # code blocks: marimo leaves 21.6px above and below
     # section headings in the course's sans, closer to the text they introduce (marimo: serif, 21.6px above, 14.4px below)
     ".markdown h3{font-family:-apple-system,Segoe UI,system-ui,sans-serif !important;font-weight:700 !important;font-size:19px !important;"
     "color:#13262f !important;margin:18px 0 4px !important;}"

@@ -75,24 +75,24 @@
   <p class="sub">Times are for a room that works at the same pace. Run the page from the full-screen link under the lesson so the work is kept.</p>
   <div class="tbl"><table>
     <tr><th>Part</th><th>Min</th><th>What happens</th><th>Say</th><th>Cut if short</th></tr>
-    <tr><td>Opening and <i>See it first</i></td><td class="m">4</td><td>Read the five cards. Scroll to the first console: one admin key, ten tools, 10 of 10 landed.</td>
-        <td>&ldquo;Nothing was hacked. What was the vulnerability?&rdquo; Let them answer: there was none. The grant was the problem.</td><td>The five cards, read two.</td></tr>
+    <tr><td>Opening and <i>See it first</i></td><td class="m">4</td><td>Read the five cards. Scroll to the first console and the three numbers under it: ten tools held for two needed, nine scopes on the key for two needed, four attacks of four landed.</td>
+        <td>&ldquo;Nothing was hacked. What was the vulnerability?&rdquo; Let them answer: there is no software bug to patch. The vulnerability is the grant, which is how OWASP frames Excessive Agency.</td><td>The five cards, read two.</td></tr>
     <tr><td>1 How it breaks</td><td class="m">10</td><td>Tick the two tools the reply needs. Click through the four attacks. Pick the call where authority changed hands.</td>
         <td>Excess has no attacker in Replit and Asana. An attacker only borrows what is there.</td><td>&ldquo;Two things called a confused deputy.&rdquo;</td></tr>
-    <tr><td>2 How you stop it</td><td class="m">20</td><td>The four switches (5 min). Write <code>mint</code>, <code>can_access</code>, <code>needs_approval</code> (11 min). The approval stream (3 min). Read the table for the deployment they built (1 min).</td>
-        <td>Three layers are the minimum. The object check alone breaks the real task: fail closed needs a claim to read.</td><td>The approval stream. Keep the switchboard and at least <code>can_access</code>.</td></tr>
+    <tr><td>2 How you stop it</td><td class="m">20</td><td>The four switches (5 min). Write <code>mint</code>, <code>can_access</code>, <code>needs_approval</code> (11 min). The approval stream (3 min). Read the table for the deployment they built, and the paragraph on what it still leaves open (1 min).</td>
+        <td>Three layers are the minimum. The object check alone breaks the real task: fail closed needs a claim to read. &ldquo;Holds four attacks&rdquo; is not &ldquo;secure&rdquo;: mail can still go to any address.</td><td>The approval stream. Keep the switchboard and at least <code>can_access</code>.</td></tr>
     <tr><td>3 Break your own validator</td><td class="m">11</td><td>Get <code>--ex id</code> past the check (3). Write <code>valid_flags</code> (4). Attack the rule (2). The typed switch (2).</td>
         <td>A rule on text is a guess about a parser. The model supplies values; the tool owns syntax.</td><td>Attack your own rule.</td></tr>
     <tr><td>4 The tools themselves</td><td class="m">10</td><td>Rug pull with the pin. Day-one with the pin (lands). Reworded with the scanner (lands). The allowlist holds all three. Read the matrix.</td>
         <td>The control that does not read the description is the one the description cannot talk past.</td><td>The seven doorways, or all but two of them.</td></tr>
     <tr><td>5 Defender&rsquo;s toolbox</td><td class="m">8</td><td>Sort the ten controls. Read the vendor table aloud, one row per volunteer.</td>
         <td>Ask of every control: what flips it into a boundary? Where a vendor calls something intended, your control is the only one.</td><td>Build order and crosswalk (hand them out).</td></tr>
-    <tr><td>6 Your own agent</td><td class="m">7</td><td>Write one row of the tool register for a real tool. Run the policy test. Do the incident-to-layer exercise.</td>
-        <td>The register is the deliverable, not the notebook.</td><td>The incident exercise (set as homework).</td></tr>
+    <tr><td>6 Your own agent</td><td class="m">7</td><td>Write one row of the tool register for a real tool. Run the policy test. Do the case-to-layer exercise.</td>
+        <td>The register is the deliverable, not the notebook.</td><td>The case exercise (set as homework).</td></tr>
   </table></div>
 
   <h2 id="stage">The 20-minute stage version</h2>
-  <p class="sub">No key, no network, no typing on stage: every beat is a click, and the answers are one tap away under &ldquo;Show a working answer&rdquo;.</p>
+  <p class="sub">No key and no network. Every beat is a click except one short line typed in beat 4, and the answers are one tap away under &ldquo;Show a working answer&rdquo;.</p>
   <div class="tbl"><table>
     <tr><th>Beat</th><th>Min</th><th>Click</th><th>Say, then ask the room</th></tr>
     <tr><td>1 The grant</td><td class="m">3</td><td><i>See it first</i>. Then <i>Four things that go wrong</i>: Dump, then Read another tenant&rsquo;s account.</td>
@@ -100,13 +100,13 @@
     <tr><td>2 The layers</td><td class="m">5</td><td>The four switches. Credential only: the deputy still lands. Object check only: the real task breaks. Add the gate and the credential: everything holds. Open &ldquo;Show all sixteen combinations&rdquo;.</td>
         <td>&ldquo;What is the smallest set that holds all four and keeps the task working?&rdquo; Take guesses, then show the table: three.</td></tr>
     <tr><td>3 The card</td><td class="m">4</td><td><i>The approval card under load</i>. With the summary tab, call the room on cards 5 and 8 (a show of hands). Then the literal tab.</td>
-        <td>&ldquo;The model wrote that summary, after it was steered.&rdquo; Then the 93 percent figure: a gate people answer yes to is not being read.</td></tr>
+        <td>&ldquo;The model wrote that summary, after it was steered.&rdquo; Then the 93 percent figure: a gate people answer yes to is not being read. Ask: &ldquo;Would the gate we just wrote have shown anyone card 5?&rdquo; No. It was the third email, and a count does not read the recipient.</td></tr>
     <tr><td>4 The string</td><td class="m">4</td><td><i>Run a command through a log search</i>. Ask for a spelling, then type <code>--ex id</code>. Open &ldquo;Show everything that gets through&rdquo;. Flip the typed switch.</td>
         <td>&ldquo;Several products, one bug.&rdquo; Point at the Trail of Bits card. The fix is a tool with no string to abuse.</td></tr>
     <tr><td>5 The tool</td><td class="m">3</td><td><i>A third-party tool</i>. Rug pull and the pin. Day-one and the pin (lands). Reworded and the scanner (lands). The allowlist (held).</td>
         <td>&ldquo;Which of these three controls reads the description?&rdquo; Only the first two. The one that does not read it wins.</td></tr>
-    <tr><td>6 Close</td><td class="m">1</td><td>Part 6: the tool register and the five things to attack next. Open the case library in a second tab.</td>
-        <td>The sentence on the wall. &ldquo;Fifty-four incidents, one question for each: whose authority, how much, and who checked.&rdquo;</td></tr>
+    <tr><td>6 Close</td><td class="m">1</td><td>Part 6: the tool register and the four things to attack next. Open the case library in a second tab.</td>
+        <td>The sentence on the wall. &ldquo;Fifty-four documented cases, one question for each: whose authority, how much, and who checked.&rdquo;</td></tr>
   </table></div>
 
   <h2 id="key">Answer key</h2>
@@ -120,7 +120,7 @@
 
 def can_access(cred, acct):
     tenant = cred.get("tenant")
-    return tenant is not None and acct.get("tenant") == tenant
+    return bool(tenant) and acct.get("tenant") == tenant
 
 def needs_approval(call, sent):
     tool = call["tool"]
@@ -133,15 +133,21 @@ def valid_flags(flags):
     return all(token in ALLOWED for token in flags.split())</pre>
     <p>The page grades each on the cases shown in its results table, and the engine&rsquo;s own self-check runs these answers and the wrong ones below on every build.</p>
   </div></details>
+  <details><summary>The approval stream in Part 2</summary><div>
+    <p>Ten calls, two bad: call 5 emails the whole customer list to <code>audit@finance-mirror.example</code>, and call 8 deletes account 102. Both summaries are written in the words of the
+       task, so the summary tab cannot tell them apart from the rest; the literal tab shows the outside address in red and the irreversible flag. The gate learners write in step 3 meters email
+       by count, so it holds call 8 and call 9 (an ordinary reminder, the fourth email) and lets call 5, the third email, straight through. That is the teaching moment: a count catches a
+       flood and not a thief, and the destination is the next control (Part 4).</p>
+  </div></details>
   <details><summary>The sort in Part 5 (ten controls)</summary><div>
     <p><span class="tag ok">Boundary</span> remove the tools the task does not need; mint the credential for the task and the person; check the object inside the tool; approval of the literal
        irreversible action; spend and rate limits keyed to the identity.</p>
     <p><span class="tag bad">Reducer</span> an &ldquo;allow this tool?&rdquo; prompt on every call; a classifier that approves calls for the human; a scanner over tool descriptions; a system-prompt rule.</p>
     <p><span class="tag">Detect</span> alerts on a run of denied calls, and a log of who each call was for.</p>
   </div></details>
-  <details><summary>The incident-to-layer exercise in Part 6 (nine incidents)</summary><div>
+  <details><summary>The case-to-layer exercise in Part 6 (nine cases)</summary><div>
     <div class="tbl"><table>
-      <tr><th>Incident</th><th>Best layer</th><th>Also helps</th></tr>
+      <tr><th>Case</th><th>Best layer</th><th>Also helps</th></tr>
       <tr><td>Notion 3.0, a search tool that accepts URLs</td><td>Check the arguments</td><td>Take the tool away</td></tr>
       <tr><td>Supabase MCP and the support ticket</td><td>Scope the credential</td><td>An approval gate the agent cannot reach</td></tr>
       <tr><td>Asana MCP, another organisation&rsquo;s data</td><td>Check the object</td><td>Scope the credential</td></tr>
@@ -174,17 +180,25 @@ def valid_flags(flags):
   <p class="sub">Each was run through the same grader as a real answer. Use the failing row as the teaching moment.</p>
   <div class="tbl"><table>
     <tr><th>Exercise</th><th>Wrong answer</th><th>What fails</th><th>Say</th></tr>
-    <tr><td>mint</td><td>Returns every scope, or the shipped key</td><td>All five rows</td><td>That key can still dump and delete. The scope is the first thing the task never needed.</td></tr>
-    <tr><td>mint</td><td>Right scopes, but a <code>KeyError</code> for a stranger</td><td>The two <code>PermissionError</code> rows</td><td>Fail closed on purpose, with the error a caller can tell apart from a bug.</td></tr>
-    <tr><td>can_access</td><td><code>return True</code></td><td>Five refusal rows</td><td>This is the shipped deployment, spelled as code.</td></tr>
-    <tr><td>can_access</td><td><code>acct["tenant"] == cred["tenant"]</code></td><td>A missing claim raises; <code>None == None</code> passes</td><td>Two accounts with no tenant are not the same tenant. A missing claim is a refusal.</td></tr>
-    <tr><td>can_access</td><td>A <code>startswith</code> test on the tenant name</td><td>The <code>larnaca-marine-uk</code> row and the <code>None</code> row</td><td>The same mistake as the Filesystem MCP server&rsquo;s path check. Compare whole values.</td></tr>
-    <tr><td>needs_approval</td><td><code>return True</code></td><td>The lookup and the first three emails</td><td>That is an outage and a rubber stamp in one line.</td></tr>
-    <tr><td>needs_approval</td><td><code>return False</code></td><td>The delete, the SQL and the fourth email</td><td>That is not a gate.</td></tr>
-    <tr><td>needs_approval</td><td>Hold anything marked irreversible</td><td>Holds the first two ordinary emails</td><td><code>send_email</code> is irreversible, so the rule needs a count: the ordinary reply must flow.</td></tr>
-    <tr><td>valid_flags</td><td><code>"--exec" not in flags</code></td><td>Six of the eight bypasses</td><td>It is right only where the exact word is visible. Show the parse beside it.</td></tr>
-    <tr><td>valid_flags</td><td>Block <code>exec</code> and <code>-x</code></td><td>Five bypasses: <code>--ex</code>, <code>--exe=</code>, <code>--e</code>, <code>-nx</code>, <code>-nxid</code></td><td>Every added case is another guess. The allowlist names what is allowed.</td></tr>
+    <tr><td>mint</td><td>Returns every scope, or the shipped key</td><td>All six rows</td><td>That key can still dump and delete. The scope is the first thing the task never needed.</td></tr>
+    <tr><td>mint</td><td>Right scopes, a constant <code>sub</code>, and a <code>KeyError</code> for a stranger</td><td>The subject row and the two <code>PermissionError</code> rows</td><td>Fail closed on purpose, with the error a caller can tell apart from a bug. A key that names nobody cannot be traced in a log.</td></tr>
+    <tr><td>mint</td><td>Every scope listed twice</td><td>The reply, diagnose and triage rows</td><td>Ask for what the task needs, once.</td></tr>
+    <tr><td>can_access</td><td><code>return True</code></td><td>Nine refusal rows</td><td>This is the shipped deployment, spelled as code.</td></tr>
+    <tr><td>can_access</td><td><code>acct["tenant"] == cred["tenant"]</code></td><td>A missing claim raises; <code>None == None</code> and <code>"" == ""</code> pass; a missing field raises</td><td>Two accounts with no tenant are not the same tenant. A missing claim is a refusal.</td></tr>
+    <tr><td>can_access</td><td>A <code>startswith</code> or <code>endswith</code> test on the tenant name</td><td>The <code>larnaca-marine-uk</code> or <code>evil-larnaca-marine</code> row, the <code>None</code> row and the empty-string row</td><td>The same mistake as the Filesystem MCP server&rsquo;s path check. Compare whole values.</td></tr>
+    <tr><td>can_access</td><td><code>tenant is not None and ...</code></td><td>The empty-string row</td><td>Empty is not a tenant either. Test for a value, not for <code>None</code>.</td></tr>
+    <tr><td>can_access</td><td>Allow when the account&rsquo;s tenant is <code>None</code> or the same</td><td>The three rows where the account&rsquo;s tenant is missing, <code>None</code> or empty</td><td>An account that names no owner cannot be shown to be this tenant&rsquo;s.</td></tr>
+    <tr><td>needs_approval</td><td><code>return True</code></td><td>The reads and the ordinary emails</td><td>That is an outage and a rubber stamp in one line.</td></tr>
+    <tr><td>needs_approval</td><td><code>return False</code></td><td>The delete, the SQL, the shell command, the export and the fourth email onwards</td><td>That is not a gate.</td></tr>
+    <tr><td>needs_approval</td><td>Hold anything marked irreversible</td><td>Holds the ordinary emails and misses the export</td><td><code>send_email</code> is irreversible, so the rule needs a count: the ordinary reply must flow.</td></tr>
+    <tr><td>needs_approval</td><td><code>sent == FLOOD_AFTER</code></td><td>The eleventh email</td><td>A flood does not stop being a flood at the fifth. Use <code>&gt;=</code>.</td></tr>
+    <tr><td>needs_approval</td><td>Holds the delete and the SQL only</td><td>The shell command and the export</td><td>Name the rule (cannot be undone, or a bulk export), not the two tools you thought of.</td></tr>
+    <tr><td>needs_approval</td><td>Holds everything once the count passes three</td><td>A read in the middle of a flood</td><td>Only email is metered. Reads stay free or the gate becomes an outage.</td></tr>
+    <tr><td>valid_flags</td><td><code>"--exec" not in flags</code></td><td>Seven of the ten bypasses</td><td>It is right only where the exact word is visible. Show the parse beside it.</td></tr>
+    <tr><td>valid_flags</td><td>Block <code>exec</code> and <code>-x</code></td><td>Six bypasses: <code>--ex</code>, <code>--exe=</code>, <code>--e</code>, <code>-nx</code>, <code>-nxid</code> and the tab</td><td>Every added case is another guess. The allowlist names what is allowed.</td></tr>
     <tr><td>valid_flags</td><td><code>return False</code></td><td>All six harmless calls</td><td>A rule that refuses everything has removed the tool.</td></tr>
+    <tr><td>valid_flags</td><td>Looks only at the last word</td><td>The <code>--exec=id -i</code> row</td><td>The dangerous flag does not have to come last.</td></tr>
+    <tr><td>valid_flags</td><td>Splits on single spaces</td><td>The tab row</td><td>The tool splits on any whitespace. A check that splits differently is checking a different string.</td></tr>
   </table></div>
 
   <h2 id="talk">Discussion questions</h2>
@@ -195,14 +209,14 @@ def valid_flags(flags):
     <li>Which of its tools take a free string: a command, a path, a URL, SQL? Does the check run on the parsed value or on the text?</li>
     <li>A vendor tells you a behaviour is expected or intended. What is your control?</li>
     <li>Where do its tool definitions come from? What happens if one is rewritten tomorrow, and would you notice?</li>
-    <li>Which of the 54 incidents in the case library would you most expect to find in your own estate, and which layer would have held?</li>
+    <li>Which of the 54 cases in the case library would you most expect to find in your own estate, and which layer would have held?</li>
     <li>What would your policy test assert today, and which of the four attacks would turn it red?</li>
   </ol>
 
   <h2 id="myth">Common misconceptions</h2>
   <div class="tbl"><table>
     <tr><th>Heard in the room</th><th>The short answer</th></tr>
-    <tr><td>&ldquo;We tell the model not to use that tool.&rdquo;</td><td>That is a prompt, which is a reducer. The tool must be absent. In the Replit incident the freeze existed only as a sentence.</td></tr>
+    <tr><td>&ldquo;We tell the model not to use that tool.&rdquo;</td><td>That is a prompt, which is a reducer. The tool must be absent. In the Replit case the freeze existed only as a sentence.</td></tr>
     <tr><td>&ldquo;Least privilege means a read-only key.&rdquo;</td><td>The deputy lookup is a read. Read-only bounds writes, and the object check bounds whose data is read.</td></tr>
     <tr><td>&ldquo;Our scanner checks the tool descriptions.&rdquo;</td><td>It lowers the odds and passed the reworded tool. Keep a reach limit behind it.</td></tr>
     <tr><td>&ldquo;An approval prompt makes it safe.&rdquo;</td><td>Only while it is rare and literal. Users accept 93 percent of manual prompts in Claude Code, by Anthropic&rsquo;s count.</td></tr>
@@ -220,7 +234,7 @@ def valid_flags(flags):
     <li>No key is needed or asked for in this module. The OpenRouter key belongs to Module 02&rsquo;s live section and the model benchmark.</li>
     <li>Printing this page opens every answer. Keep it for the person teaching.</li>
   </ul>
-  <p style="margin-top:22px;color:var(--muted);font-size:13px">Part of the <a href="../" target="_top">Secure AI Deployment</a> course. The incidents are in the <a href="../#/tool/cases" target="_top">case library</a>.</p>
+  <p style="margin-top:22px;color:var(--muted);font-size:13px">Part of the <a href="../" target="_top">Secure AI Deployment</a> course. The cases and the attack atlas are in the <a href="../#/tool/cases" target="_top">case library and atlas</a>.</p>
 </div>
 </body>
 </html>

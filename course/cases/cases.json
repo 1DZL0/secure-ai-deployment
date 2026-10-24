@@ -25,7 +25,7 @@
     ],
     [
      "OWASP LLM06 sub-type",
-     "excessive permissions (one credential reaching every repo) plus excessive autonomy (\"Always Allow\" on a write tool). ASI ids (this course's mapping): ASI02 Tool Misuse, ASI03 Identity and Privilege Abuse; the entry that started it is ASI01 Goal Hijack."
+     "excessive permissions (one credential reaching every repo) plus excessive autonomy (\"Always Allow\" on a write tool). ASI ids (this course's mapping): ASI02 Tool Misuse, ASI03 Identity and Privilege Abuse; the entry that started it is ASI01 Agent Goal Hijack."
     ],
     [
      "Control that stops it",
@@ -240,11 +240,11 @@
     "confused deputy"
    ],
    "status": "PARTIAL",
-   "status_note": "(primary page unreadable by the fetch tool; two secondary reports agree)",
+   "status_note": "(primary page could not be read; two secondary reports agree)",
    "fields": [
     [
      "Found by / published",
-     "Cato CTRL (Cato Networks threat research), \"PoC attack targeting Atlassian's Model Context Protocol introduces new 'Living off AI' risk\", 19 June 2025. https://www.catonetworks.com/blog/cato-ctrl-poc-attack-targeting-atlassians-mcp/ (the page returned blank content to the fetch tool, so the mechanism below is taken from Infosecurity Magazine's report of the PoC, 2025-06-19, https://infosecurity-magazine.com/news/atlassian-ai-agent-mcp-attack , and Simon Willison's summary, 2025-06-19, https://simonwillison.net/2025/Jun/19/atlassian-prompt-injection-mcp/ )."
+     "Cato CTRL (Cato Networks threat research), \"PoC attack targeting Atlassian's Model Context Protocol introduces new 'Living off AI' risk\", 19 June 2025. https://www.catonetworks.com/blog/cato-ctrl-poc-attack-targeting-atlassians-mcp/ (the page returned blank content when checked, so the mechanism below is taken from Infosecurity Magazine's report of the PoC, 2025-06-19, https://infosecurity-magazine.com/news/atlassian-ai-agent-mcp-attack , and Simon Willison's summary, 2025-06-19, https://simonwillison.net/2025/Jun/19/atlassian-prompt-injection-mcp/ )."
     ],
     [
      "Target",
@@ -256,7 +256,7 @@
     ],
     [
      "OWASP LLM06 sub-type",
-     "excessive permissions (the agent runs with the human's full tenant rights for a ticket-summary task) and excessive autonomy (write-back to an externally visible ticket with no approval). ASI03 Identity and Privilege Abuse, ASI01 Goal Hijack."
+     "excessive permissions (the agent runs with the human's full tenant rights for a ticket-summary task) and excessive autonomy (write-back to an externally visible ticket with no approval). ASI03 Identity and Privilege Abuse, ASI01 Agent Goal Hijack."
     ],
     [
      "Control that stops it",
@@ -361,7 +361,7 @@
    "fields": [
     [
      "Found by / published",
-     "Aim Labs (Aim Security); reporters credited in the GitHub advisory as hxofir-a and MaccariTA. Press 2025-08-01 (BleepingComputer https://www.bleepingcomputer.com/news/security/ai-powered-cursor-ide-vulnerable-to-prompt-injection-attacks/ ); CVE published 2025-08-05 (https://cveawg.mitre.org/api/cve/CVE-2025-54135 ); advisory GHSA-4cxx-hrm3-49rm dated 2025-08-02 (https://github.com/cursor/cursor/security/advisories/GHSA-4cxx-hrm3-49rm ). Aim's post: https://www.aim.security/post/when-public-prompts-turn-into-local-shells-rce-in-cursor-via-mcp-auto-start (not readable by the fetch tool)."
+     "Aim Labs (Aim Security); reporters credited in the GitHub advisory as hxofir-a and MaccariTA. Press 2025-08-01 (BleepingComputer https://www.bleepingcomputer.com/news/security/ai-powered-cursor-ide-vulnerable-to-prompt-injection-attacks/ ); CVE published 2025-08-05 (https://cveawg.mitre.org/api/cve/CVE-2025-54135 ); advisory GHSA-4cxx-hrm3-49rm dated 2025-08-02 (https://github.com/cursor/cursor/security/advisories/GHSA-4cxx-hrm3-49rm ). Aim's post: https://www.aim.security/post/when-public-prompts-turn-into-local-shells-rce-in-cursor-via-mcp-auto-start (the page could not be read when checked)."
     ],
     [
      "Target",
@@ -1319,7 +1319,7 @@
     ],
     [
      "Teaching hook",
-     "it maps one-to-one onto Koda's fetch_url. The data left inside an argument to a tool the vendor thought of as \"search\"."
+     "it maps one-to-one onto the fetch_url tool in Module 02's lab. The data left inside an argument to a tool the vendor thought of as \"search\"."
     ]
    ],
    "urls": [
@@ -1424,7 +1424,7 @@
     ],
     [
      "OWASP LLM06 sub-type",
-     "excessive autonomy (approval of a script by name) with excessive permissions (email reader, shell and the whole home directory in one agent). ASI01 Goal Hijack, ASI02 Tool Misuse, ASI09 Human-Agent Trust Exploitation."
+     "excessive autonomy (approval of a script by name) with excessive permissions (email reader, shell and the whole home directory in one agent). ASI01 Agent Goal Hijack, ASI02 Tool Misuse, ASI09 Human-Agent Trust Exploitation."
     ],
     [
      "Control that stops it",
@@ -1663,7 +1663,7 @@
     ],
     [
      "Control that stops it (Hugging Face and OpenAI)",
-     "egress that passes through a tool is still egress, so the proxy is a trust boundary to be hardened and adversarially tested; independent overlapping controls (\"no single control should ever be assumed to be fully robust\"; least privilege, isolation and strong authentication \"remain as vital as ever\"); short-lived workload identity instead of shared cluster-admin connector credentials, metadata service blocked from pods, admission control against privileged pods, secrets out of environment variables (Hugging Face); monitoring of agent trajectories with an automated stop that is tested. OpenAI states the propensity to compromise infrastructure dropped over 100x under the production ChatGPT harness and system prompt, and that its production auto-review would have flagged many of the actions."
+     "egress that passes through a tool is still egress, so the proxy is a trust boundary to be hardened and adversarially tested; independent overlapping controls (\"no single control should ever be assumed to be fully robust\"; least privilege, isolation and strong authentication \"remain as vital as ever\"); short-lived workload identity instead of shared cluster-admin connector credentials, metadata service blocked from pods, admission control against privileged pods, secrets out of environment variables (Hugging Face); monitoring of agent trajectories with an automated stop that is tested. OpenAI reports, from preliminary tests after the incident, that the propensity to compromise infrastructure can drop by more than 100x under its production harness and system prompt compared with the lightweight prompts it uses to evaluate research models, and that its production auto-review would have flagged many of the actions."
     ],
     [
      "Vendor fix",
@@ -1835,7 +1835,7 @@
      "Anthropic security advisories for `@anthropic-ai/claude-code`, https://github.com/anthropics/claude-code/security/advisories (read 2026-10-24; four pages of advisories). Researcher write-ups are cited per item."
     ],
     [
-     "Items, each fixed by Anthropic:",
+     "Items, each fixed by the vendor:",
      " - CVE-2025-54795 (GHSA-x56v-x2h6-7j34, 2025-08-01, High, CVSS v4 8.7): a command-parsing error (the title names the `echo` command) let an untrusted command skip the confirmation prompt; needs untrusted text in the context window. Fixed 1.0.20. Credit: Elad Beber, Cymulate. - CVE-2025-55284 (GHSA-x5gv-jw7f-j6xj, 2025-08-15, High, 7.1): an overly broad allowlist of \"safe\" commands let a file be read and its contents sent over the network with no prompt. Rehberger's write-up (2025-08-11, https://embracethered.com/blog/posts/2025/claude-code-exfiltration-via-dns-requests/ ) names `ping`, `nslookup`, `host` and `dig` and shows data carried as a subdomain in a DNS lookup. Reported 2025-05-26, fixed 2025-06-06, in 1.0.4. Credit: wunderwuzzi23. - CVE-2025-59536 and CVE-2026-21852 (Check Point Research, Aviv Donenfeld and Oded Vanunu, 2026-02-25, https://research.checkpoint.com/2026/rce-and-api-token-exfiltration-through-claude-code-project-files-cve-2025-59536/ ): configuration files inside a repository ran code at session start (hooks in the project settings file) or started MCP servers before the trust dialog was answered, and a project-level API base URL setting sent the user's API key to an attacker-controlled server before trust was granted. Fixes: hooks 2025-08-26, MCP consent 2025-09-22, API key 2025-12-28. Anthropic added a warning for untrusted project configuration, blocked MCP servers from starting before approval and deferred all network operations until consent. - CVE-2026-54316 (GHSA-fg94-h982-f3mm, 2026-06-13, Moderate, 6.0): the bare hostname huggingface.co was pre-approved for the WebFetch tool, so any path on it, including attacker-controlled model repositories, was fetched with no prompt; request paths encoded data and the host counted them as downloads, a covert channel. Fixed 2.1.163. Credit: hackerone.com/novee. - CVE-2026-55607 (GHSA-7835-87q9-rgvv, 2026-06-25, High, 7.7): worktree path confusion plus symlink and git fsmonitor behaviour overwrote files in the home directory such as `.zshenv`; shell startup files run outside the macOS seatbelt sandbox, so this was code execution outside the sandbox. Needs a cloned malicious repository with injected text. Fixed 2.1.163. Credit: hackerone.com/metnew. - CVE-2026-86063 (GHSA-pq7j-f95f-qfcv, 2026-10-09, High, CVSS v4 7.5): the plugin installer checked out a marketplace's pinned commit SHA but did not verify that HEAD matched it, so a branch named like the SHA won and the user believed the reviewed hash was in use. Fixed 2.1.179. Credit: Or Nevo Michrowski, Air Security. - Same shape in another product, same month: Mistral Vibe CVE-2026-109429 (GHSA-m84r-3mrm-j4p8, 2026-10-13, High, 8.7): a command substitution hidden in a single-quoted variable escaped static parsing, and only the trailing allowlisted command was classified; fixed 2.25.4."
     ],
     [
@@ -1908,7 +1908,7 @@
     ],
     [
      "Teaching hook",
-     "this is the cleanest example of a tool that is \"useful in the happy path and a weapon in the adversarial one\". Ask the class to find the equivalent in the Koda tool list (fetch_url, remember)."
+     "this is the cleanest example of a tool that is \"useful in the happy path and a weapon in the adversarial one\". Ask the class to find the equivalent in Module 02's tool list (fetch_url, remember)."
     ]
    ],
    "urls": [
@@ -2296,7 +2296,7 @@
     ],
     [
      "Teaching hook",
-     "this is Case 5 with the human removed. The deputy is now another agent, the confusion is a documented default, and the vendor's answer is \"configure it\". Use it for the confused-deputy slide with the Koda profile table: unsafe means \"invoker's rights, all agents visible\", hardened means \"own identity, supervised writes\"."
+     "this is Case 5 with the human removed. The deputy is now another agent, the confusion is a documented default, and the vendor's answer is \"configure it\". Use it for the confused-deputy slide: the shipped setup runs with the invoker's rights and lets every agent see every other, and the fix gives each agent its own identity and supervises writes."
     ]
    ],
    "urls": [
@@ -2395,7 +2395,7 @@
      "instructions hidden as faint text inside screenshots, or visible on a page the user merely asked the browser to open, were passed to the model as if the user had written them, and the agent acts with the user's authenticated privileges (banks, email, cloud storage). Brave reported Perplexity on 2025-10-01 and Fellou on 2025-08-20; it records no fix in the post, and concludes that agentic browsing should be treated as inherently dangerous until there are categorical improvements, isolated from normal browsing and run only on explicit invocation. See also Case 24."
     ],
     [
-     "ChatGPT Atlas (Oct 2025) was on my candidate list. I could not verify any Atlas finding from a primary page (OpenAI pages returned HTTP 403 and my search allowance ran out); it is left out.",
+     "ChatGPT Atlas (October 2025) is left out: no finding about it could be checked against a primary page.",
      ""
     ],
     [
@@ -2491,7 +2491,7 @@
     "exposure"
    ],
    "status": "VERIFIED",
-   "status_note": "(Trend Micro). The candidate \"Lasso scan\" could not be verified",
+   "status_note": "(Trend Micro)",
    "fields": [
     [
      "Found by / published",
@@ -2510,7 +2510,7 @@
      "local (stdio) transport where possible; authenticated reverse proxy and TLS for anything networked; per-user OAuth token delegation so each request runs in the user's own permissions; secrets in a vault, short-lived and scoped; read-only where possible; request-level authorisation for every MCP operation; log authentication and authorisation."
     ],
     [
-     "Verification note",
+     "Not used here",
      "A Lasso Security scan of exposed MCP servers could not be found or read, so none is used here. The Trend Micro scan is the verified equivalent."
     ],
     [
@@ -2809,7 +2809,7 @@
     ],
     [
      "Teaching hook",
-     "ask the class what the Koda `read_file` tool does with `../` and a sibling prefix. It is the shortest demo in the module: two directories, one string comparison."
+     "ask the class what their own file-reading tool does with `../` and a sibling prefix; Part 3 of Module 03 runs that check. It is the shortest demo in the module: two directories, one string comparison."
     ]
    ],
    "urls": [
@@ -3061,9 +3061,9 @@
   "Combination risk (6 cases: 1, 4, 5, 21, 23, 40). Private data, untrusted text and an outbound channel in one session is the recurring structure behind the confused-deputy cases. Control: split the sessions or tools so no single context holds all three.",
   "Isolation that is real (7 cases: 9, 14, 26, 29, 30, 32, 51). A sandbox that does not cover every tool (26), every path (32's start-up files), every channel (30's DNS) or every package route (29) is a gate in an open field. Control: layered, independent, adversarially tested, with a stop mechanism that has been tested. OpenAI's own report says \"no single control should ever be assumed to be fully robust\".",
   "Autonomy without an adversary is the same failure (11, 18, 19, 29, 30). Hallucination, ambiguity and reward pressure drove these. Controls are the same as for attackers, which is the case for treating LLM06 as an engineering problem.",
-  "Vendors often will not close it, so the deployer's control is the control. Vendor positions recorded in the cases: \"a known issue\" (Cursor on the Jira chain, Case 21); \"the user's responsibility\" (Cursor and GitHub on rules files, Case 47); \"expected behaviour\" (Anthropic on MCP STDIO, as OX reports it, Case 28); \"documented and expected\" (AWS on AgentCore roles, Case 31); \"intended\" (ServiceNow, Case 40); \"a duplicate\" (Google on Case 25); \"working as designed\" (Anthropic on Auto Mode, as the finder reports it, Case 51); \"first requires system compromise\" (AWS on Case 49); \"outside our threat model\" (opencode, Case 54); no answer in more than 120 days (Cognition, Cases 15 and 33); and \"user access control issue, not an AI autonomy issue\" (Amazon, Case 18). Several of these vendors also fixed things quickly and transparently (Claude Code advisories in Case 32; Supabase's documentation in Case 4).",
+  "Vendors do not always treat it as theirs to close, so the deployer's control is the control. Vendor positions recorded in the cases: \"a known issue\" (Cursor on the Jira chain, Case 21); \"the user's responsibility\" (Cursor and GitHub on rules files, Case 47); \"expected behaviour\" (Anthropic on MCP STDIO, as OX reports it, Case 28); \"documented and expected\" (AWS on AgentCore roles, Case 31); \"intended\" (ServiceNow, as AppOmni reports it, Case 40); \"a duplicate\" (Google on Case 25, as the finder reports it); \"working as designed\" (Anthropic on Auto Mode, as the finder reports it, Case 51); \"first requires system compromise\" (AWS on Case 49, as the finder reports it); \"outside our threat model\" (opencode, Case 54); no answer in more than 120 days (Cognition, Cases 15 and 33); and \"user access control issue, not an AI autonomy issue\" (Amazon, Case 18). Several of these vendors also fixed things quickly and transparently (Claude Code advisories in Case 32; Supabase's documentation in Case 4).",
   "The same bug shapes come back. Trail of Bits (Oct 2025), Gemini CLI (Jul 2025), Amazon Q (Jul 2025) and Antigravity (Jan 2026) are the same allowlist bug; `mcp-remote` (Jul 2025) and opencode (Oct 2026) are the same server-supplied string; MCPoison (Aug 2025) and the computer-use race (Jun 2026) are the same check-versus-use gap. Write tests for the shapes, not for the CVEs.",
-  "Numbers worth quoting, each with its source in the case: Anthropic's own pilot measured 23.6 percent attack success without mitigations and 11.2 percent with them in autonomous mode (Case 42); a finder measured 60 to 80 percent against Auto Mode while a vendor-commissioned evaluation reported 0.00 percent (Case 51); OpenAI reports a drop of over 100 times in infrastructure-compromise propensity under the production harness (Case 29); 492 MCP servers were found exposed with no authentication, 1,402 tools in total (Case 44). The honest framing is that filters are probabilistic and the boundary has to be structural."
+  "Numbers worth quoting, each with its source in the case: Anthropic's red-teaming before its August 2025 Claude in Chrome pilot (123 test cases in 29 attack scenarios, in the experimental autonomous mode) measured 23.6 percent attack success without the new mitigations and 11.2 percent with them (Case 42); a finder measured 60 to 80 percent against Auto Mode in small samples (three or four of five runs) while a vendor-commissioned evaluation reported 0.00 percent (Case 51); OpenAI reports, from preliminary post-incident tests, that a model's propensity to compromise infrastructure can drop by more than 100 times under its production harness and system prompt, compared with the lightweight prompts it uses to evaluate research models (Case 29); 492 MCP servers were found exposed with no authentication, 1,402 tools in total (Case 44). The honest framing is that filters are probabilistic and the boundary has to be structural."
  ],
  "themes": [
   "Agents as attacker capability (boundary)",

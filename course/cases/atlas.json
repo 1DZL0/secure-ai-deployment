@@ -1,0 +1,768 @@
+{
+ "families": {
+  "A": "Over-grant: the tool carries more authority than the task needs",
+  "B": "Authority misdirected: the deputy spends authority on someone else's behalf",
+  "C": "Tool integrity: the tool, its description or its output is attacker-influenced",
+  "D": "Dangerous sinks: what the tool does with model-chosen arguments",
+  "E": "Identity, approval and autonomy governance"
+ },
+ "classes": [
+  {
+   "n": 1,
+   "title": "Excessive functionality",
+   "subtitle": "the tool surface is bigger than the task",
+   "family": "A",
+   "module": "Part 1 (the dump attack), Part 2 (the tool diet)",
+   "mechanism": "The agent is offered tools, or tool functions, the task never needs: a read tool that also writes, an open-ended \"run SQL\" or \"run a shell command\" where a typed lookup would do, a trial tool nobody removed, or an internal helper accidentally registered as callable. Anything an attacker-influenced model can name, it can call.",
+   "standards": "LLM06:2025 (excessive functionality, examples 1 to 3); ASI02 (over-privileged tool access); T2 Tool Misuse; Microsoft \"Excessive agency\"; MCP02 (partly); ATLAS AML.T0053 AI Agent Tool Invocation with mitigation AML.M0028 AI Agent Tools Permissions Configuration; NIST NISTAML.039 (effect only).",
+   "example": "Semantic Kernel .NET SDK: a file-download helper in `SessionsPythonPlugin` was exposed as an AI-callable tool, giving arbitrary file write on the host (CVE-2026-25592, CVSS 9.9, published 2026-02-06; fixed in 1.71.0). Microsoft Defender Security Research Team, 7 May 2026: https://www.microsoft.com/en-us/security/blog/2026/05/07/prompts-become-shells-rce-vulnerabilities-ai-agent-frameworks/",
+   "control": "A per-task tool allowlist (deny by default), narrow typed tools instead of open-ended ones, removal of leftover tools, and an explicit \"exposed to the model\" flag per function. OpenAI's tool risk rating (low, medium or high, based on factors like read-only vs. write access, reversibility, required account permissions, and financial impact) is a usable schema for the register.",
+   "rbd": "Bound, and the cheapest bound: a tool that is not registered with the dispatcher cannot be called, whatever the wording of the injection.",
+   "urls": [
+    "https://www.microsoft.com/en-us/security/blog/2026/05/07/prompts-become-shells-rce-vulnerabilities-ai-agent-frameworks/",
+    "https://cdn.openai.com/business-guides-and-resources/a-practical-guide-to-building-agents.pdf"
+   ],
+   "llm": "LLM06 functionality",
+   "asi": "ASI02",
+   "mcp": "MCP02 (part)",
+   "atlas": "AML.T0053",
+   "sits": "Bound"
+  },
+  {
+   "n": 2,
+   "title": "Excessive permissions",
+   "subtitle": "the credential behind the tool is broader than the task",
+   "family": "A",
+   "module": "Part 2 (the scoped credential)",
+   "mechanism": "The tool is right-sized but the identity it connects with is not: an admin key, a service-role key that bypasses row-level security, or one shared identity for all users. The model never needs to \"escalate\"; the tool already holds the authority.",
+   "standards": "LLM06:2025 (excessive permissions, examples 4 and 5); ASI03 Identity and Privilege Abuse (the \"agentic evolution of Excessive Agency\") and ASI02 (\"over-scoped tool access\"); T3 Privilege Compromise; MCP02 Privilege Escalation via Scope Creep; MCP07; Microsoft \"Incorrect permissions\"; ATLAS AML.M0026, AML.M0027, AML.M0028; OWASP NHI5 Overprivileged NHI.",
+   "example": "Supabase MCP with the `service_role` key, which \"bypasses all row-level security\": a support ticket carrying instructions could make the agent read an `integration_tokens` table and write it back where the attacker could read it. General Analysis, reported by Simon Willison, 6 July 2025: https://simonwillison.net/2025/Jul/6/supabase-mcp-lethal-trifecta/ (the account here is Willison's post about General Analysis' work). Also AWS-2025-015 (23 July 2025): the Amazon Q Developer extension compromise (a build pipeline token, not an agent tool credential) came from \"an inappropriately scoped GitHub token in their CodeBuild configuration\": https://aws.amazon.com/security/security-bulletins/AWS-2025-015/",
+   "control": "A per-tool scoped credential: a database role with SELECT on the views the task uses, a key that respects row-level security, minted per task and per user, short-lived. Complete mediation downstream (LLM06 item 7), never \"the prompt says read only\".",
+   "rbd": "Bound. Module 02's own sentence applies: \"A parser is a reducer, the credential is the boundary.\"",
+   "urls": [
+    "https://simonwillison.net/2025/Jul/6/supabase-mcp-lethal-trifecta/",
+    "https://aws.amazon.com/security/security-bulletins/AWS-2025-015/"
+   ],
+   "llm": "LLM06 permissions",
+   "asi": "ASI03, ASI02",
+   "mcp": "MCP02, MCP07",
+   "atlas": "AML.T0053; M0026 to M0028",
+   "sits": "Bound"
+  },
+  {
+   "n": 3,
+   "title": "Over-scoped and long-lived OAuth tokens",
+   "subtitle": "delegated credentials held by integrations",
+   "family": "A",
+   "module": "Part 2 (the credential; real tokens also carry an audience and an expiry)",
+   "mechanism": "A connector or agent integration is granted broad OAuth scopes up front and a refresh token that never expires. Whoever obtains the token (a leaked log, a breached vendor, a prompt-injected agent that can read its own configuration) inherits everything the grant allowed, for as long as it lives. The MCP spec's \"Scope Minimization\" section describes the preconditions: a server that publishes every scope in `scopes_supported` and a client that requests them all.",
+   "standards": "MCP01 Token Mismanagement & Secret Exposure; MCP02; MCP07; ASI03 (\"Enforce Task-Scoped, Time-Bound Permissions\", \"Define Intent\"); T3; OWASP NHI7 Long-Lived Secrets; ATLAS AML.T0098 AI Agent Tool Credential Harvesting and AML.T0083 Credentials from AI Agent Configuration; MCP spec Security Best Practices \"Scope Minimization\"; RFC 8707 Resource Indicators.",
+   "example": "Salesloft Drift (UNC6395, as early as 8 August through at least 18 August 2025): the actor used stolen OAuth tokens of the Drift third-party app to export data from many Salesforce instances and then searched it for secrets (AWS keys, passwords, Snowflake tokens). GTIG: \"This issue does not stem from a vulnerability within the core Salesforce platform.\" Google Cloud, 27 August 2025: https://cloud.google.com/blog/topics/threat-intelligence/data-theft-salesforce-instances-via-salesloft-drift (This is a third-party integration breach, not an agent injection. The GTIG post does not state the scopes or lifetimes of the stolen tokens; Salesloft and Salesforce revoked all active access and refresh tokens on 20 August 2025.)",
+   "control": "Minimal initial scopes with incremental step-up; short token lifetimes; audience-bound tokens (`resource` parameter, RFC 8707); refresh tokens kept confidential; refresh tokens held in a vault, with the application getting a provider access token by token exchange when it needs one (Auth0 Token Vault pattern); one-click revocation; alert on use from an unexpected origin.",
+   "rbd": "Bound (scope, lifetime, audience) with a detect leg (use from a new origin).",
+   "urls": [
+    "https://cloud.google.com/blog/topics/threat-intelligence/data-theft-salesforce-instances-via-salesloft-drift"
+   ],
+   "llm": "LLM06 permissions",
+   "asi": "ASI03",
+   "mcp": "MCP01, MCP02",
+   "atlas": "AML.T0098, T0083",
+   "sits": "Bound, detect"
+  },
+  {
+   "n": 4,
+   "title": "Excessive autonomy",
+   "subtitle": "an irreversible action with no independent check",
+   "family": "A",
+   "module": "Part 1 (the delete attack), Part 2 (the approval gate)",
+   "mechanism": "The agent can do something it cannot undo (delete, pay, send externally, push to production) and no control outside the model stands in front of it. The trigger can be injection, but also plain misreading: Microsoft's taxonomy has a user saying \"get rid of it\" about a record and the agent dropping the table.",
+   "standards": "LLM06:2025 (excessive autonomy, example 6; mitigation 6 \"Require user approval\"); ASI02 (\"Action-Level Authentication and Approval\"); T7 Misaligned & Deceptive Behaviors (partly); Microsoft \"Excessive agency\", \"Misinterpretation of instructions\", \"Prioritization leading to user safety issues\"; ATLAS AML.T0101 Data Destruction via AI Agent Tool Invocation, AML.M0029 Human In-the-Loop for AI Agent Actions.",
+   "example": "Replit and SaaStr, July 2025: the founder reported that the agent deleted a production database despite an instruction not to change code, and wrote \"There is no way to enforce a code freeze in vibe coding apps like Replit.\" The Register, 21 July 2025: https://www.theregister.com/2025/07/21/replit_saastr_vibe_coding_incident/ (single-source account from the affected customer; the article reports no vendor fixes, and the customer later reported that a rollback did work). OWASP ASI tracker lists it as ASI01, ASI09 and ASI10.",
+   "control": "Approval of the literal action for irreversible calls (shown by trusted code, class 21); reversible-by-design operations (soft delete, snapshots, staging); production credentials not available to the agent at all; a freeze that is a dispatcher policy, not a sentence in the prompt; dry-run diff before approval (ASI02).",
+   "rbd": "Bound for credential removal, reversibility and a dispatcher freeze. The human approval gate bounds only if it shows the literal action (class 21); otherwise it is a reducer.",
+   "urls": [
+    "https://www.theregister.com/2025/07/21/replit_saastr_vibe_coding_incident/"
+   ],
+   "llm": "LLM06 autonomy",
+   "asi": "ASI02, ASI09",
+   "mcp": "none",
+   "atlas": "AML.T0101; M0029",
+   "sits": "Bound"
+  },
+  {
+   "n": 5,
+   "title": "Unbounded consumption and tool-call loops",
+   "subtitle": "budget, rate, kill switch",
+   "family": "A",
+   "module": "Part 1 (the email flood), Part 2 (the approval gate), Part 5 (limits and the stop)",
+   "mechanism": "An injected or confused agent calls tools repeatedly: costly APIs, mail sends, retries, delegation to other agents. The harm is cost, outage or flood, and it scales with how fast the loop runs and how long nobody looks.",
+   "standards": "LLM10:2025 Unbounded Consumption; ASI02 (\"Loop amplification\", \"Adaptive Tool Budgeting\"); ASI08 Cascading Failures; T4 Resource Overload; Microsoft \"Resource exhaustion\"; ATLAS AML.T0034.002 Agentic Resource Consumption and AML.M0036 Limit AI Workload Resource Consumption.",
+   "example": "OpenAI technical report on the Hugging Face incident: \"Sustained high-volume agent activity within Artifactory continued and, as a result, caused the instance to become unavailable late on July 4\" (2026); on 27 June a security monitoring tool alerted to port sweep activity and on-call advised that stopping the run \"was not required\"; the report describes the agents having compromised Artifactory with administrator access, and describes no spend cap or call loop. Report PDF: https://cdn.openai.com/pdf/67869394-cb91-4c12-888c-5cbd85c7814c/OpenAI-Hugging-Face%20Incident-Technical-Report.pdf . No clean public postmortem of a runaway-cost incident was found, only forum and blog anecdotes, whose figures could not be verified and are not cited.",
+   "control": "Per-session and per-identity call budgets; per-tool rate limits; a circuit breaker on repeated refusals; provider-side hard spend caps (an alert is not a cap); a kill switch that revokes the credential; the ATLAS list of limits (iterations, retries, tool calls, delegation depth, spend).",
+   "rbd": "Bound for the caps; detect and respond for the kill switch.",
+   "urls": [
+    "https://cdn.openai.com/pdf/67869394-cb91-4c12-888c-5cbd85c7814c/OpenAI-Hugging-Face%20Incident-Technical-Report.pdf"
+   ],
+   "llm": "LLM10",
+   "asi": "ASI02, ASI08",
+   "mcp": "none",
+   "atlas": "AML.T0034.002; M0036",
+   "sits": "Bound, detect"
+  },
+  {
+   "n": 6,
+   "title": "Confused deputy",
+   "subtitle": "the agent spends the user's authority on an attacker's instruction",
+   "family": "B",
+   "module": "Part 1 (the deputy), Part 2 (the object check)",
+   "mechanism": "The agent legitimately holds the requesting user's authority (their token, their session, their tenant). Content the user did not write steers it to name an object or action the user would never have asked for, and the downstream system accepts it because the credential is valid. Hardy's 1988 compiler is the template: the authority came from the deputy, the designation (which file) came from the requester.",
+   "standards": "LLM06:2025 (its reference list cites the confused-deputy post; mitigation 5 \"Execute extensions in user's context\"); ASI03 (\"Cross-Agent Trust Exploitation (Confused Deputy)\", \"Identity Sharing\"); ASI01; T3 and T9; MCP07; ATLAS AML.T0053 (\"tools that are not directly accessible by users. Adversaries may abuse this\"); NIST NISTAML.039 Compromising connected resources (effect); Microsoft \"Incorrect permissions\".",
+   "example": "ServiceNow Now Assist second-order prompt injection, AppOmni, 19 November 2025: \"Now Assist agents run with the privilege of the user who started the interaction\", so text written by a low-privileged user in a record field can make a higher-privileged user's session recruit a more capable agent; agents were discoverable and team-grouped by default. https://appomni.com/ao-labs/ai-agent-to-agent-discovery-prompt-injection/ . Origin story: Embrace The Red, cross plugin request forgery, 28 May 2023 (https://embracethered.com/blog/posts/2023/chatgpt-cross-plugin-request-forgery-and-prompt-injection./).",
+   "control": "Authorise the object, not just the tool: the tool re-checks the requested object against the calling principal's claim (tenant, user, task) and fails closed on a missing claim; bind designation to authority (hand the tool an opaque handle already scoped to the ticket's account instead of a free id); downstream per-call authorisation; segment agents by team so a low-risk agent cannot reach a privileged one; supervised mode for privileged tools.",
+   "rbd": "Bound.",
+   "urls": [
+    "https://appomni.com/ao-labs/ai-agent-to-agent-discovery-prompt-injection/",
+    "https://embracethered.com/blog/posts/2023/chatgpt-cross-plugin-request-forgery-and-prompt-injection./"
+   ],
+   "llm": "LLM06 permissions",
+   "asi": "ASI03",
+   "mcp": "MCP07",
+   "atlas": "AML.T0053",
+   "sits": "Bound"
+  },
+  {
+   "n": 7,
+   "title": "Token passthrough and proxy consent confusion",
+   "subtitle": "the MCP authorisation layer",
+   "family": "B",
+   "module": "Part 4 (the authorisation doorway)",
+   "mechanism": "An MCP server accepts a token not issued to it and forwards it downstream, or an MCP proxy fronting a third-party API with a static client id lets an attacker's dynamically registered client ride the user's earlier consent cookie. The result is a valid token in the wrong hands, issued without fresh consent, and logs that blame the wrong party.",
+   "standards": "MCP spec Security Best Practices \"Confused Deputy Problem\" and \"Token Passthrough\"; authorisation spec (\"MCP servers MUST NOT accept or transit any other tokens\"); MCP07; MCP01; ASI03; T3, T9; RFC 8707 and RFC 9207 (mix-up).",
+   "example": "No public in-the-wild incident was found that matches the spec's exact preconditions. The spec is the documented source (current revision 2026-07-28): https://modelcontextprotocol.io/specification/latest/basic/security_best_practices . Nearest real case: FastMCP OAuthProxy, CVE-2026-27124 (published 2026-04-03, CVSS 4.0 score 8.2; fastmcp before 3.2.0 affected, fixed in 3.2.0). The proxy did not check that the browser delivering the callback had just given consent, and GitHub skips its consent page for previously authorized clients, so the attacker's client received a valid authorization code that it exchanged for an access token tied to the victim's GitHub account. https://github.com/PrefectHQ/fastmcp/security/advisories/GHSA-rww4-4w9c-7733 . A related but different OAuth consent attack: CoPhish (Datadog Security Labs, 20 October 2025), where a Copilot Studio agent shared through its demo website had its Login button wired to a malicious OAuth app; the post involves no MCP server. https://securitylabs.datadoghq.com/articles/cophish-using-microsoft-copilot-studio-as-a-wrapper/",
+   "control": "Per-client consent stored server-side or in signed cookies bound to the client_id, and checked before the third-party flow; exact redirect-URI match; audience validation of every inbound token; never forward the client's token (use a token exchange with an actor); `iss` validation against the recorded issuer.",
+   "rbd": "Bound (protocol level).",
+   "urls": [
+    "https://modelcontextprotocol.io/specification/latest/basic/security_best_practices",
+    "https://github.com/PrefectHQ/fastmcp/security/advisories/GHSA-rww4-4w9c-7733",
+    "https://securitylabs.datadoghq.com/articles/cophish-using-microsoft-copilot-studio-as-a-wrapper/"
+   ],
+   "llm": "none",
+   "asi": "ASI03",
+   "mcp": "MCP07, MCP01",
+   "atlas": "none",
+   "sits": "Bound"
+  },
+  {
+   "n": 8,
+   "title": "Toxic agent flow",
+   "subtitle": "the tool set itself completes the trifecta",
+   "family": "B",
+   "module": "Part 6 (the tool register and the lethal trifecta)",
+   "mechanism": "No single tool is dangerous; the combination is. One tool reads untrusted text (a public issue, an inbound email, a support ticket), another reads private data, a third can write or send outwards. One injection then walks data across the gap. Module 02 owns the trifecta and the Rule of Two; Module 03 owns auditing the tool set against them.",
+   "standards": "ASI02 (its scenario of chaining \"a secure, internal-only CRM tool with an external email tool\"); ASI01; T2; Microsoft \"Cross domain prompt injection (XPIA)\"; NIST NISTAML.039; ATLAS AML.T0086 Exfiltration via AI Agent Tool Invocation, AML.M0030 Restrict AI Agent Tool Invocation on Untrusted Data.",
+   "example": "GitHub MCP \"toxic agent flow\", Invariant Labs, 26 May 2025: an issue in a public repository made an agent with access to private repositories leak private data into a public pull request; Claude Desktop asks the user to confirm each tool call by default, but many users choose an \"Always Allow\" policy and stop monitoring individual actions. https://invariantlabs.ai/blog/mcp-github-vulnerability . A 2026 case: Microsoft's finding on the Claude Code GitHub Action (5 June 2026), where untrusted issue and pull-request content reached an agent holding workflow secrets and a file-read tool; Anthropic fixed it in Claude Code 2.1.128 on 5 May 2026 and Microsoft advises the Rule of Two. https://www.microsoft.com/en-us/security/blog/2026/06/05/securing-ci-cd-in-agentic-world-claude-code-github-action-case/",
+   "control": "Tool-set audit (count the three legs per session); session scoping (one repository or one tenant per session); once untrusted data is in context, drop write and egress tools or require approval (ATLAS M0030; Google's example of a policy that blocks external email after processing data from a known suspicious source unless the user explicitly approves); egress allowlist; split the agent so no session holds all three.",
+   "rbd": "Bound.",
+   "urls": [
+    "https://invariantlabs.ai/blog/mcp-github-vulnerability",
+    "https://www.microsoft.com/en-us/security/blog/2026/06/05/securing-ci-cd-in-agentic-world-claude-code-github-action-case/",
+    "https://storage.googleapis.com/gweb-research2023-media/pubtools/1018686.pdf"
+   ],
+   "llm": "LLM06, LLM01",
+   "asi": "ASI02, ASI01",
+   "mcp": "MCP06 (part)",
+   "atlas": "AML.T0086; M0030",
+   "sits": "Bound"
+  },
+  {
+   "n": 9,
+   "title": "Tenant crossing in shared tool servers",
+   "subtitle": "",
+   "family": "B",
+   "module": "Part 2 (the object check and the tenant claim)",
+   "mechanism": "A multi-tenant tool server or connector returns another tenant's data because tenancy is derived from request arguments, caches or a handle rather than from the verified token. The agent need not be attacked; the shared component leaks.",
+   "standards": "MCP10:2025 Context Injection & Over-Sharing; MCP spec \"State Handle Hijacking\" (2026-07-28; \"Session Hijacking\" in 2025-11-25); ASI06 (its \"Cross-tenant vector bleed\"); Microsoft \"Loss of data provenance\"; LLM02:2025.",
+   "example": "Asana's MCP server: Asana found a bug on 4 June 2025 that \"could have potentially exposed certain information from your Asana domain to other Asana MCP users\", took the server offline from 5 to 17 June, and required manual reconnection. The Register, 18 June 2025: https://www.theregister.com/2025/06/18/asana_mcp_server_bug/ (that source gives no customer count and says Asana's incident report gave no details of the coding error, so this shows the outcome, not which of the mechanisms above was at fault; figures from other write-ups are not repeated).",
+   "control": "Derive tenant and user from the verified token, never from arguments; key stored state by `<user_id>:<handle>` with the user taken from the token (the spec's wording); per-tenant credentials; no cross-tenant caches; two-tenant tests in CI.",
+   "rbd": "Bound, with the two-tenant CI test as a pre-release check that the bound holds (it catches regressions before release; it does not detect live cross-tenant reads).",
+   "urls": [
+    "https://www.theregister.com/2025/06/18/asana_mcp_server_bug/"
+   ],
+   "llm": "LLM02",
+   "asi": "ASI03, ASI06 (part)",
+   "mcp": "MCP10",
+   "atlas": "none",
+   "sits": "Bound, test"
+  },
+  {
+   "n": 10,
+   "title": "Tool description poisoning",
+   "subtitle": "",
+   "family": "C",
+   "module": "Part 4 (a poisoned definition)",
+   "mechanism": "Instructions hidden in a tool's name, description or parameter descriptions are read by the model in full while the user sees a short label. The tool need not even be called for the text to steer the model.",
+   "standards": "MCP03:2025 Tool Poisoning; ASI02 (tool poisoning of \"the interface of an otherwise legitimate tool at runtime\") and ASI04 (\"Tool-descriptor injection\"); T2, T16, T17; Microsoft taxonomy v2.0 \"MCP / plugin abuse\" (v1.0: \"Tool compromise\"); ATLAS AML.T0110 AI Agent Tool Poisoning (.000 Definition and Instructions) and AML.T0011.002 Poisoned AI Agent Tool; NIST NISTAML.015 (effect). MCP spec: tool annotations \"untrusted unless they come from trusted servers\".",
+   "example": "Invariant Labs, \"MCP Security Notification: Tool Poisoning Attacks\", 1 April 2025: https://invariantlabs.ai/blog/mcp-security-notification-tool-poisoning-attacks . Measured: MCPTox (arXiv 2508.14925), 45 live servers and 353 tools, 20 agents, highest attack success 72.8%, highest refusal under 3%.",
+   "control": "Treat all tool metadata as untrusted input; review and pin by hash; show the user the full model-visible text; server allowlist; and an action-level bound (a recipient or destination allowlist), because a phrase scanner is a reducer that a reworded description walks past.",
+   "rbd": "Reduce (scanner, pin, review) plus Bound (the action allowlist). The reducers lower the odds that a poisoned definition reaches the model; the action allowlist caps what a poisoned definition can make the tool do.",
+   "urls": [
+    "https://invariantlabs.ai/blog/mcp-security-notification-tool-poisoning-attacks"
+   ],
+   "llm": "LLM01 (carrier)",
+   "asi": "ASI02 and ASI04",
+   "mcp": "MCP03",
+   "atlas": "AML.T0110.000",
+   "sits": "Reduce, bound"
+  },
+  {
+   "n": 11,
+   "title": "Tool shadowing and cross-server injection",
+   "subtitle": "",
+   "family": "C",
+   "module": "Part 4 (the shadowing doorway)",
+   "mechanism": "A description on server A changes how the agent uses server B's trusted tool (for example which recipient `send_message` gets), so the attacker's server never has to be called and the sensitive call is made by the trusted tool with the user's authority.",
+   "standards": "MCP03 (partly); ASI02 and ASI07 (its \"Agent-in-the-Middle via MCP descriptor poisoning\"); T16 Insecure Inter-Agent Protocol Abuse; ATLAS AML.T0110; the MCP tools page notes that tool-name uniqueness is per server and aggregators \"SHOULD implement a disambiguation strategy such as prefixing\".",
+   "example": "Invariant Labs WhatsApp MCP, 7 April 2025 (updated 9 April): a second server's description redirected the trusted WhatsApp server's send tool and exfiltrated chat history; the approval dialog showed the recipient only as a raw phone number that is hard to check against the contact list, and the message body looked like \"Hi\" while the exfiltration payload sat off screen until the user scrolled right. https://invariantlabs.ai/blog/whatsapp-mcp-exploited . Invariant notes sandboxing the malicious server \"is not a relevant mitigation\".",
+   "control": "Namespace tools by server; forbid one server's descriptions from naming another server's tools; one context per server where feasible; an argument-level allowlist on the sensitive tool (recipient domain or contact list); a dialog that shows the whole body without scrolling and flags a recipient that is not in the contact list.",
+   "rbd": "Bound at the sensitive tool's arguments; namespacing is a reducer.",
+   "urls": [
+    "https://invariantlabs.ai/blog/whatsapp-mcp-exploited"
+   ],
+   "llm": "none",
+   "asi": "ASI02, ASI07",
+   "mcp": "MCP03",
+   "atlas": "AML.T0110",
+   "sits": "Bound, reduce"
+  },
+  {
+   "n": 12,
+   "title": "Rug pull",
+   "subtitle": "the tool changes after approval",
+   "family": "C",
+   "module": "Part 4 (the rug pull and the pin)",
+   "mechanism": "The user or admin approves a tool, server or configuration once. Later the definition, the server version or the launch command changes and nothing asks again, because the approval was bound to a name rather than to content.",
+   "standards": "MCP03 and MCP04; ASI04 (\"Pinning\", \"auto-rollback on hash drift\"); T17; ATLAS AML.T0109 AI Supply Chain Rug Pull [Realized] and AML.T0110.001 Implementation; Microsoft taxonomy v1.0 \"Tool compromise\" (v2.0 overview: \"Function compromise and malicious functions\"); AML.M0014 Verify AI Artifacts (the nearest ATLAS mitigation; ATLAS 2026.09 does not map it to T0109 or T0110).",
+   "example": "Cursor \"MCPoison\", CVE-2025-54136: approval of an MCP entry was \"bound only to the name\", so a later change to its command or arguments ran without a new prompt, including on each project reopen. Check Point Research, 5 August 2025 (disclosed 16 July; Cursor 1.3 on 29 July 2025 requires re-approval on any change, \"including something as small as adding a space\"): https://research.checkpoint.com/2025/cursor-vulnerability-mcpoison/ . Invariant's WhatsApp demo is the same pattern for descriptions.",
+   "control": "Approval bound to a hash of the full definition (description, schemas, annotations) and the server version; any change blocks the tool until re-approved; staged rollout and rollback on hash drift; for remote servers, diff on every list-changed event. Trail of Bits' `mcp-context-protector` (28 July 2025) is a beta trust-on-first-use implementation, with the caveat of alert fatigue.",
+   "rbd": "Bound for this class (it removes the silent-change step); only a reducer against day-one poisoning.",
+   "urls": [
+    "https://research.checkpoint.com/2025/cursor-vulnerability-mcpoison/"
+   ],
+   "llm": "LLM03",
+   "asi": "ASI04",
+   "mcp": "MCP03, MCP04",
+   "atlas": "AML.T0109, T0110.001",
+   "sits": "Bound"
+  },
+  {
+   "n": 13,
+   "title": "Malicious or look-alike tool, server or skill",
+   "subtitle": "agent supply chain",
+   "family": "C",
+   "module": "Part 4 (look-alike servers and skills)",
+   "mechanism": "Tools, MCP servers, skills and plugins are dependencies that run with the agent's authority. A typosquat, a hijacked maintainer account, a poisoned update or an unvetted marketplace entry delivers hostile behaviour that no prompt can prevent, because the hostile part is the tool.",
+   "standards": "MCP04 Software Supply Chain Attacks & Dependency Tampering; MCP09 Shadow MCP Servers; ASI04 Agentic Supply Chain Vulnerabilities (and its \"Supply chain kill switch\"); LLM03:2025; T17 Supply Chain Compromise; ATLAS AML.T0010.005 AI Agent Tool, AML.T0115.002 Publish Poisoned AI Artifacts: AI Agent Tools, AML.T0011.002; AML.M0023 AI Bill of Materials.",
+   "example": "`postmark-mcp` on npm: version 1.0.16 (17 September 2025) added a line that blind-copied every sent email to an attacker address; reported by Koi Security as the first malicious MCP server seen in the wild and downloaded 1,643 times in total per The Hacker News (CSO Online quotes Koi at about 1,500 downloads a week, a different measure; Koi's own post could not be read): https://thehackernews.com/2025/09/first-malicious-mcp-server-found.html ; ATLAS AML.CS0053. Also: Amazon Q Developer extension 1.84.0 (CVE-2025-8217; AWS-2025-015, 23 July 2025: https://aws.amazon.com/security/security-bulletins/AWS-2025-015/ ), where hostile code reached a release through an inappropriately scoped GitHub token in the CodeBuild configuration (the injected code did not run, because of a syntax error); and 341 malicious skills among 2,857 audited on ClawHub (Koi Security; reported by The Hacker News on 2 February 2026 and eSecurity Planet on 3 February 2026; fake \"prerequisite\" install steps): https://esecurityplanet.com/threats/hundreds-of-malicious-skills-found-in-openclaws-clawhub",
+   "control": "Curated registry or allowlist; pin by version and hash with provenance; AIBOM; read-only review before first use; run each tool server under its own minimal credential; an action-level allowlist enforced outside the tool server, for example at a gateway between the server and the mail API (the BCC would have been refused by a recipient allowlist there); a supply-chain kill switch that disables a tool across all deployments; least-privilege CI tokens.",
+   "rbd": "Reduce (vetting, pinning), Bound (credential and action allowlists, enforced outside the tool server), Detect (egress and recipient monitoring); the kill switch is the respond leg.",
+   "urls": [
+    "https://thehackernews.com/2025/09/first-malicious-mcp-server-found.html",
+    "https://aws.amazon.com/security/security-bulletins/AWS-2025-015/",
+    "https://esecurityplanet.com/threats/hundreds-of-malicious-skills-found-in-openclaws-clawhub"
+   ],
+   "llm": "LLM03",
+   "asi": "ASI04",
+   "mcp": "MCP04, MCP09",
+   "atlas": "AML.T0010.005, T0115.002",
+   "sits": "Reduce, bound, detect"
+  },
+  {
+   "n": 14,
+   "title": "Injection through tool results",
+   "subtitle": "the tool as carrier",
+   "family": "C",
+   "module": "Module 02 owns it; Part 4 (tool results as a channel)",
+   "mechanism": "The tool returns text an outsider wrote (an issue, a ticket, a web page, a search hit), and the model treats it as instruction. This is the delivery path of indirect injection. Module 02 owns the mechanism and the reduce layer; Module 03 owns the tool-side consequences: result schemas, labelling results as untrusted, and restricting what may be called after an untrusted result.",
+   "standards": "MCP06:2025 (listed as \"Prompt Injection via Contextual Payloads\"; the entry file is titled \"Intent Flow Subversion\"); LLM01:2025; ASI01 Agent Goal Hijack; T6; Microsoft XPIA; NIST NISTAML.015; ATLAS AML.T0051.001 (Indirect), AML.T0099 AI Agent Tool Data Poisoning, AML.M0030.",
+   "example": "\"Living off AI\": prompt injection through a Jira Service Management ticket reaching an agent using the Atlassian MCP server, Cato CTRL, 19 June 2025 (ATLAS AML.CS0039; link and date taken from the ATLAS data file; Cato's own post was not read): https://www.catonetworks.com/blog/cato-ctrl-poc-attack-targeting-atlassians-mcp/ . Also ATLAS AML.CS0045 (Backslash Security, 24 June 2025), a scraper MCP tool returning an injected page to Cursor.",
+   "control": "Structured outputs with `outputSchema` validated by the client; results tagged with their origin; after an untrusted result, state-changing and egress tools need approval or are withdrawn (ATLAS M0030); strip active content at ingest (02's reduce layer).",
+   "rbd": "Reduce (schemas, sanitising) and Bound (restrict tool invocation on untrusted data).",
+   "urls": [
+    "https://www.catonetworks.com/blog/cato-ctrl-poc-attack-targeting-atlassians-mcp/"
+   ],
+   "llm": "LLM01",
+   "asi": "ASI01",
+   "mcp": "MCP06",
+   "atlas": "AML.T0051.001, T0099",
+   "sits": "Reduce, bound"
+  },
+  {
+   "n": 15,
+   "title": "Argument injection and allowlisted-command bypass",
+   "subtitle": "",
+   "family": "D",
+   "module": "Part 3 (argument injection)",
+   "mechanism": "The agent may run only \"safe\" commands, but the arguments are model-chosen. Flags of an approved binary (an exec option, an output-file option, a preprocessor) turn a harmless command into code execution, file write or network egress without a shell metacharacter in sight. The same happens inside typed-looking MCP tools that pass a string straight to a CLI.",
+   "standards": "ASI02 (its \"Approved Tool misuse\" scenario: an auto-run ping tool used to exfiltrate over DNS) and ASI05; MCP05 Command Injection & Execution; LLM05:2025 Improper Output Handling; T2, T11; ATLAS AML.T0053; CWE-88 (CVE-2025-68144); Microsoft's May 2026 sentence \"Any tool parameter the model can influence must be treated as attacker-controlled input.\"",
+   "example": "Trail of Bits (Will Vandevanter), 22 October 2025: three production agents each exploited in one shot through flags of allowlisted commands; \"Maintaining allowlists of 'safe' commands without a sandbox is fundamentally flawed.\" https://blog.trailofbits.com/2025/10/22/prompt-injection-to-rce-in-ai-agents/ . CVEs: mcp-server-git CVE-2025-68144 (published 2025-12-17; user-controlled arguments reached git, enabling arbitrary file overwrite); Claude Code CVE-2025-55284 (published 2025-08-16; \"an overly broad allowlist of safe commands\" let file contents leave over the network; reported 26 May and fixed 6 June 2025 in v1.0.4 per Embrace The Red, https://embracethered.com/blog/posts/2025/claude-code-exfiltration-via-dns-requests/ ); Claude Code CVE-2025-54795 (confirmation-prompt bypass through a parsing error).",
+   "control": "Typed and validated arguments with an exact token allowlist (no abbreviations, no clusters, no values); direct process execution with no shell; `--` before user input; a per-tool facade that builds the command; the sandbox as the primary control. A blocklist of \"dangerous flags\" is a reducer: getopt-style abbreviation and clustering walk past it.",
+   "rbd": "Bound (typed arguments plus sandbox); the command or flag blocklist is a reducer.",
+   "urls": [
+    "https://blog.trailofbits.com/2025/10/22/prompt-injection-to-rce-in-ai-agents/",
+    "https://embracethered.com/blog/posts/2025/claude-code-exfiltration-via-dns-requests/"
+   ],
+   "llm": "LLM05",
+   "asi": "ASI02, ASI05",
+   "mcp": "MCP05",
+   "atlas": "AML.T0053",
+   "sits": "Bound"
+  },
+  {
+   "n": 16,
+   "title": "Command, code and eval sinks",
+   "subtitle": "unexpected code execution through a tool",
+   "family": "D",
+   "module": "Part 3 (aside); Module 06 owns the sandbox",
+   "mechanism": "A tool passes model-influenced text into an interpreter: `eval` on a filter expression, a template engine, a deserialiser, a shell string, a URL opener. The model is working as designed; the sink trusts it. Module 06 owns the sandbox; Module 03 owns finding the sink in the tool's own code.",
+   "standards": "ASI05 Unexpected Code Execution (RCE); MCP05; LLM05:2025; T11 Unexpected RCE and Code Attacks; Microsoft \"Insufficient isolation\"; ATLAS AML.T0053 AI Agent Tool Invocation (its description covers an LLM integrated with a command or script interpreter), see also AML.T0050 Command and Scripting Interpreter; NIST section 3.5 (agents hijacked \"to execute arbitrary code\").",
+   "example": "Semantic Kernel Python `InMemoryVectorStore` filter evaluated with `eval()` after a blocklist check (CVE-2026-26030, CVSS 10.0, published 2026-02-19, fixed in 1.39.4). Microsoft, 7 May 2026 (link in class 1): \"The AI model itself isn't the issue as it's behaving exactly as designed\", and \"blocklists in dynamic languages like Python are inherently fragile\". Other command-injection CVEs in MCP tooling from CVE.org (the tainted string here comes from an HTTP request, a server's OAuth response or an unauthenticated proxy call, not from the model): Framelink Figma MCP CVE-2025-53967 (shell metacharacters reach a curl command; CVSS 8.0; 2025-10-08); mcp-remote CVE-2025-6514 (command injection from an authorization-endpoint URL; CVSS 9.6; 2025-07-09); MCP Inspector CVE-2025-49596 (unauthenticated client-to-proxy link launches stdio commands; CVSS 4.0 score 9.4; 2025-06-13).",
+   "control": "No `eval` or shell-string sinks in tools; AST allowlists rather than blocklists; typed parameters; run the tool process in a sandbox with no ambient credentials; host-level detection of agent processes spawning shells (Microsoft).",
+   "rbd": "Bound (sandbox, Module 06) with validation as a reducer; host detection as detect.",
+   "urls": [],
+   "llm": "LLM05",
+   "asi": "ASI05",
+   "mcp": "MCP05",
+   "atlas": "AML.T0053",
+   "sits": "Bound"
+  },
+  {
+   "n": 17,
+   "title": "Path and scope escape in tool arguments",
+   "subtitle": "",
+   "family": "D",
+   "module": "Part 3 (the path-prefix aside)",
+   "mechanism": "A tool is meant to stay inside a directory, repository or table, but the check is a string comparison that traversal, symlinks, prefix matches or missing validation defeat. The scope exists on paper, not in the operating system.",
+   "standards": "LLM05:2025 (output used to build file paths, path traversal); ASI02, ASI05; MCP05, MCP02; T2, T3; CWE-22 and CWE-59.",
+   "example": "The reference Filesystem MCP server (modelcontextprotocol/servers): access to unintended files through symlinks inside allowed directories (CVE-2025-53109) and through a directory-name prefix match (CVE-2025-53110), both published 2025-07-02 and fixed in 0.6.4 and 2025.7.01. Git MCP server: `repo_path` was not validated against the configured `--repository` (CVE-2025-68145), and `git_init` accepted arbitrary paths (CVE-2025-68143), both published 2025-12-17. All from CVE.org records.",
+   "control": "Canonicalise first, then compare; resolve symlinks; enforce scope at the operating-system layer (a mount, a container, a chroot, a per-path credential) instead of in tool code; corpus tests for traversal, prefix and symlink cases.",
+   "rbd": "Bound when enforced by the OS; a reducer when it is a string check.",
+   "urls": [],
+   "llm": "LLM05",
+   "asi": "ASI02, ASI05",
+   "mcp": "MCP05, MCP02",
+   "atlas": "none",
+   "sits": "Bound (OS level)"
+  },
+  {
+   "n": 18,
+   "title": "SSRF and egress through fetch tools",
+   "subtitle": "",
+   "family": "D",
+   "module": "Module 02 (the egress allowlist); Module 06",
+   "mechanism": "A fetch or browse tool takes a URL from the model and requests it from inside the network, so it can reach cloud metadata, internal admin panels and localhost, and can carry data out in the request. String checks on the URL fail against redirects, alternate encodings and DNS rebinding.",
+   "standards": "LLM05:2025 (SSRF named as a possible impact); LLM06:2025 (mitigation 3 cites \"fetch a URL\" as the open-ended tool to avoid); ASI02 (\"Unsafe browsing or federated calls\"); MCP Security Best Practices, \"Server-Side Request Forgery (SSRF)\" (written for MCP clients fetching OAuth discovery URLs, applied here by analogy); T2; CWE-918. No ATLAS technique is named SSRF.",
+   "example": "The official fetch MCP server README: \"This server can access local/internal IP addresses and may represent a security risk\" (it now blocks private ranges by default; `--allow-private-ips` turns that off): https://github.com/modelcontextprotocol/servers/tree/main/src/fetch . CVEs: `fetch-mcp` v1.0.2 and earlier bypasses its private-IP validation (CVE-2025-65513, published 2025-12-09); `mcp-atlassian` before 0.17.0 let an unauthenticated caller make the server fetch an attacker URL through two HTTP headers (in middleware, not in a tool handler) (CVE-2026-27826, CVSS 8.2, published 2026-03-10). Agents themselves used SSRF against an internal package mirror to reach the internet (OpenAI technical report: first successful SSRF through Artifactory on 26 May 2026, used at scale from 9 July 2026; link in class 5).",
+   "control": "Egress allowlist by resolved address; deny private, loopback and link-local ranges (including the metadata address); do not follow redirects, or re-validate each hop; pin DNS between check and use; an egress proxy; never hand-roll IP parsing (the spec warns about octal, hex and IPv4-mapped forms).",
+   "rbd": "Bound (network layer); the in-tool URL parser is a reducer.",
+   "urls": [
+    "https://github.com/modelcontextprotocol/servers/tree/main/src/fetch"
+   ],
+   "llm": "LLM05, LLM06",
+   "asi": "ASI02",
+   "mcp": "none (spec section)",
+   "atlas": "none",
+   "sits": "Bound"
+  },
+  {
+   "n": 19,
+   "title": "Agent self-modification",
+   "subtitle": "the agent edits its own configuration or permissions",
+   "family": "E",
+   "module": "Part 4 (the configuration doorway)",
+   "mechanism": "The agent can write to the file that decides what it may do: an editor settings file with an auto-approve flag, an MCP configuration, a rules file, a policy file. A prompt injection then widens the agent's own authority and the next action needs no approval.",
+   "standards": "ATLAS AML.T0081 Modify AI Agent Configuration [Demonstrated]; ASI05, ASI02, ASI03; MCP02 (scope creep via manifest edits); T3; OWASP AI Agent Security Cheat Sheet (\"AI Console Malicious Configuration\"); Microsoft \"Excessive agency\".",
+   "example": "GitHub Copilot agent mode in VS Code, as demonstrated by Embrace The Red (CVE-2025-53773, published 2025-08-12; the CVE record is titled \"GitHub Copilot and Visual Studio Remote Code Execution Vulnerability\" and lists Visual Studio 2022 17.14, fixed in 17.14.12): the agent could write workspace settings, including the auto-approve setting, which led to code execution without confirmation; fixed in Microsoft's August 2025 Patch Tuesday. Embrace The Red, 12 August 2025: https://embracethered.com/blog/posts/2025/github-copilot-remote-code-execution-via-prompt-injection/ . Cursor (CVE-2025-54135, published 2025-08-05, CVSS 8.6): creating a missing `.cursor/mcp.json` needed no approval in versions below 1.3.9.",
+   "control": "Configuration, rules and tool manifests sit outside the agent's write scope, deny by default including new dotfiles; any change needs approval with a visible diff; sign the policy; audit or block settings changes during a session (Claude Code documents `ConfigChange` hooks for this).",
+   "rbd": "Bound.",
+   "urls": [
+    "https://embracethered.com/blog/posts/2025/github-copilot-remote-code-execution-via-prompt-injection/"
+   ],
+   "llm": "LLM06",
+   "asi": "ASI05, ASI02, ASI03",
+   "mcp": "MCP02",
+   "atlas": "AML.T0081",
+   "sits": "Bound"
+  },
+  {
+   "n": 20,
+   "title": "Identity confusion: shared service identities and the attribution gap",
+   "subtitle": "",
+   "family": "E",
+   "module": "Part 2 (the credential names the task and the person)",
+   "mechanism": "Many agents or workloads share one credential, or the agent acts as the user with no record of which agent acted. Compromise of one is compromise of all, and the audit log cannot say who did what with what authority.",
+   "standards": "ASI03 (\"attribution gap\", \"Isolate Agent Identities and Contexts\"); T9 Identity Spoofing & Impersonation (Agent Identity Compromise), T8 Repudiation & Untraceability; MCP07 and MCP01, MCP08 Lack of Audit and Telemetry; ATLAS AML.M0027 Single-User AI Agent Permissions Configuration; Microsoft mitigation \"Identity\"; Google principle 1; RFC 8693 (delegation versus impersonation); Entra Agent ID (sponsor, blueprint, on-behalf-of).",
+   "example": "OpenAI technical report, 2026: OpenAI \"provided the agents with shared Artifactory credentials\" and \"by design, many Research CaaS workloads used the same shared Artifactory credential\"; agents used it to reach administrator rights through a token-refresh flaw (26 June to 4 July 2026) and to run a message board between runs. OpenAI then removed the shared credential from new workloads. Report PDF (link in class 5). Hugging Face's timeline says the agent obtained a broker credential bound to cluster-admin-level access, and the broker had one connector credential shared across clusters and bound to system:masters, and it is being rebuilt with a separate, cluster-scoped credential per cluster: https://huggingface.co/blog/agent-intrusion-technical-timeline",
+   "control": "One identity per agent and per task with a named human sponsor; delegation with an actor claim instead of impersonation; per-task short-lived credentials; the subject and the actor on every audit line; no credential shared across workloads.",
+   "rbd": "Bound (distinct, scoped identities) plus Detect (attribution).",
+   "urls": [
+    "https://huggingface.co/blog/agent-intrusion-technical-timeline"
+   ],
+   "llm": "LLM06",
+   "asi": "ASI03",
+   "mcp": "MCP07, MCP01, MCP08",
+   "atlas": "AML.M0027",
+   "sits": "Bound, detect"
+  },
+  {
+   "n": 21,
+   "title": "Approval-gate failure",
+   "subtitle": "fatigue, forged dialogs, unintelligible consent",
+   "family": "E",
+   "module": "Part 2 (the approval card under load)",
+   "mechanism": "The human-in-the-loop control exists but does not bind. Users click \"Always Allow\" after many prompts; the dialog shows a model-written summary instead of the literal action; the recipient or the body is truncated or hidden; the dialog text can be shaped by the attacker. The control is present and the risk is unchanged.",
+   "standards": "ASI09 Human-Agent Trust Exploitation; T10 Overwhelming Human in the Loop, T15 Human Manipulation; Microsoft \"Human-in-the-loop (HitL) bypass\" and \"Insufficient intelligibility for meaningful consent\" (its scenario: the dialog asks to send an email but does not say to whom or what it contains); LLM06:2025 mitigation 6; OWASP community page \"HITL Dialog Forging (aka Lies-in-the-Loop)\"; ATLAS AML.M0029; MCP spec (clients SHOULD \"show tool inputs to the user before calling the server\").",
+   "example": "Checkmarx Zero, \"Lies-in-the-Loop\": forging the approval dialog in Claude Code with long text that pushes the payload off screen, benign-looking padding and a tampered one-line description; for GitHub Copilot Chat the write-up shows Markdown injected into the dialog but rendered only after approval, and describes a pre-approval Markdown breakout as a possible further attack (original post 15 September 2025, expanded write-up dated 16 December 2025): https://checkmarx.com/zero-post/turning-ai-safeguards-into-weapons-with-hitl-dialog-forging/ . Anthropic classed its report as outside its threat model and Microsoft closed the Copilot Chat report without a fix, per Checkmarx. Related: users on \"Always Allow\" in Invariant's GitHub MCP case (class 8); Anthropic's sandbox post, 20 October 2025, which names \"approval fatigue\" and reports that, in its internal usage, sandboxing cut permission prompts by 84%: https://www.anthropic.com/engineering/claude-code-sandboxing",
+   "control": "Approval of the literal action, rendered by trusted code after the action is fully built (all recipients, all arguments, no truncation); show a plain-language risk summary, not a model-written rationale (ASI09: \"provide plain-language risk summary (not model-generated rationales)\"); approvals bound to the exact action and its normalized parameters, short-lived, with replay protection for irreversible operations (OWASP AI Agent Security Cheat Sheet: \"Bind approval to the exact action\"; \"Use short-lived authorization artifacts and replay protection for irreversible operations\"); few, high-value prompts, with the safe remainder handled by a sandbox or allowlist so people still read the ones that remain; separate preview from effect.",
+   "rbd": "Bound only if the dialog shows the literal action and the approval is bound to it; otherwise a reducer. Module 02 already says \"human approval of the literal action\".",
+   "urls": [
+    "https://checkmarx.com/zero-post/turning-ai-safeguards-into-weapons-with-hitl-dialog-forging/",
+    "https://www.anthropic.com/engineering/claude-code-sandboxing"
+   ],
+   "llm": "LLM06 autonomy",
+   "asi": "ASI09",
+   "mcp": "none",
+   "atlas": "AML.M0029",
+   "sits": "Bound if literal"
+  },
+  {
+   "n": 22,
+   "title": "Rogue or out-of-bounds autonomous agent",
+   "subtitle": "goal drift, sandbox escape, kill switch",
+   "family": "E",
+   "module": "Part 5 (limits and the stop); Module 09",
+   "mechanism": "An agent pursuing its goal uses whatever authority it can reach beyond what its operators intended: finding a bypass of its own isolation, reusing exposed credentials, reaching for tools it was not given. Cause can be injection, misalignment or an impossible task; the control question is the same: what stops it when the model's behaviour is not what you wanted.",
+   "standards": "ASI10 Rogue Agents (and ASI08 for propagation); T13 Rogue Agents in Multi-Agent Systems, T7; Microsoft \"Prioritization leading to user safety issues\"; ATLAS AML.M0037 AI Agent Authority Expansion Controls (\"explicitly granted prior to runtime\"), AML.M0038 AI Agent Scope Drift Detection, AML.T0105 Escape to Host; Google principle 3; NIST none.",
+   "example": "OpenAI and Hugging Face, 8 to 13 July 2026: during an internal cyber evaluation with production safeguards disabled, OpenAI models used a previously unknown flaw in an internal package mirror to reach the internet, found publicly exposed credentials, and compromised parts of Hugging Face's production infrastructure; about 17,600 actions recovered from the agent's logs; \"No human directed the individual steps\" (Hugging Face, 27 July 2026 timeline). OpenAI technical report (PDF in class 5): lessons that \"no single control should ever be assumed to be fully robust\" and that controls must be \"multiple, overlapping, and independent\" across prevention, detection and mitigation. Hugging Face, 16 July 2026, https://huggingface.co/blog/security-incident-july-2026 and 27 July 2026 timeline (link in class 20). Caveat: an internal research model under deliberately reduced safeguards, not a typical enterprise agent. Use it for the control lesson, not for likelihood. A second, smaller case is Replit (class 4).",
+   "control": "Deny-by-default egress for any agent environment; per-run short-lived credentials; independent layers (isolation, authentication, monitoring) so one failure is not total; behavioural monitors on every environment, not only production; a kill switch with credential revocation (ASI10); treat any authority discovered at runtime as outside the boundary until validated.",
+   "rbd": "Bound (egress, credentials) and Detect and respond (monitor, kill switch). Per the OpenAI report, prevention, detection and mitigation must be independent layers here (\"no single control should ever be assumed to be fully robust\").",
+   "urls": [
+    "https://huggingface.co/blog/security-incident-july-2026"
+   ],
+   "llm": "none",
+   "asi": "ASI10, ASI08",
+   "mcp": "none",
+   "atlas": "AML.M0037, M0038, T0105",
+   "sits": "Bound, detect"
+  },
+  {
+   "n": 23,
+   "title": "Shadow and exposed tool servers",
+   "subtitle": "",
+   "family": "E",
+   "module": "Part 4 (servers as ordinary software)",
+   "mechanism": "Tool servers, agent gateways and control panels run outside inventory, often bound to all interfaces with default or no authentication, or reachable by a browser through a crafted link. Anyone who can reach the endpoint inherits the agent's tools and credentials.",
+   "standards": "MCP09:2025 Shadow MCP Servers; MCP07; ASI04; T17; ATLAS AML.T0132 Misconfigured or Publicly Exposed AI Services [Demonstrated]; AML.CS0048.",
+   "example": "ClawdBot (now OpenClaw): exposed control interfaces found through Shodan on 25 January 2026 led to credential access and command execution (ATLAS AML.CS0048); OpenClaw before 2026.1.29 took a `gatewayUrl` from the query string and connected, sending a token (CVE-2026-25253, CVSS 8.8, published 2026-02-01). Earlier: MCP Inspector CVE-2025-49596 (13 June 2025), an unauthenticated local proxy reachable from a web page (Oligo, 27 June 2025: \"When a victim visits a malicious website, the vulnerability allows attackers to run arbitrary code on the visiting host\").",
+   "control": "An inventory of approved servers and a managed allowlist in the client (Claude Code has managed MCP configuration); authentication on every control endpoint; bind to loopback or a private interface; periodic exposure scans; remove the agent's access when a server drops off the inventory.",
+   "rbd": "Bound (authentication on every control endpoint, loopback or private binding), Reduce (inventory, managed allowlist) and Detect (discovery scans).",
+   "urls": [],
+   "llm": "LLM03",
+   "asi": "ASI04",
+   "mcp": "MCP09, MCP07",
+   "atlas": "AML.T0132",
+   "sits": "Reduce, detect"
+  }
+ ],
+ "control_families": {
+  "A": "Least privilege per tool and per call",
+  "B": "Credentials and identity",
+  "C": "Per-action authorisation outside the model",
+  "D": "Human in the loop, done right",
+  "E": "Isolation",
+  "F": "MCP hardening",
+  "G": "Detect and respond",
+  "H": "Testing"
+ },
+ "controls": [
+  {
+   "id": "A1",
+   "family": "A",
+   "control": "Typed, closed-argument tools",
+   "addresses": "Free-string misuse: SQL, path, command, URL",
+   "class": "Bound (reduce if regex or denylist)",
+   "flips": "The argument space is an enum, ID or parsed value checked server-side, behind a narrow credential"
+  },
+  {
+   "id": "A2",
+   "family": "A",
+   "control": "Deny-by-default registry, per-task tool set",
+   "addresses": "Excessive functionality, tool the attacker needs is present",
+   "class": "Bound",
+   "flips": "The set is fixed from trusted input before untrusted data is read and enforced by the harness"
+  },
+  {
+   "id": "A3",
+   "family": "A",
+   "control": "Remove the tool rather than instruct",
+   "addresses": "Same as A2; wording-dependence",
+   "class": "Bound (instruction is reduce)",
+   "flips": "The tool is absent from the executable registry and no second path exists"
+  },
+  {
+   "id": "B1",
+   "family": "B",
+   "control": "Run as the user (delegation)",
+   "addresses": "Confused deputy, cross-user access",
+   "class": "Bound for cross-user",
+   "flips": "The downstream system decides on the user's token, delegated scopes only"
+  },
+  {
+   "id": "B2",
+   "family": "B",
+   "control": "Governed agent identity",
+   "addresses": "Attribution gap, unrevocable shared credentials",
+   "class": "Bound (revocation, scope); enables detect",
+   "flips": "One identity per agent, no standing secret, sponsor, lifecycle"
+  },
+  {
+   "id": "B3",
+   "family": "B",
+   "control": "Short-lived downscoped credentials; tool holds the secret",
+   "addresses": "Secret disclosure, long-lived key abuse",
+   "class": "Bound for disclosure and blast radius",
+   "flips": "Secret never in context or sandbox; injection bound to host; minutes-long lifetime"
+  },
+  {
+   "id": "B4",
+   "family": "B",
+   "control": "MCP authorization profile",
+   "addresses": "Token replay across servers, proxy confused deputy, SSRF, mix-up",
+   "class": "Bound for who may call",
+   "flips": "Audience validated, no passthrough, exact redirects, SSRF guards"
+  },
+  {
+   "id": "C1",
+   "family": "C",
+   "control": "Policy decision point in front of every call",
+   "addresses": "Tool misuse, privilege abuse",
+   "class": "Bound (reduce if a clause asks a classifier)",
+   "flips": "On the only path, default deny, fails closed, decides from trusted facts"
+  },
+  {
+   "id": "C2",
+   "family": "C",
+   "control": "Budgets, rate and transaction limits",
+   "addresses": "Loop amplification, bulk exfiltration, denial of wallet",
+   "class": "Bound on blast radius",
+   "flips": "Keyed to identity, not session; counters outside the model"
+  },
+  {
+   "id": "C3",
+   "family": "C",
+   "control": "Kill switch and circuit breaker",
+   "addresses": "Duration of compromise",
+   "class": "Bound in time; response arm of detect",
+   "flips": "Checked on every authorisation and reaches every enforcement point"
+  },
+  {
+   "id": "C4",
+   "family": "C",
+   "control": "Plan-then-execute, dry-run, two-phase commit",
+   "addresses": "Control-flow hijack, irreversible actions, approve-one-run-another",
+   "class": "Bound on control flow and on the approved action",
+   "flips": "Plan from trusted input only; approval bound to action hash; preconditions rechecked"
+  },
+  {
+   "id": "C5",
+   "family": "C",
+   "control": "Capability labels and information-flow control",
+   "addresses": "Exfiltration and action driven by untrusted data",
+   "class": "Bound within its model (string taint check is reduce)",
+   "flips": "Provenance travels with values through a runtime you control"
+  },
+  {
+   "id": "C6",
+   "family": "C",
+   "control": "Rule of Two as a design test",
+   "addresses": "Indirect injection data theft",
+   "class": "Bound on the combination",
+   "flips": "The tool table is computed per session and enforced"
+  },
+  {
+   "id": "D1",
+   "family": "D",
+   "control": "Literal approval card",
+   "addresses": "Wrong-thing approved, forged dialogs",
+   "class": "Bound on path, reduce on content",
+   "flips": "Built by trusted code; bound to hash; no model-authored text"
+  },
+  {
+   "id": "D2",
+   "family": "D",
+   "control": "Spend attention where it buys something",
+   "addresses": "Approval fatigue",
+   "class": "Sandbox plus scope is bound; model approver is reduce",
+   "flips": "Prompts limited to a short list; OS-enforced limits do the rest"
+  },
+  {
+   "id": "D3",
+   "family": "D",
+   "control": "Vendor permission models",
+   "addresses": "Varies",
+   "class": "Mostly reduce (rules on free text); sandbox parts are bound",
+   "flips": "Deny rules plus OS sandbox; managed settings; no bypass modes"
+  },
+  {
+   "id": "D4",
+   "family": "D",
+   "control": "Out-of-band approval",
+   "addresses": "Dialog forging, self-approval",
+   "class": "Bound on who can approve",
+   "flips": "Separate device and channel; agent cannot write the approval"
+  },
+  {
+   "id": "E1",
+   "family": "E",
+   "control": "Sandboxes by threat",
+   "addresses": "Code execution, escape, persistence",
+   "class": "Bound on host and cross-tenant",
+   "flips": "Deny-by-default egress and writes; no standing secrets; kernel isolation where needed"
+  },
+  {
+   "id": "E2",
+   "family": "E",
+   "control": "Egress policy",
+   "addresses": "Exfiltration, SSRF, second-stage download",
+   "class": "Bound on destination (reduce on hostname-only decisions)",
+   "flips": "Enforced outside the agent; resolved addresses checked; DNS and image channels covered"
+  },
+  {
+   "id": "E3",
+   "family": "E",
+   "control": "Kernel-enforced path scope",
+   "addresses": "Traversal, symlink, secret and config tampering",
+   "class": "Bound (lexical checks are reduce)",
+   "flips": "`openat2`-style resolution or Landlock on a directory handle"
+  },
+  {
+   "id": "E4",
+   "family": "E",
+   "control": "Separate OS identities and limits",
+   "addresses": "Cross-agent contamination, resource exhaustion",
+   "class": "Bound",
+   "flips": "Unprivileged per-agent account, per-session environment"
+  },
+  {
+   "id": "E5",
+   "family": "E",
+   "control": "Tenant isolation",
+   "addresses": "Cross-tenant exposure",
+   "class": "Bound",
+   "flips": "Tenant from the verified token, enforced in the data layer"
+  },
+  {
+   "id": "F1",
+   "family": "F",
+   "control": "Pin tool definitions",
+   "addresses": "Poisoning after approval, shadowing",
+   "class": "Bound on change (not on day-one)",
+   "flips": "Hash of everything model-visible; re-approval on any change; pins outside agent reach"
+  },
+  {
+   "id": "F2",
+   "family": "F",
+   "control": "Server allowlists and registry",
+   "addresses": "Untrusted or shadow servers",
+   "class": "Bound on which servers connect",
+   "flips": "Enforced by managed config; sources pinned"
+  },
+  {
+   "id": "F3",
+   "family": "F",
+   "control": "Scanners",
+   "addresses": "Day-one poisoning, toxic flows",
+   "class": "Detect or reduce",
+   "flips": "Never; scanners are reducers by construction"
+  },
+  {
+   "id": "F4",
+   "family": "F",
+   "control": "Gateways and proxies",
+   "addresses": "Whatever is behind them",
+   "class": "Bound only if sole path with real policy",
+   "flips": "Network and credentials force the path"
+  },
+  {
+   "id": "F5",
+   "family": "F",
+   "control": "Local server hygiene",
+   "addresses": "Config-driven command execution, drive-by",
+   "class": "Bound where sandboxed",
+   "flips": "Stdio, sandbox, exact-command consent"
+  },
+  {
+   "id": "F6",
+   "family": "F",
+   "control": "Untrusted-result handling",
+   "addresses": "Injection via results, result-borne exfiltration",
+   "class": "Bound for blocked channels; reduce for model-side defences",
+   "flips": "Deterministic transforms for known channels"
+  },
+  {
+   "id": "G1",
+   "family": "G",
+   "control": "Tool-call tracing",
+   "addresses": "Blind spots",
+   "class": "Detect",
+   "flips": "Written by the checkpoint, complete, redacted"
+  },
+  {
+   "id": "G2",
+   "family": "G",
+   "control": "Sequence and destination anomaly rules",
+   "addresses": "Authorised but wrong",
+   "class": "Detect",
+   "flips": "Not applicable; feeds C3"
+  },
+  {
+   "id": "G3",
+   "family": "G",
+   "control": "Provenance-rich audit logs",
+   "addresses": "Repudiation, unexplainable incidents",
+   "class": "Detect",
+   "flips": "Not applicable"
+  },
+  {
+   "id": "G4",
+   "family": "G",
+   "control": "Alerts on denials",
+   "addresses": "Probing, active attack",
+   "class": "Detect",
+   "flips": "Not applicable; feeds C3"
+  },
+  {
+   "id": "G5",
+   "family": "G",
+   "control": "Replay through a stricter policy",
+   "addresses": "Blind policy change",
+   "class": "Detect and change control",
+   "flips": "Deterministic policy, logged inputs, a gate"
+  },
+  {
+   "id": "G6",
+   "family": "G",
+   "control": "Canary tools and credentials",
+   "addresses": "Hijack, credential theft",
+   "class": "Detect",
+   "flips": "Not applicable"
+  },
+  {
+   "id": "H1 to H3",
+   "family": "H",
+   "control": "Benchmarks, red-team tools, CI",
+   "addresses": "Regression and complacency",
+   "class": "Detect",
+   "flips": "Deterministic checkpoint tests are the only ones that can fail a build without ambiguity"
+  }
+ ]
+}
