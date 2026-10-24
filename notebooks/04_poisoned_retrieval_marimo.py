@@ -359,7 +359,7 @@ def _(mo):
         what sources feed the index, whether any are attacker-reachable, which sensitive actions a retrieved document could trigger,
         and what gates each one. **The fix is a permission, not a cleverer filter.**
 
-        Standards: OWASP **LLM08** (Vector &amp; Embedding Weaknesses), **LLM01** (Prompt Injection), **ASI06** (Context Poisoning).
+        Standards: OWASP **LLM08:2025** (Vector &amp; Embedding Weaknesses, LLM09:2026), **LLM01** (Prompt Injection, the same number in 2025 and 2026), **ASI06** (Context Poisoning).
         """
     )
     return

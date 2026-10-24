@@ -26,6 +26,10 @@ PROFILES = {
     "hardened": {"db_readonly": True,  "egress_allowlist": ["config.koda-internal"],
                  "memory_gated": True,  "fs_scoped": True,  "block_pii_egress": True},
 }
+# Part 6 (architectures): no permission switch is on; the control is a call list fixed before the record is read, so a
+# note cannot add a call (plan-then-execute). Pass it to run_agent() as a profile dict; dispatch() enforces plan_tools.
+PLANNED = {"db_readonly": False, "egress_allowlist": None, "memory_gated": False, "fs_scoped": False,
+           "block_pii_egress": False, "plan_tools": {"lookup_customer"}}
 ALLOWED_DIR = "shared/"   # the only folder read_file may reach when fs_scoped is on
 
 # ---- the small parsers the checkpoint stands on. Each stands in for a real control (a sandboxed path, a database
@@ -79,6 +83,9 @@ def memory_poisoned(note_text, planted=None):
 
 def dispatch(tool, args, prof, loaded_pii=()):
     # the single policy checkpoint. returns (result_text, blocked_reason_or_None).
+    if prof.get("plan_tools") is not None and tool not in prof["plan_tools"]:
+        # plan-then-execute: the call list was fixed before any untrusted text was read, so a note cannot add a call
+        return None, f"{tool} is not in the plan, which was fixed before the record was read"
     if tool == "read_file":
         path = str(args.get("path", ""))
         inside = in_bounds(path)
@@ -330,7 +337,30 @@ WATCH = {  # doorways that get a catalogue entry rather than a card of their own
         "how": "The payload sits in a record someone else created earlier (a lead\u2019s description, a profile bio, a display name, a file name, image EXIF) and fires when a colleague asks the agent to work with it. Koda\u2019s notes field is exactly this.",
         "harm": "ForcedLeak (Noma Labs, Salesforce Agentforce, CVSS 9.4, Sep 2025): instructions in a Web-to-Lead description made the agent query CRM data and leak it through an image URL on an expired, still-allowlisted domain.",
         "control": "Every externally populated field is data; egress stays allowlisted and the allowlist is re-verified (an expired domain is an open door)."},
+    "Prompts the user delivers for you": {
+        "how": "The attacker never reaches the agent. They put the instruction where the user will copy it from, or in a link the user will open, and the user hands it over. The user’s own session, permissions and trust do the delivery.",
+        "harm": "Greshake et al. (2023) call this a user-driven injection: text copied from an attacker’s page and pasted into a chatbot as a question, or “try this prompt” social engineering. Card 7’s address-bar case is the browser version.",
+        "control": "Treat anything pasted or opened through a link as untrusted content, not as the user’s own words: show it as quoted material, carry it as data, and require confirmation for any action that traces back to it. Provenance decides trust, not whose account the message came from."},
+    "Two-stage notes": {
+        "how": "The first note is short and looks harmless; its only instruction is to fetch more text from a place the attacker controls. The long, blunt second stage never sits in the record you scanned.",
+        "harm": "Greshake et al. (2023) call these hidden injections and show a compromised model fetching fresh instructions from an attacker’s server on every request, a remotely controllable backdoor. NIST AI 100-2e2025 lists multi-stage injection under injection hiding.",
+        "control": "The egress allowlist stops the fetch, and anything fetched after untrusted content was read is untrusted too. Scanning the record at ingest cannot be your boundary, because the dangerous text arrives later."},
+    "The answer talks the user into it": {
+        "how": "The injection does not need a tool. It tells the assistant to recommend a link, quote a false figure or say that a payment is urgent, and the user acts because the assistant said so. No permission is touched, so nothing on this page fires.",
+        "harm": "Greshake et al. (2023) steered Bing Chat to push a phishing link, and it added urgency of its own without being told how to persuade. OWASP’s agentic list names the class ASI09, human-agent trust exploitation.",
+        "control": "Outside the permission model: show where each claim came from, keep the assistant’s verdict advisory for any decision that carries money or access, and make the literal action, not the assistant’s description of it, the thing the human approves (card 6)."},
+    "Burning time and money": {
+        "how": "A planted line tells the agent to do something slow or endless: loop over a long list, call a paid tool again and again, or stop using a capability it needs. Nothing is stolen or deleted; the harm is cost and downtime, and it is cheap to cause.",
+        "harm": "Greshake et al. (2023) made Bing Chat do time-consuming background work and disarm its own search tool. NIST AI 100-2e2025 lists time-consuming tasks and inhibiting capabilities as indirect-injection availability attacks (NISTAML.016, NISTAML.017); MITRE ATLAS has agentic resource consumption (AML.T0034.002); OWASP’s agentic list calls the tool version loop amplification.",
+        "control": "Budgets for calls, spend and wall-clock time per task and per identity, enforced by the checkpoint and not by the model, with a circuit breaker that halts or escalates when one trips (OWASP Excessive Agency: rate limiting)."},
 }
+
+
+def flow_ok(dest_labels, payload_labels):
+    """The CaMeL-style rule behind Part 6: a value derived from private data may not flow to an outbound call whose
+    destination came from untrusted text. Labels are sets drawn from {"user", "config", "private", "untrusted"}; they
+    travel with a value however it is encoded, which a string match on the URL cannot do."""
+    return not ("untrusted" in set(dest_labels) and "private" in set(payload_labels))
 
 def results_table(title, rows):
     # show the real output of the learner's function per input. row = (call, output, ok_or_None, note?)
@@ -649,7 +679,15 @@ if __name__ == "__main__":
     assert wins(run_agent(42, "unsafe", note=POISON["exfil"])) == ["leaked PII"]
     assert wins(run_agent(42, "hardened", note=POISON["exfil"])) == []
     assert wins(run_agent(42, "unsafe", note=POISON["subtle"])) == ["read secrets", "deleted data", "poisoned memory"]
-    assert len(WATCH) == 6
+    assert len(WATCH) == 10
+    # Part 6: a plan fixed before the record is read removes every call that is not in it, and protects nothing that is
+    planned = run_agent(42, PLANNED, note=CUSTOMERS[42]["notes"])
+    assert wins(planned) == [] and all(s["blocked"] for s in planned[1:]) and "not in the plan" in planned[1]["blocked"]
+    assert wins(run_agent(42, PLANNED, note=POISON["exfil"])) == [] and wins(run_agent(42, PLANNED, note=POISON["subtle"])) == []
+    plan_remember = dict(PLANNED, plan_tools={"lookup_customer", "remember"})
+    assert wins(run_agent(42, plan_remember, note=CUSTOMERS[42]["notes"])) == ["poisoned memory"], "the plan does not protect what it legitimately includes"
+    assert wins(run_agent(42, dict(plan_remember, memory_gated=True), note=CUSTOMERS[42]["notes"])) == []
+    assert not flow_ok({"untrusted"}, {"private"}) and flow_ok({"config"}, set()) and flow_ok({"user"}, {"private"}) and flow_ok({"untrusted"}, {"user"})
     # the checkpoint's parsers, probed the way an expert will probe them
     assert dispatch("fetch_url", {"url": "http://evil.example?@config.koda-internal"}, H, pii)[1], "a ? ends the authority: the real host is evil.example"
     assert dispatch("fetch_url", {"url": "http://evil.example#@config.koda-internal"}, H, pii)[1]

@@ -463,19 +463,19 @@ def _():
     # The course map as data: every planned module is a point on the layer its attacks enter through.
     # layer 2 = outer (inputs & retrieved data), 1 = middle (framework, tools, memory), 0 = core (permissions & assets).
     MAP = [
-        {"name": "Prompt injection", "layer": 2, "module": "02", "owasp": "OWASP LLM01:2025", "status": "live",
+        {"name": "Prompt injection", "layer": 2, "module": "02", "owasp": "OWASP LLM01:2025 / 2026", "status": "live",
          "desc": "Untrusted text in the input stream is read as a command."},
-        {"name": "Poisoned retrieval", "layer": 2, "module": "04", "owasp": "OWASP LLM08:2025", "status": "live",
+        {"name": "Poisoned retrieval", "layer": 2, "module": "04", "owasp": "OWASP LLM08:2025 / LLM09:2026", "status": "live",
          "desc": "A booby-trapped document, retrieved into context, issues orders."},
-        {"name": "Tools & excessive agency", "layer": 1, "module": "03", "owasp": "OWASP LLM06:2025", "status": "coming",
+        {"name": "Tools & excessive agency", "layer": 1, "module": "03", "owasp": "OWASP LLM06:2025 / LLM03:2026", "status": "coming",
          "desc": "The agent's own tools and MCP servers carry, or over-grant, authority."},
-        {"name": "Insecure code execution", "layer": 1, "module": "06", "owasp": "OWASP LLM05:2025", "status": "coming",
+        {"name": "Insecure code execution", "layer": 1, "module": "06", "owasp": "OWASP LLM05:2025 / LLM10:2026", "status": "coming",
          "desc": "Model output run as code escapes its sandbox."},
         {"name": "Memory & persistence", "layer": 1, "module": "07", "owasp": "OWASP Agentic: Memory Poisoning", "status": "coming",
          "desc": "A planted memory re-fires the attack in later sessions."},
         {"name": "Multi-agent spread (A2A)", "layer": 1, "module": "08", "owasp": "OWASP Agentic: Agent Comms", "status": "coming",
          "desc": "One agent's injected output becomes another agent's instruction."},
-        {"name": "Data leakage & output", "layer": 0, "module": "05", "owasp": "OWASP LLM02 / LLM05", "status": "coming",
+        {"name": "Data leakage & output", "layer": 0, "module": "05", "owasp": "OWASP LLM02 / LLM05:2025 (LLM10:2026)", "status": "coming",
          "desc": "Sensitive data crosses the egress boundary in an answer or a URL."},
         {"name": "Monitoring & governance", "layer": 1, "module": "09", "owasp": "NIST AI RMF / EU AI Act", "status": "coming",
          "desc": "Detect, evaluate, respond, and govern, across every layer."},
@@ -540,11 +540,11 @@ def _():
 
     def map_legend_html():
         _rows = [("01", "Foundations: the frame", "course frame", "this module"),
-                 ("02", "Prompt injection", "OWASP LLM01:2025", "live"),
-                 ("03", "Tools & excessive agency", "OWASP LLM06:2025", "coming"),
-                 ("04", "Poisoned retrieval", "OWASP LLM08:2025", "live"),
-                 ("05", "Data leakage & output handling", "OWASP LLM02 / LLM05", "coming"),
-                 ("06", "Isolated code execution & sandboxing", "OWASP LLM05:2025", "coming"),
+                 ("02", "Prompt injection", "OWASP LLM01:2025 / 2026", "live"),
+                 ("03", "Tools & excessive agency", "OWASP LLM06:2025 / LLM03:2026", "coming"),
+                 ("04", "Poisoned retrieval", "OWASP LLM08:2025 / LLM09:2026", "live"),
+                 ("05", "Data leakage & output handling", "OWASP LLM02 / LLM05:2025 (LLM10:2026)", "coming"),
+                 ("06", "Isolated code execution & sandboxing", "OWASP LLM05:2025 / LLM10:2026", "coming"),
                  ("07", "Memory & persistence", "OWASP Agentic: Memory Poisoning", "coming"),
                  ("08", "Multi-agent systems", "OWASP Agentic: Agent Comms", "coming"),
                  ("09", "Monitoring, evaluation & governance", "NIST AI RMF / EU AI Act", "coming")]

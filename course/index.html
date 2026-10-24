@@ -213,7 +213,7 @@ const MODULES = [
     subtitle: "When data becomes a command",
     blurb: "An agent reads one poisoned record and turns against its operator. Break it, bound it with permissions you flip yourself, then see how real models fare on the benchmark.",
     url: "../prompt-injection/",
-    minutes: 60,
+    minutes: 80,
     quiz: [
       { q: "Why can't an LLM agent tell a customer's note apart from your real instruction?",
         options: [
@@ -250,6 +250,20 @@ const MODULES = [
           "Stop using agents entirely" ],
         answer: 1,
         why: "Bound the action outside the model; the wording of the injection cannot reach that boundary." },
+      { q: "A vendor says its prompt-injection classifier blocks 99% of attacks. What is the right reading?",
+        options: [
+          "It is solved, so ship it as your boundary",
+          "It blocks 99% of what the vendor tried: test it against an adaptive attacker with many attempts, and keep the boundary on the action",
+          "Classifiers never work, so ignore them" ],
+        answer: 1,
+        why: "In The Attacker Moves Second, most published defences were bypassed more than 90% of the time once the attacker adapted. A reducer is worth having under a boundary, not instead of one." },
+      { q: "An agent's plan is fixed in code before it reads any untrusted text. What can a planted note still do?",
+        options: [
+          "Add a call to a tool that is not in the plan",
+          "Misuse a tool that is in the plan, through its arguments or content",
+          "Nothing at all: plan-then-execute is a complete defence" ],
+        answer: 1,
+        why: "The plan removes what is not in it. It does not protect what it legitimately includes, so arguments and content still need a boundary." },
     ],
   },
   {
