@@ -474,8 +474,7 @@ def _(hero, kt, mo):
                   'border-radius:8px;max-width:860px;"><b style="color:#13262f;">You leave with</b> a deployment you built that holds four attacks '
                   "while the real task still works, a tool register for your own agent, and a test that fails if the policy ever slips. "
                   'It builds on the agent loop from <a href="../course/#/lesson/foundations" target="_top" style="color:#b05a00;">Module 01</a>. '
-                  'Alongside it: the <a href="../course/#/tool/cases" target="_blank" rel="noopener" style="color:#b05a00;">case library and attack atlas</a> (54 documented cases, 23 attack classes, 37 controls), and the '
-                  '<a href="../course/#/tool/teach" target="_blank" rel="noopener" style="color:#b05a00;">teaching notes</a> with a run sheet and answer key (both open in a new tab).</div>'
+                  'Alongside it: the <a href="../course/#/tool/cases" target="_blank" rel="noopener" style="color:#b05a00;">case library and attack atlas</a> (54 documented cases, 23 attack classes, 37 controls; opens in a new tab).</div>'
                 + f'<div style="font:13px/1.6 {_SANS};color:#1b2a30;margin:8px 0 0;padding:9px 13px;border:1px dashed #cfd8db;border-radius:8px;max-width:860px;">'
                   '<b style="color:#13262f;">Where this module stops.</b> Module 02 owns how text becomes a command and the six architectures that '
                   "take away the agent&rsquo;s freedom to improvise. This module owns the grant: the tool list, the credential, the object check, the "

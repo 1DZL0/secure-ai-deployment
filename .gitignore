@@ -12,6 +12,6 @@ __pycache__/
 notebooks/assets/
 notebooks/__marimo__/
 _site/
-# the course shell and its companion pages (case library, teaching notes) are hand-written static HTML, not notebook exports, so keep them
+# the course shell and its companion pages (the case library) are hand-written static HTML, not notebook exports, so keep them
 !course/*.html
 !course/*/*.html
