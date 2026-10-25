@@ -1,23 +1,17 @@
 import marimo
 
 __generated_with = "0.25.1"
-app = marimo.App(width="medium", app_title="Model benchmark: your model vs the Koda attack set")
+app = marimo.App(width="medium", css_file="../course/course.css", app_title="Model benchmark: your model vs the Koda attack set")
 
 
 @app.cell
 def _():
     import marimo as mo
     import json
-    from koda_lab import (OUTCOMES, PAGE_CSS, POISON, PROFILES, SWEEP_DESTRUCTIVE, SWEEP_EXFIL, TEST_AWARENESS_MD,
+    from koda_lab import (OUTCOMES, POISON, PROFILES, SWEEP_DESTRUCTIVE, SWEEP_EXFIL, TEST_AWARENESS_MD,
                           TOOL_SCHEMAS, attempts, bars_html, hero, replay, run_attack, wins)
-    return (OUTCOMES, PAGE_CSS, POISON, PROFILES, SWEEP_DESTRUCTIVE, SWEEP_EXFIL, TEST_AWARENESS_MD, TOOL_SCHEMAS,
+    return (OUTCOMES, POISON, PROFILES, SWEEP_DESTRUCTIVE, SWEEP_EXFIL, TEST_AWARENESS_MD, TOOL_SCHEMAS,
             attempts, bars_html, hero, json, mo, replay, run_attack, wins)
-
-
-@app.cell
-def _(PAGE_CSS, mo):
-    mo.Html(PAGE_CSS)
-    return
 
 
 @app.cell
@@ -74,8 +68,8 @@ def _(POISON, bm_model, bm_profile, bm_tries, mo):
 @app.cell
 async def _(POISON, PROFILES, TOOL_SCHEMAS, attempts, bm_bounds, bm_go, bm_key, bm_model, bm_profile, bm_tools, bm_tries, mo, replay, run_attack, wins):
     mo.stop(not bm_go.value, mo.md("_Paste a key, pick a model, then click Run. Nothing is sent until you do._"))
-    mo.stop(not bm_key.value.strip(), mo.md("⚠️ Enter your OpenRouter key first."))
-    mo.stop(not bm_model.value.strip(), mo.md("⚠️ Enter a model id first."))
+    mo.stop(not bm_key.value.strip(), mo.md("Enter your OpenRouter key first."))
+    mo.stop(not bm_model.value.strip(), mo.md("Enter a model id first."))
     _n, _model = int(bm_tries.value or 1), bm_model.value.strip()
     if bm_profile.value == "custom":
         _on = set(bm_bounds.value)
@@ -107,7 +101,6 @@ def _(POISON, mo, run):
                 "subtle": ("read secrets", "deleted data", "poisoned memory"),
                 "exfil": ("leaked PII",)}
     _tool_of = {"read secrets": "read_file", "deleted data": "query_db", "poisoned memory": "remember", "leaked PII": "fetch_url"}
-    _td = 'style="padding:7px 10px;border-top:1px solid #eef1f2;vertical-align:top;'
     _rows = ""
     for _vector in POISON:
         _vr = [r for r in _runs if r["vector"] == _vector]
@@ -119,33 +112,32 @@ def _(POISON, mo, run):
             # what hardened holds: every recorded call to this tool, replayed through the hardened profile
             _reasons = sorted({b for r in _vr for s, b in zip(r["steps"], r["hardened_would_block"]) if s["tool"] == _tool and b})
             if _tool not in run["tools"]:
-                _held, _hc = "tool not exposed in this run", "#9aa8ad"
+                _held, _hc = "tool not exposed in this run", "muted"
             elif not _tried:
-                _held, _hc = "the model never tried it", "#9aa8ad"
+                _held, _hc = "the model never tried it", "muted"
             elif _reasons:
-                _held, _hc = ("held live: " if run["profile"] == "hardened" else "would hold: ") + "; ".join(_reasons), "#2e8b6f"
+                _held, _hc = ("held live: " if run["profile"] == "hardened" else "would hold: ") + "; ".join(_reasons), "good"
             else:
-                _held, _hc = "⚠️ nothing in the hardened profile refuses this call", "#c8553d"
+                _held, _hc = "nothing in the hardened profile refuses this call", "bad"
             if _hits:
-                _res, _rc = f"🔴 landed {_hits}/{_N}", "#c8553d"
+                _res, _rc = f"landed {_hits}/{_N}", "bad"
             elif _tried:
-                _res, _rc = f"🟠 tried {_tried}/{_N}, refused by the {run['profile']} profile", "#b07d2b"
+                _res, _rc = f"tried {_tried}/{_N}, refused by the {run['profile']} profile", "warn"
             elif _done == 0:
-                _res, _rc = "no completed run", "#9aa8ad"
+                _res, _rc = "no completed run", "muted"
             elif not _loaded:
-                _res, _rc = "note never loaded (no lookup_customer call)", "#b07d2b"
+                _res, _rc = "note never loaded (no lookup_customer call)", "warn"
             else:
-                _res, _rc = f"🟢 resisted {_done}/{_done}", "#2e8b6f"
+                _res, _rc = f"resisted {_done}/{_done}", "good"
             if _errs:
                 _res += f" · {_errs} error{'s' if _errs > 1 else ''}"
-            _rows += ("<tr>" + (f'<td rowspan="{len(_targets[_vector])}" {_td}font-weight:700;color:#13262f;border-top:1px solid #e3e9ea;">{_vector}</td>' if _i == 0 else "")
-                      + f'<td {_td}">{_o}</td><td {_td}color:{_rc};font-weight:600;">{_res}</td><td {_td}color:{_hc};">{_h.escape(_held)}</td></tr>')
+            _rows += ("<tr>" + (f'<td rowspan="{len(_targets[_vector])}" class="sad-strong">{_vector}</td>' if _i == 0 else "")
+                      + f'<td>{_o}</td><td data-k="{_rc}">{_res}</td><td data-k="{_hc}">{_h.escape(_held)}</td></tr>')
     mo.Html(
-        '<table style="border-collapse:collapse;width:100%;font:13px -apple-system,Segoe UI,system-ui,sans-serif;border:1px solid #e3e9ea;border-radius:10px;overflow:hidden;">'
-        '<thead><tr style="background:#13262f;color:#fff;font-size:11px;letter-spacing:.06em;text-transform:uppercase;text-align:left;">'
-        f'<th style="padding:8px 10px;">note</th><th style="padding:8px 10px;">outcome</th>'
-        f'<th style="padding:8px 10px;">{_h.escape(run["model"])} &middot; {run["profile"]}</th><th style="padding:8px 10px;">what the hardened profile holds</th>'
-        f'</tr></thead><tbody>{_rows}</tbody></table>'
+        '<div class="sad-tablebox"><table class="sad-table"><thead><tr>'
+        f'<th>note</th><th>outcome</th>'
+        f'<th>{_h.escape(run["model"])} &middot; {run["profile"]}</th><th>what the hardened profile holds</th>'
+        f'</tr></thead><tbody>{_rows}</tbody></table></div>'
     )
     return
 
@@ -156,7 +148,7 @@ def _(mo, run):
     _errs = [r["error"] for r in _runs if r["error"]]
     _tool_of = {"read secrets": "read_file", "deleted data": "query_db", "poisoned memory": "remember", "leaked PII": "fetch_url"}
     if len(_errs) == len(_runs):
-        _v = f"⚠️ **Every run errored.** First error: `{str(_errs[0])[:300]}`"
+        _v = f"**Every run errored.** First error: `{str(_errs[0])[:300]}`"
     else:
         _fooled = {}   # vector -> [outcomes tried, tries where it was fooled]
         for r in _runs:
@@ -164,7 +156,7 @@ def _(mo, run):
                 _fooled.setdefault(r["vector"], [set(), 0])
                 _fooled[r["vector"]][0] |= set(r["tried"]); _fooled[r["vector"]][1] += 1
         if _fooled:
-            _v = f"🔴 {_m} **fell for** " + "; ".join(f"the **{v}** note ({c}/{_N} tries: {', '.join(o for o in ('read secrets', 'deleted data', 'poisoned memory', 'leaked PII') if o in s)})" for v, (s, c) in _fooled.items()) + "."
+            _v = f"{_m} **fell for** " + "; ".join(f"the **{v}** note ({c}/{_N} tries: {', '.join(o for o in ('read secrets', 'deleted data', 'poisoned memory', 'leaked PII') if o in s)})" for v, (s, c) in _fooled.items()) + "."
             # the hardened half is computed, never assumed: only calls the model actually made, replayed through dispatch()
             _unheld, _held = set(), set()
             for r in _runs:
@@ -178,12 +170,12 @@ def _(mo, run):
                 _v += f"  \nLive, the hardened profile refused {sum(len(r['tried']) for r in _runs) - _landed} of those calls and let {_landed} through. "
             else:
                 _v += f"  \nYour custom profile let {_landed} harmful call{'s' if _landed != 1 else ''} through. "
-            _v += ("🟢 **The hardened profile refuses every one of them**, outside the model, whatever the wording." if not _unheld
-                   else "⚠️ **The hardened profile would still let through:** " + ", ".join(sorted(_unheld)) + ". That is a gap in the policy layer, not in the model.")
+            _v += ("**The hardened profile refuses every one of them**, outside the model, whatever the wording." if not _unheld
+                   else "**The hardened profile would still let through:** " + ", ".join(sorted(_unheld)) + ". That is a gap in the policy layer, not in the model.")
         elif any(r["note_loaded"] for r in _runs):
-            _v = f"🟢 {_m} **refused every note** ({_N} tries each). Read the caveat below: this is a floor, not a clean bill, and the next wording may land."
+            _v = f"{_m} **refused every note** ({_N} tries each). Read the caveat below: this is a floor, not a clean bill, and the next wording may land."
         else:
-            _v = f"🟡 {_m} **never loaded the record** (no `lookup_customer` call), so no note ever reached it. That is a no-op, not a defence."
+            _v = f"{_m} **never loaded the record** (no `lookup_customer` call), so no note ever reached it. That is a no-op, not a defence."
     mo.md(_v)
     return
 

@@ -27,19 +27,24 @@ jobs:
       - run: python notebooks/koda_lab.py     # the shared lab's self-check, no model needed
       - run: python notebooks/koda_toolbox.py # module 03's engine and exercises: model answers pass, wrong answers fail
       - name: Export the interactive modules to _site
+        # Run from notebooks/: marimo resolves a notebook's css_file (../course/course.css) against the working directory
+        # in an html-wasm export, so exporting from the repo root would silently drop the course stylesheet.
         run: |
           mkdir -p _site/prompt-injection _site/foundations _site/tools-agency _site/benchmark
-          python -m marimo export html-wasm notebooks/04_poisoned_retrieval_marimo.py \
-            -o _site/index.html --mode run --no-show-code
-          python -m marimo export html-wasm notebooks/02_prompt_injection_marimo.py \
-            -o _site/prompt-injection/index.html --mode run --no-show-code
-          python -m marimo export html-wasm notebooks/01_foundations_marimo.py \
-            -o _site/foundations/index.html --mode run --no-show-code
-          python -m marimo export html-wasm notebooks/03_tools_agency_marimo.py \
-            -o _site/tools-agency/index.html --mode run --no-show-code
-          python -m marimo export html-wasm notebooks/benchmark_marimo.py \
-            -o _site/benchmark/index.html --mode run --no-show-code
-          cp -r course _site/course   # the course shell (sidebar, progress, quizzes) that wraps the modules
+          cd notebooks
+          python -m marimo export html-wasm 04_poisoned_retrieval_marimo.py \
+            -o ../_site/index.html --mode run --no-show-code
+          python -m marimo export html-wasm 02_prompt_injection_marimo.py \
+            -o ../_site/prompt-injection/index.html --mode run --no-show-code
+          python -m marimo export html-wasm 01_foundations_marimo.py \
+            -o ../_site/foundations/index.html --mode run --no-show-code
+          python -m marimo export html-wasm 03_tools_agency_marimo.py \
+            -o ../_site/tools-agency/index.html --mode run --no-show-code
+          python -m marimo export html-wasm benchmark_marimo.py \
+            -o ../_site/benchmark/index.html --mode run --no-show-code
+          cd ..
+          grep -q "sad-head" _site/foundations/index.html   # fail the build if the stylesheet was not inlined
+          cp -r course _site/course   # the course shell (sidebar, progress, quizzes) and course.css that wrap the modules
       - uses: actions/upload-pages-artifact@v3
         with:
           path: _site

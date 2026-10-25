@@ -1,7 +1,7 @@
 import marimo
 
 __generated_with = "0.25.1"
-app = marimo.App(width="medium", app_title="Tools and excessive agency: the agent's own tools as the risk")
+app = marimo.App(width="medium", css_file="../course/course.css", app_title="Tools and excessive agency: the agent's own tools as the risk")
 
 
 @app.cell
@@ -11,8 +11,8 @@ def _():
     import itertools
     import re
     import koda_toolbox as kt
-    from koda_lab import PAGE_CSS, console_html, divider, hero, results_table
-    return PAGE_CSS, console_html, divider, hero, html, itertools, kt, mo, re, results_table
+    from koda_lab import console_html, divider, hat_html, hero, results_table
+    return console_html, divider, hat_html, hero, html, itertools, kt, mo, re, results_table
 
 
 @app.cell
@@ -266,53 +266,40 @@ def _():
 
 
 @app.cell
-def _(CASES, KINDS, SUBTYPES, html, itertools, kt, mo, re):
+def _(CASES, KINDS, SUBTYPES, console_html, hat_html, html, itertools, kt, mo, re):
     # shared renderers for this page: feedback cards, chips, incident cards, the attack-set table and the grader wrapper
-    _SANS = "-apple-system,Segoe UI,system-ui,sans-serif"
-    AMBER = lambda s: f'<span style="background:#f6eedb;color:#7a5a16;padding:0 3px;">{s}</span>'
-    REDUCER = '<span style="color:#b07d2b;font-weight:700;">Reducer</span>'
-    BOUNDARY = '<span style="color:#2e8b6f;font-weight:700;">Boundary</span>'
-    DETECT = '<span style="color:#5e7278;font-weight:700;">Detect</span>'
+    AMBER = lambda s: f'<span class="sad-hl">{s}</span>'
+    REDUCER = '<span class="sad-lbl">Reducer</span>'
+    BOUNDARY = '<span class="sad-lbl">Boundary</span>'
+    DETECT = '<span class="sad-lbl">Detect</span>'
 
-    def chip(text, bg="#eef2f3", fg="#13262f", bd="#d7dee0"):
-        return (f'<span style="display:inline-block;background:{bg};color:{fg};border:1px solid {bd};font:600 11px {_SANS};'
-                f'padding:2px 9px;border-radius:10px;white-space:nowrap;">{text}</span>')
+    def chip(text, strong=False):
+        return f'<span class="sad-tag{" is-strong" if strong else ""}">{text}</span>'
 
     def status_chip(text, kind):
-        # green = held, red = landed or broken, amber = partly
-        _c = {"good": ("#e4f3ec", "#1d6b52", "#b9dccd"), "bad": ("#fbe6e1", "#9c3a27", "#efc1b7"), "warn": ("#f6eedb", "#7a5a16", "#e3d3a8")}[kind]
-        return chip(text, *_c)
+        # good = held, bad = landed or broken, warn = partly; carried by outline and weight, so it reads without colour
+        return f'<span class="sad-st" data-k="{kind}">{text}</span>'
 
     def layer_chip(layer):
         _names = {"toolbox": "tool diet", "scope": "scoped credential", "object check": "object check", "argument check": "argument check",
                   "approval": "approval gate", "pin": "pin", "scanner": "scanner", "allowlist": "allowlist",
                   "isolation": "isolation (Module 06)"}
-        return chip(_names.get(layer, layer), "#13262f", "#fff", "#13262f")
+        return chip(_names.get(layer, layer), strong=True)
 
     def fb_card(ok, why, head=None):
         why = re.sub(r"`([^`]+)`", lambda m: "<code>" + m.group(1) + "</code>", why)          # the card is raw HTML, so turn `code` spans into tags
-        _c = "#2e8b6f" if ok else "#c8553d"
         _h = head or ("&#10003; correct" if ok else "&#10007; not quite")
-        return mo.Html(f'<div style="border-left:4px solid {_c};background:#fafcfc;border-radius:6px;padding:9px 13px;margin:6px 0;'
-                       f'font:13px {_SANS};color:#1b2a30;line-height:1.5;"><b style="color:{_c};">{_h}</b> &middot; {why}</div>')
+        return mo.Html(f'<div class="sad-fb" data-ok="{"true" if ok else "false"}"><b>{_h}</b> &middot; {why}</div>')
 
     def verdict(state, err, passed, failed):
-        return {"missing": "✏️ **Write the function** (keep its name), then click out of the editor and the check runs.",
-                "blank": "✏️ **Write the body**: it still returns the `...` placeholder. The check runs when you click out of the editor.",
-                "raised": f"⚠️ your code raised `{err}`, fix it and the check re-runs.",
-                "pass": "✅ **PASS.** " + passed,
-                "fail": "🟡 **Not yet.** " + failed}[state]
+        return {"missing": "**Write the function** (keep its name), then click out of the editor and the check runs.",
+                "blank": "**Write the body**: it still returns the `...` placeholder. The check runs when you click out of the editor.",
+                "raised": f"Your code raised `{err}`, fix it and the check re-runs.",
+                "pass": "**PASS.** " + passed,
+                "fail": "**Not yet.** " + failed}[state]
 
     def answer(code):
         return mo.accordion({"Show a working answer": mo.md("```python\n" + code + "\n```")})
-
-    def hat_html(side, title, note=""):
-        _c, _t = ("#c8553d", "Red team") if side == "red" else ("#2e8b6f", "Blue team")
-        return (f'<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:18px 0 4px;font-family:{_SANS};">'
-                f'<span style="background:{_c};color:#fff;font:700 10.5px system-ui;letter-spacing:.12em;text-transform:uppercase;'
-                f'padding:4px 11px;border-radius:20px;white-space:nowrap;">{_t}</span>'
-                f'<span style="font:700 19px {_SANS};color:#13262f;">{title}</span>'
-                + (f'<span style="color:#5e7278;font:500 13px {_SANS};">{note}</span>' if note else "") + "</div>")
 
     def hat(side, title, note=""):
         return mo.Html(hat_html(side, title, note))
@@ -321,15 +308,13 @@ def _(CASES, KINDS, SUBTYPES, html, itertools, kt, mo, re):
         _c = CASES[key]
         _subs = "".join(chip(SUBTYPES[s]) for s in _c["subs"])
         _links = " &middot; ".join(f'<a href="{u}" target="_blank" rel="noopener">{l}</a>' for l, u in _c["srcs"])
-        return (f'<div style="border:1px solid #e3d9c6;border-left:4px solid #b05a00;background:#fffaf2;border-radius:8px;padding:10px 14px;'
-                f'margin:8px 0;max-width:900px;font:13px/1.55 {_SANS};color:#1b2a30;">'
-                f'<div style="display:flex;flex-wrap:wrap;gap:5px 9px;align-items:center;">'
-                f'<span style="color:#b05a00;font:700 10.5px system-ui;letter-spacing:.12em;text-transform:uppercase;">Documented case &middot; {_c["date"]}</span>{chip(KINDS[_c["kind"]], "#fff3e3", "#7a4300", "#f0cfa4")}{_subs}</div>'
-                f'<div style="font:700 14.5px {_SANS};color:#13262f;margin:3px 0 4px;">{_c["title"]}</div>'
-                f'<div><b style="color:#13262f;">What happened.</b> {_c["what"]}</div>'
-                f'<div style="margin-top:3px;"><b style="color:#13262f;">What would have bounded it.</b> {_c["bound"]} '
-                f'<span style="white-space:nowrap;">In the lab: {layer_chip(_c["layer"])}</span></div>'
-                f'<div style="margin-top:4px;font-size:12px;color:#5e7278;">Sources (open in a new tab): {_links}</div></div>')
+        return ('<div class="sad-case">'
+                f'<div class="sad-case-meta"><span>Documented case &middot; {_c["date"]}</span>{chip(KINDS[_c["kind"]])}{_subs}</div>'
+                f'<div class="sad-case-title">{_c["title"]}</div>'
+                f'<div><b>What happened.</b> {_c["what"]}</div>'
+                f'<div class="sad-gap"><b>What would have bounded it.</b> {_c["bound"]} '
+                f'<span class="sad-nowrap">In the lab: {layer_chip(_c["layer"])}</span></div>'
+                f'<div class="sad-src sad-gap">Sources (open in a new tab): {_links}</div></div>')
 
     def case_card(key):
         return mo.Html(case_html(key))
@@ -354,10 +339,8 @@ def _(CASES, KINDS, SUBTYPES, html, itertools, kt, mo, re):
         _planted = kt.SCENARIOS[sid]["planted"] if sid in kt.SCENARIOS else None
         _note = ""
         if _planted:
-            _note = ('<div style="border:1px solid #d7dee0;border-radius:8px;padding:9px 13px;margin:4px 0;background:#fafcfc;max-width:760px;'
-                     'font:12.5px Consolas,monospace;line-height:1.55;"><div style="color:#5e7278;font:600 10px system-ui;letter-spacing:.06em;'
-                     'text-transform:uppercase;margin-bottom:3px;">In Petros&rsquo;s account notes, written by a stranger</div>'
-                     f'{AMBER(html.escape(_planted))}</div>')
+            _note = ('<div class="sad-panel"><p class="sad-cap">In Petros&rsquo;s account notes, written by a stranger</p>'
+                     f'<div class="sad-mono">{AMBER(html.escape(_planted))}</div></div>')
         return _note + console_html(_steps, 0, label, user=USER_SAYS[sid], reply=assistant_reply(sid, _steps)), _steps
 
     def attack_table(dep, title="This deployment against the attack set"):
@@ -367,25 +350,23 @@ def _(CASES, KINDS, SUBTYPES, html, itertools, kt, mo, re):
         _ok = kt.completed(_legit)
         _why = next((s["blocked"] for s in _legit if s["blocked"]), "")
         _cell = lambda label, sub, chipped: (
-            '<div style="display:flex;flex-wrap:wrap;gap:3px 12px;align-items:center;padding:7px 0;border-top:1px solid #eef1f2;">'
-            f'<div style="flex:1 1 250px;min-width:0;"><b style="font:600 13.5px {_SANS};color:#13262f;">{label}</b>'
-            f'<div style="font:12px {_SANS};color:#5e7278;">{sub}</div></div><div style="flex:1 1 280px;min-width:0;">{chipped}</div></div>')
+            '<div class="sad-row">'
+            f'<div class="sad-grow"><div class="sad-title">{label}</div><div class="sad-sub2">{sub}</div></div><div class="sad-grow">{chipped}</div></div>')
         _rows += _cell("The real task", "Alice asks for a reply to Nadia, one of Larnaca Marine&rsquo;s customers, about her invoice",
                        status_chip("&#10003; still works", "good") if _ok else status_chip("&#10007; broken", "bad")
-                       + f' <span style="font:12px {_SANS};color:#9c3a27;">{html.escape(_why)}</span>')
+                       + f' <span class="sad-sub2">{html.escape(_why)}</span>')
         for _sid in kt.ATTACKS:
             _steps = kt.run_scenario(_sid, dep)
             _lnd, _held = kt.landed(_steps), kt.layers_that_held(_steps)
             if _lnd:
-                _out = status_chip("LANDED", "bad") + f' <span style="font:12.5px {_SANS};color:#9c3a27;">{kt.OUTCOMES[_lnd[0]]}</span>'
+                _out = status_chip("LANDED", "bad") + f' <span class="sad-sub2">{kt.OUTCOMES[_lnd[0]]}</span>'
             elif _held:
                 _out = status_chip("waits for a person" if _held == ["approval"] else "held", "good") + " " + " ".join(layer_chip(h) for h in _held)
             else:
                 _out = status_chip("did not run", "warn")
             _rows += _cell(kt.SCENARIOS[_sid]["label"], f'{kt.SCENARIOS[_sid]["gist"]} <i>({kt.SCENARIOS[_sid]["lesson"]})</i>', _out)
         _landed = sum(1 for _s in kt.ATTACKS if kt.landed(kt.run_scenario(_s, dep)))
-        return (f'<div style="border:1px solid #e3e9ea;border-radius:8px;padding:9px 14px;margin:6px 0;background:#fff;max-width:900px;">'
-                f'<div style="font:600 10px system-ui;color:#5e7278;letter-spacing:.05em;text-transform:uppercase;margin-bottom:2px;">{title}</div>{_rows}</div>'), _ok, _landed
+        return (f'<div class="sad-panel"><p class="sad-cap">{title}</p>{_rows}</div>'), _ok, _landed
 
     def subsets_that_hold():
         # every combination of the four reference layers, and whether it holds all four attacks while the real task works
@@ -401,49 +382,30 @@ def _(CASES, KINDS, SUBTYPES, html, itertools, kt, mo, re):
         return _out
 
     return (AMBER, BOUNDARY, DETECT, REDUCER, USER_SAYS, answer, assistant_reply, attack_table, case_card, case_html, chip, fb_card, hat,
-            hat_html, layer_chip, scenario_html, status_chip, subsets_that_hold, verdict)
-
-
-@app.cell
-def _(PAGE_CSS, mo):
-    mo.Html(PAGE_CSS)   # page polish: reading width, tighter cell spacing, no minimap, styled widgets
-    return
+            layer_chip, scenario_html, status_chip, subsets_that_hold, verdict)
 
 
 @app.cell
 def _(hero, kt, mo):
-    _SANS = "-apple-system,Segoe UI,system-ui,sans-serif"
-    _pill = lambda t: (f'<span style="display:inline-block;background:#eef2f3;color:#13262f;font:600 11.5px system-ui;'
-                       f'padding:4px 11px;border-radius:14px;margin:0 6px 6px 0;">{t}</span>')
-    _h2 = lambda t: f'<div style="font:700 22px {_SANS};color:#13262f;margin:18px 0 6px;">{t}</div>'
     # OWASP's three root causes of excessive agency, plus the two questions Module 02 did not ask
-    _causes = [("1", "Too many tools", "Excessive functionality",
+    _causes = [("Too many tools", "Excessive functionality",
                 "The agent can do things the task never needed: run any SQL, delete an account, run a shell command."),
-               ("2", "Keys that are too wide", "Excessive permissions",
+               ("Keys that are too wide", "Excessive permissions",
                 "The credential behind a tool reaches further than the job: other customers, other tenants, every scope at once."),
-               ("3", "No one checking", "Excessive autonomy",
+               ("No one checking", "Excessive autonomy",
                 "An action that cannot be undone, or runs without limit, goes ahead with no independent check."),
-               ("4", "Whose authority?", "The confused deputy",
+               ("Whose authority?", "The confused deputy",
                 "A request from someone with little authority, or text they wrote, spends the agent's much greater authority."),
-               ("5", "Who wrote the tool?", "Tool integrity",
+               ("Who wrote the tool?", "Tool integrity",
                 "A tool&rsquo;s name, description and result are text the model obeys. Whoever controls them steers the agent.")]
-    _card = lambda n, t, tag, d: (
-        '<div style="flex:1 1 190px;min-width:0;border:1px solid #d7dee0;border-radius:10px;padding:11px 13px;background:#fff;">'
-        f'<div style="display:flex;align-items:center;gap:8px;margin-bottom:2px;">'
-        f'<span style="flex:none;width:22px;height:22px;border-radius:50%;background:#13262f;color:#fff;font:700 12px/22px {_SANS};text-align:center;">{n}</span>'
-        f'<span style="font:700 14.5px {_SANS};color:#13262f;">{t}</span></div>'
-        f'<div style="font:600 10.5px system-ui;color:#b05a00;letter-spacing:.08em;text-transform:uppercase;margin:0 0 4px 30px;">{tag}</div>'
-        f'<div style="font:13.5px/1.5 {_SANS};color:#1b2a30;">{d}</div></div>')
+    _item = lambda t, tag, d: f'<li><b>{t}</b><span class="sad-kind">{tag}</span>{d}</li>'
     _parts = [("How it breaks", "Audit the toolbox against one task, then watch four things go wrong with no software bug."),
               ("How you stop it", "Shrink the toolbox, then write the credential, the object check and the approval gate, and aim the attack set at your own deployment."),
               ("Break your own validator", "Slip a flag past the shipped check, write the check that stops you, and see why a typed tool removes the problem."),
               ("The tools themselves", "Definitions poisoned before and after approval, and the tool supply chain."),
               ("The defender&rsquo;s toolbox", "Sort ten controls, read the build order, and see what the vendors say about their own."),
               ("Take it to your own agent", "Score each tool on what it can do, whose authority it uses and what pins it, then turn the result into a test.")]
-    _row = lambda i, t, d: (
-        '<div style="display:flex;gap:10px;align-items:baseline;padding:5px 0;border-top:1px solid #eef1f2;">'
-        f'<span style="flex:none;color:#b05a00;font:700 11px {_SANS};letter-spacing:.1em;text-transform:uppercase;width:52px;">Part {i}</span>'
-        f'<span style="font:14px/1.5 {_SANS};color:#1b2a30;"><b style="color:#13262f;">{t}.</b> {d}</span></div>')
+    _row = lambda i, t, d: f'<li><span class="sad-no">Part {i}</span><span><b>{t}.</b> <span class="sad-desc">{d}</span></span></li>'
     _tools, _scopes = len(kt.TOOLBOX), len(kt.ALL_SCOPES)
     mo.vstack([
         mo.Html(hero(
@@ -452,41 +414,33 @@ def _(hero, kt, mo):
             "Assume the model will sometimes follow text it should not, or simply get it wrong. This module asks what that costs: which tools the "
             "assistant holds, how wide the key behind them is, and who checks each use. You take Koda&rsquo;s assistant from one admin key to a "
             "deployment that holds four named attacks while the real task still works, and you learn what that deployment still leaves open.",
+            meta=("about 70 minutes", "runs in your browser, no key needed", "Koda is invented, nothing real is touched"),
         )),
-        mo.Html('<div style="margin:2px 0 0;">' + _pill("about 70 minutes") + _pill("runs in your browser, no key needed")
-                + _pill("Koda is invented, nothing real is touched") + "</div>"
-                + _h2("The question after &ldquo;what if the model is fooled?&rdquo;")
-                + f'<div style="font:14.5px/1.55 {_SANS};color:#1b2a30;max-width:860px;margin-bottom:9px;">'
-                  "<a href=\"../course/#/lesson/prompt-injection\" target=\"_top\" style=\"color:#b05a00;\">Module 02</a> ended on one sentence: only authority the model "
-                  "does not hold makes a landed injection survivable. This module asks the question one step earlier. "
-                  "<b>Why did the assistant hold that authority at all?</b> OWASP calls the problem <b>Excessive Agency</b> (LLM06:2025, "
-                  "renumbered LLM03:2026 in the <a href=\"https://genai.owasp.org/resource/owasp-genai-llm-top-10-2026/\" target=\"_blank\" rel=\"noopener\" style=\"color:#b05a00;\">2026 edition</a>) "
-                  "and names three causes. Two more questions come with tools.</div>"
-                + '<div style="display:flex;gap:9px;flex-wrap:wrap;">' + "".join(_card(*c) for c in _causes) + "</div>"
-                + f'<div style="font:14.5px/1.55 {_SANS};color:#1b2a30;margin:9px 0 0;max-width:860px;">'
-                  "The first three need no attacker at all: in July 2025 a coding agent deleted a production database during a code freeze that "
-                  "existed only as a sentence in the conversation. An attacker only has to <b>borrow</b> what the agent already holds. "
-                  "The fix is the same each time: <b>make the authority smaller, tie it to the person and the task, and check each use "
-                  "outside the model.</b></div>"
-                + _h2("In this module")
-                + '<div style="max-width:860px;">' + "".join(_row(i + 1, *p) for i, p in enumerate(_parts)) + "</div>"
-                + f'<div style="font:14px/1.55 {_SANS};color:#1b2a30;margin:8px 0 0;padding:9px 13px;background:#fafcfc;border:1px solid #e3e9ea;'
-                  'border-radius:8px;max-width:860px;"><b style="color:#13262f;">You leave with</b> a deployment you built that holds four attacks '
-                  "while the real task still works, a tool register for your own agent, and a test that fails if the policy ever slips. "
-                  'It builds on the agent loop from <a href="../course/#/lesson/foundations" target="_top" style="color:#b05a00;">Module 01</a>. '
-                  'Alongside it: the <a href="../course/#/tool/cases" target="_blank" rel="noopener" style="color:#b05a00;">case library and attack atlas</a> (54 documented cases, 23 attack classes, 37 controls; opens in a new tab).</div>'
-                + f'<div style="font:13px/1.6 {_SANS};color:#1b2a30;margin:8px 0 0;padding:9px 13px;border:1px dashed #cfd8db;border-radius:8px;max-width:860px;">'
-                  '<b style="color:#13262f;">Where this module stops.</b> Module 02 owns how text becomes a command and the six architectures that '
-                  "take away the agent&rsquo;s freedom to improvise. This module owns the grant: the tool list, the credential, the object check, the "
-                  'approval gate and the tool&rsquo;s own definition. OWASP draws the line the same way: LLM01 is the input-side compromise, and '
-                  "Excessive Agency carries the agency-side treatment. Retrieval as the carrier is Module 04, the answer path and what leaks is 05, "
-                  "the code sandbox is 06, memory is 07, peers are 08, and watching it all is 09.</div>"
-                + f'<div style="font:13.5px/1.55 {_SANS};color:#1b2a30;margin:10px 0 0;">'
-                  '<span style="background:#c8553d;color:#fff;font:700 10px system-ui;letter-spacing:.12em;text-transform:uppercase;padding:3px 9px;border-radius:20px;">Red team</span>'
-                  " sections: you borrow the agent&rsquo;s authority. "
-                  '<span style="background:#2e8b6f;color:#fff;font:700 10px system-ui;letter-spacing:.12em;text-transform:uppercase;padding:3px 9px;border-radius:20px;">Blue team</span>'
-                  " sections: you size, scope and check it. Documented cases appear as cards beside the part of the lab that bounds them, "
-                  "described by mechanism and never by payload.</div>"),
+        mo.Html('<h2 class="sad-h2">The question after &ldquo;what if the model is fooled?&rdquo;</h2>'
+                '<p class="sad-prose"><a href="../course/#/lesson/prompt-injection" target="_top">Module 02</a> ended on one sentence: only authority the model '
+                "does not hold makes a landed injection survivable. This module asks the question one step earlier. "
+                "Why did the assistant hold that authority at all? OWASP calls the problem <b>Excessive Agency</b> (LLM06:2025, "
+                'renumbered LLM03:2026 in the <a href="https://genai.owasp.org/resource/owasp-genai-llm-top-10-2026/" target="_blank" rel="noopener">2026 edition</a>) '
+                "and names three causes. Two more questions come with tools.</p>"
+                '<ol class="sad-steps">' + "".join(_item(*c) for c in _causes) + "</ol>"
+                '<p class="sad-prose">The first three need no attacker at all: in July 2025 a coding agent deleted a production database during a code freeze that '
+                "existed only as a sentence in the conversation. An attacker only has to <b>borrow</b> what the agent already holds. "
+                'The fix is the same each time: <b class="sad-key">make the authority smaller, tie it to the person and the task, and check each use '
+                "outside the model.</b></p>"
+                '<h2 class="sad-h2">In this module</h2>'
+                '<ol class="sad-parts">' + "".join(_row(i + 1, *p) for i, p in enumerate(_parts)) + "</ol>"
+                '<div class="sad-note"><b>You leave with</b> a deployment you built that holds four attacks '
+                "while the real task still works, a tool register for your own agent, and a test that fails if the policy ever slips. "
+                'It builds on the agent loop from <a href="../course/#/lesson/foundations" target="_top">Module 01</a>. '
+                'Alongside it: the <a href="../course/#/tool/cases" target="_blank" rel="noopener">case library and attack atlas</a> (54 documented cases, 23 attack classes, 37 controls; opens in a new tab).</div>'
+                '<div class="sad-note"><b>Where this module stops.</b> Module 02 owns how text becomes a command and the six architectures that '
+                "take away the agent&rsquo;s freedom to improvise. This module owns the grant: the tool list, the credential, the object check, the "
+                'approval gate and the tool&rsquo;s own definition. OWASP draws the line the same way: LLM01 is the input-side compromise, and '
+                "Excessive Agency carries the agency-side treatment. Retrieval as the carrier is Module 04, the answer path and what leaks is 05, "
+                "the code sandbox is 06, memory is 07, peers are 08, and watching it all is 09.</div>"
+                '<p class="sad-prose"><b>Red team</b> sections: you borrow the agent&rsquo;s authority. <b>Blue team</b> sections: you size, scope and check it. '
+                "Documented cases appear as cards beside the part of the lab that bounds them, "
+                "described by mechanism and never by payload.</p>"),
     ])
     return
 
@@ -497,9 +451,9 @@ def _(attack_table, kt, mo, scenario_html):
     _tbl, _ok, _landed = attack_table(kt.open_deployment(), "The assistant as shipped, against four attacks")
     _task_tools, _task_scopes = len(kt.TASKS["reply"]["needs"]), len(kt.TASKS["reply"]["scopes"])
     mo.vstack([
-        mo.md("### See it first\n\n**Alice, who works in support at Larnaca Marine, asked the assistant to follow up with a customer. This is what it did.**"),
+        mo.md("### See it first\n\nAlice, who works in support at Larnaca Marine, asked the assistant to follow up with a customer. This is what it did."),
         mo.Html(_html),
-        mo.md("The amber **UNTRUSTED DATA** tag marks text a stranger could have written. Here it is the notes field on Petros&rsquo;s record. "
+        mo.md("The **UNTRUSTED DATA** tag marks text a stranger could have written. Here it is the notes field on Petros&rsquo;s record. "
               "The model reads it the way it reads Alice&rsquo;s request, and that is the whole problem."),
         mo.hstack([
             mo.stat(f"{len(kt.TOOLBOX)} / {_task_tools}", label="tools it held / tools the task needed", bordered=True),
@@ -509,13 +463,11 @@ def _(attack_table, kt, mo, scenario_html):
         mo.md("Nothing was hacked. The assistant holds one admin key and ten tools, and a sentence in a customer record was enough to spend them. "
               "The model did what a fooled model does; the damage was set by the grant. The table shows all four attacks on this deployment."),
         mo.Html(_tbl),
-        mo.Html('<div style="border:1px solid #e3e9ea;border-radius:8px;padding:9px 13px;margin:4px 0 0;background:#fafcfc;'
-                'font:13px/1.55 -apple-system,Segoe UI,system-ui,sans-serif;color:#1b2a30;max-width:900px;">'
-                '<b style="color:#13262f;">What is running here.</b> The assistant on this page is a deterministic stand-in: for each scenario it '
+        mo.Html('<div class="sad-note"><b>What is running here.</b> The assistant on this page is a deterministic stand-in: for each scenario it '
                 "makes the calls a fooled model would make, in a fixed order. It proves nothing about whether a real model would be fooled, "
                 "which Module 02 and the Model benchmark measure. What it lets you test, repeatably and offline, is the deployment around the "
                 "model: the toolbox, the credential, the object check, the argument check and the approval gate. Nothing here executes anything. "
-                "A &ldquo;command&rdquo; is a string the mock tool pretends to run.</div>"),
+                                "A &ldquo;command&rdquo; is a string the mock tool pretends to run.</div>"),
     ])
     return
 
@@ -531,23 +483,21 @@ def _(divider, mo):
 @app.cell
 def _(hat, kt, mo):
     # recon first: a red team starts by asking the agent what it can do
-    _SANS = "-apple-system,Segoe UI,system-ui,sans-serif"
     _row = lambda n, t: (
-        '<div style="display:flex;flex-wrap:wrap;gap:3px 12px;align-items:center;padding:5px 0;border-top:1px solid #eef1f2;">'
-        f'<div style="flex:0 0 175px;">{{t_{n}}}</div>'
-        f'<div style="flex:1 1 250px;min-width:0;font:13px {_SANS};color:#1b2a30;">{t["does"]}</div>'
-        f'<div style="flex:0 1 190px;min-width:0;font:11.5px Consolas,monospace;color:#5e7278;">{t["scope"]}</div>'
-        + (f'<div style="flex:0 0 112px;"><span style="background:#fbe6e1;color:#9c3a27;font:600 10.5px system-ui;padding:2px 8px;border-radius:9px;white-space:nowrap;">cannot be undone</span></div>'
-           if t["irreversible"] else '<div style="flex:0 0 112px;"></div>') + '</div>')
+        '<div class="sad-row">'
+        f'<div class="sad-col-tick">{{t_{n}}}</div>'
+        f'<div class="sad-grow">{t["does"]}</div>'
+        f'<div class="sad-col-scope sad-code">{t["scope"]}</div>'
+        + ('<div class="sad-col-flag"><span class="sad-st" data-k="bad">cannot be undone</span></div>' if t["irreversible"] else '<div class="sad-col-flag"></div>')
+        + '</div>')
     tool_ticks = mo.Html(
-        '<div style="max-width:900px;border:1px solid #e3e9ea;border-radius:8px;padding:6px 14px;background:#fff;">'
-        f'<div style="font:600 10px system-ui;color:#5e7278;letter-spacing:.05em;text-transform:uppercase;padding:4px 0;">The assistant&rsquo;s tool register: what it answers when you ask what it can do</div>'
+        '<div class="sad-panel"><p class="sad-cap">The assistant&rsquo;s tool register: what it answers when you ask what it can do</p>'
         + "".join(_row(n, t) for n, t in kt.TOOLBOX.items()) + "</div>"
     ).batch(**{f"t_{n}": mo.ui.checkbox(label=n) for n in kt.TOOLBOX})
     mo.vstack([
         hat("red", "Recon: what can it do?", "ask before you attack"),
         mo.md("The first move in any engagement against an agent is to ask it what it can do. Koda&rsquo;s assistant answers with this register. "
-              "The task: **Alice asks the assistant to reply to Nadia about her invoice.** The ticket gives Alice Nadia&rsquo;s account id, 101. "
+              "The task: Alice asks the assistant to reply to Nadia about her invoice. The ticket gives Alice Nadia&rsquo;s account id, 101. "
               "Tick the tools that task needs, and only those."),
         tool_ticks,
     ])
@@ -597,24 +547,20 @@ def _(fb_card, kt, mo, tool_ticks):
 
 @app.cell
 def _(mo):
-    _col = lambda label, color, bg, border, tag, items: (
-        f'<div style="flex:1 1 280px;background:{bg};border:1px solid {border};border-radius:9px;padding:12px 15px;">'
-        f'<div style="color:{color};font:700 11px system-ui;letter-spacing:.1em;text-transform:uppercase;margin-bottom:2px;">{label}</div>'
-        f'<div style="font:600 12px system-ui;color:#5e7278;margin-bottom:6px;">{tag}</div>'
-        '<div style="font-size:13.5px;line-height:1.55;color:#1b2a30;">' + items + "</div></div>")
+    _col = lambda label, tag, items: f'<div><h4>{label}</h4><p class="sad-kind">{tag}</p><p>{items}</p></div>'
     mo.vstack([
         mo.md("### Three kinds of excess\n\nEvery surplus tool you left unticked is one of three things. OWASP names them as the root causes of Excessive "
               "Agency, and the rest of this module is a fix for each."),
-        mo.Html('<div style="display:flex;gap:12px;flex-wrap:wrap;font-family:-apple-system,Segoe UI,system-ui,sans-serif;margin:4px 0;">'
-                + _col("Excessive functionality", "#3d5a80", "#f4f6fb", "#d3dbe9", "the tool is there",
+        mo.Html('<div class="sad-cols">'
+                + _col("Excessive functionality", "the tool is there",
                        "A tool the task never needed, or a tool that does more than its name says: a <i>search</i> that also fetches any URL, a "
                        "<i>logs</i> tool whose flags can run a program. <b>Fix: take it away</b>, or type its arguments until it can only do its job.")
-                + _col("Excessive permissions", "#6a4c93", "#f7f4fb", "#ddd3ea", "the key is too wide",
+                + _col("Excessive permissions", "the key is too wide",
                        "The credential behind the tool reaches further than the job: every tenant, every table, every scope the platform has. "
                        "<b>Fix: scope the credential</b> to the task and the person, and let the data layer check the object.")
-                + _col("Excessive autonomy", "#a0527c", "#fbf4f8", "#eacfdc", "nobody checks",
+                + _col("Excessive autonomy", "nobody checks",
                        "An action that cannot be undone, or that can repeat without limit, goes ahead with no independent check. "
-                       "<b>Fix: a gate outside the model</b> that holds what cannot be undone and stops a flood, shown as the literal call.")
+                       "Fix: a gate outside the model that holds what cannot be undone and stops a flood, shown as the literal call.")
                 + "</div>"),
         mo.md("Excess is not the same as attack. OWASP describes the cause as damaging actions in response to *unexpected, ambiguous or manipulated* "
               "outputs, which covers a model that simply misread the task. An attacker needs the excess to be there; the excess does not need an attacker."),
@@ -735,10 +681,8 @@ def _(divider, mo):
 
 @app.cell
 def _(layer_chip, mo):
-    _SANS = "-apple-system,Segoe UI,system-ui,sans-serif"
-    _arrow = '<span style="color:#9aa8ad;font-size:15px;">&rarr;</span>'
-    _end = lambda t: (f'<span style="background:#eef2f3;color:#13262f;border:1px solid #d7dee0;font:600 11px {_SANS};padding:2px 9px;border-radius:10px;'
-                      f'white-space:nowrap;">{t}</span>')
+    _arrow = '<span class="sad-arrow">&rarr;</span>'
+    _end = lambda t: f'<span class="sad-tag">{t}</span>'
     _flow = f" {_arrow} ".join([_end("the model asks for a call"), layer_chip("toolbox"), layer_chip("scope"), layer_chip("object check"),
                                 layer_chip("argument check"), layer_chip("approval"), _end("the tool runs")])
     mo.vstack([
@@ -746,11 +690,11 @@ def _(layer_chip, mo):
               "and each clause of it is a layer."),
         mo.callout(mo.md("**Authority is a property of the call, not of the agent: shrink the toolbox, scope the credential to the task and the person, "
                          "and check every use outside the model.**"), kind="info"),
-        mo.Html(f'<div style="font-family:{_SANS};margin:6px 0;max-width:900px;">'
-                f'<div style="display:flex;flex-wrap:wrap;gap:6px 8px;align-items:center;">{_flow}</div>'
-                f'<div style="font:12.5px/1.55 {_SANS};color:#5e7278;margin-top:6px;">Every call passes the same checkpoint, in this order, outside the model. '
+        mo.Html('<div class="sad-flowbox">'
+                f'<div class="sad-flow">{_flow}</div>'
+                '<p class="sad-cap">Every call passes the same checkpoint, in this order, outside the model. '
                 "The first layer that refuses it is the one that reports. <b>Shrink</b> is the tool diet, <b>scope</b> is the credential and the object "
-                "check, and <b>check every use</b> is the argument check and the gate. The argument check has no switch on this page: it needs a tool with a free string, which is Part 3.</div></div>"),
+                "check, and <b>check every use</b> is the argument check and the gate. The argument check has no switch on this page: it needs a tool with a free string, which is Part 3.</p></div>"),
     ])
     return
 
@@ -764,8 +708,8 @@ def _(hat, mo):
     mo.vstack([
         hat("blue", "The four layers, one at a time", "a reference implementation sits behind each switch"),
         mo.md("The task for this page is Alice&rsquo;s reply to Nadia. Turn the layers on one at a time and read the table: each stops attacks the others "
-              "cannot, and one of them breaks the real task when it works alone. **Challenge: find the smallest set of layers that holds all four attacks "
-              "while the real task still works.**"),
+              "cannot, and one of them breaks the real task when it works alone. Challenge: find the smallest set of layers that holds all four attacks "
+              "while the real task still works."),
         mo.hstack([sw_tools, sw_cred, sw_obj, sw_gate], justify="start", gap=0.5, wrap=True),
         mo.md("*Tool diet*: only the two tools the reply needs. *Scoped credential*: a key minted for this task and this person. "
               "*Object check*: the account tools compare the account's tenant with the key's. "
@@ -828,7 +772,7 @@ def _(attack_table, kt, mo, subsets_that_hold, sw_cred, sw_gate, sw_obj, sw_tool
         mo.accordion({"Show all sixteen combinations": mo.md(
             "| tool diet | credential | object check | gate | real task | attacks that land |\n|---|---|---|---|---|---|\n" + _rows
             + "\n\nTwo combinations hold everything and keep the task working: the credential, the object check and the gate together, and the same three "
-              "with the tool diet added. **Three layers are the minimum for this attack set**, and the tool diet is redundant for these four attacks. "
+              "with the tool diet added. Three layers are the minimum for this attack set, and the tool diet is redundant for these four attacks. "
               "It still earns its place, because it removes attacks nobody has thought of yet, and it is the cheapest layer to ship. "
               "Two rows are worth a second look: the object check with the gate and no credential holds everything only because it holds the real task "
               "too, and a safe deployment that does nothing is an outage.")}),
@@ -840,7 +784,7 @@ def _(attack_table, kt, mo, subsets_that_hold, sw_cred, sw_gate, sw_obj, sw_tool
 def _(kt, mo):
     _tasks = "\n".join(f"| `{k}` | {v['label']} | {', '.join(f'`{s}`' for s in v['scopes'])} |" for k, v in kt.TASKS.items())
     _staff = "\n".join(f"| `{k}` | {v['name']} | `{v['tenant']}` |" for k, v in kt.STAFF.items())
-    mint_code = mo.ui.code_editor(value=kt.STARTERS["mint"], language="python", debounce=True)
+    mint_code = mo.ui.code_editor(theme="dark", value=kt.STARTERS["mint"], language="python", debounce=True)
     mo.vstack([
         mo.md("### Write the layers yourself\n\nThe switches ran reference implementations. Now you write them, one at a time, and the page grades each on a handful of cases. "
               "The first is the key."),
@@ -874,7 +818,7 @@ def _(answer, case_card, kt, mint_code, mo, results_table, verdict):
 
 @app.cell
 def _(kt, mo):
-    access_code = mo.ui.code_editor(value=kt.STARTERS["can_access"], language="python", debounce=True)
+    access_code = mo.ui.code_editor(theme="dark", value=kt.STARTERS["can_access"], language="python", debounce=True)
     mo.vstack([
         mo.md("**2. The object check.** The scope says what *kind* of call this is, not *whose data* it touches. `accounts:read` lets Alice read Nadia and Sofia alike. "
               "The tool has to ask whether this account is one this call is allowed to see. The tenant must come from the **credential**, never from anything the model "
@@ -902,7 +846,7 @@ def _(access_code, answer, case_card, kt, mo, results_table, verdict):
               "missing object check, and a key that reaches every repository leaves nothing for the tool to compare."),
         mo.accordion({"A note on what this lab does not check": mo.md(
             "The object check here guards the three tools that take one account id. Search and export have the same problem across many accounts at once: a real "
-            "data layer applies the tenant filter to the rows it returns, not only to the id it was asked about. The lab does not model that, so do not read a green "
+            "data layer applies the tenant filter to the rows it returns, not only to the id it was asked about. The lab does not model that, so do not read a passing "
             "table as proof that search is safe.")}),
     ])
     return
@@ -910,7 +854,7 @@ def _(access_code, answer, case_card, kt, mo, results_table, verdict):
 
 @app.cell
 def _(kt, mo):
-    gate_code = mo.ui.code_editor(value=kt.STARTERS["needs_approval"], language="python", debounce=True)
+    gate_code = mo.ui.code_editor(theme="dark", value=kt.STARTERS["needs_approval"], language="python", debounce=True)
     mo.vstack([
         mo.md("**3. The approval gate.** Some calls should wait for a person: the ones that cannot be undone, and the ones that repeat. But approval only works while "
               "it is rare. A gate that holds every call becomes a rubber stamp within a day, and one that holds nothing is not a gate. Finish `needs_approval(call, sent)`. "
@@ -942,7 +886,6 @@ def _(answer, case_card, gate_code, kt, mo, results_table, verdict):
 @app.cell
 def _(html, kt, mo):
     # the approval card under load: ten calls, two of them bad. Two tabs show the same ten calls with the model's summary or the literal call.
-    _SANS = "-apple-system,Segoe UI,system-ui,sans-serif"
     STREAM = [
         ("lookup_account", {"id": 101}, "Looking up Nadia's account", False),
         ("send_email", {"to": "nadia@larnaca-marine.example", "subject": "Your invoice", "body": "INV-2041, 480 EUR, is due on 14 Nov."},
@@ -968,26 +911,24 @@ def _(html, kt, mo):
         _out = []
         if tool == "send_email":
             _in = args["to"].endswith("@" + _domain)
-            _out.append(('#e4f3ec', '#1d6b52', f"inside {_domain}") if _in else ('#fbe6e1', '#9c3a27', f"outside {_domain}"))
+            _out.append(("good", f"inside {_domain}") if _in else ("bad", f"outside {_domain}"))
         if kt.TOOLBOX[tool]["irreversible"] and tool != "send_email":
-            _out.append(('#fbe6e1', '#9c3a27', "cannot be undone"))
-        return "".join(f'<span style="background:{b};color:{c};font:600 10.5px system-ui;padding:2px 8px;border-radius:9px;margin-left:6px;">{t}</span>'
-                       for b, c, t in _out)
+            _out.append(("bad", "cannot be undone"))
+        return "".join(f' <span class="sad-st" data-k="{k}">{t}</span>' for k, t in _out)
 
     def _card_text(i, literal):
         _tool, _args, _summary, _bad = STREAM[i]
         if literal:
-            return (f'<code style="font:12px Consolas,monospace;color:#13262f;word-break:break-word;">{html.escape(_literal(_tool, _args))}</code>'
-                    + _flags(_tool, _args))
-        return f'<span style="font:13.5px {_SANS};color:#13262f;">{html.escape(_summary)}</span>'
+            return f'<code class="sad-lit">{html.escape(_literal(_tool, _args))}</code>' + _flags(_tool, _args)
+        return html.escape(_summary)
 
     def _stream_form(literal):
         _rows = "".join(
-            '<div style="display:flex;flex-wrap:wrap;gap:4px 14px;align-items:center;padding:6px 0;border-top:1px solid #eef1f2;">'
-            f'<div style="flex:0 0 22px;font:700 12px {_SANS};color:#9aa8ad;">{i + 1}</div>'
-            f'<div style="flex:1 1 340px;min-width:0;">{_card_text(i, literal)}</div><div style="flex:0 0 auto;">{{c{i}}}</div></div>'
+            '<div class="sad-row">'
+            f'<div class="sad-idx">{i + 1}</div>'
+            f'<div class="sad-grow">{_card_text(i, literal)}</div><div>{{c{i}}}</div></div>'
             for i in range(len(STREAM)))
-        return mo.Html(f'<div style="max-width:900px;border:1px solid #e3e9ea;border-radius:8px;padding:6px 14px;background:#fff;">{_rows}</div>').batch(
+        return mo.Html(f'<div class="sad-panel">{_rows}</div>').batch(
             **{f"c{i}": mo.ui.radio(options=["Approve", "Hold"], inline=True) for i in range(len(STREAM))})
 
     stream_summary, stream_literal = _stream_form(False), _stream_form(True)
@@ -1029,16 +970,16 @@ def _(STREAM, case_card, kt, mo, stream_literal, stream_summary):
             _sent += 1
     _missed = [n for n in _bad if n not in _shown]
     _extra = [n for n in _shown if n not in _bad]
-    _gate_txt = ("**What your gate from step 3 would have shown.** It meters email by count, so it puts " + " and ".join(f"call {n}" for n in _shown)
+    _gate_txt = ("What your gate from step 3 would have shown. It meters email by count, so it puts " + " and ".join(f"call {n}" for n in _shown)
                  + " in front of a person. ")
     if _missed:
         _gate_txt += (f"It does not show {_say(_missed[0])}: that was only the third email of the afternoon, and a count does not read the recipient. "
                       + (f"It holds call {_extra[0]} (&ldquo;{STREAM[_extra[0] - 1][2]}&rdquo;) instead, an ordinary reminder. " if _extra else "")
-                      + "A count catches a flood, not a thief. The literal card above already shows what the count cannot, the destination in red; "
+                      + "A count catches a flood, not a thief. The literal card above already shows what the count cannot, the destination flagged as outside; "
                         "bounding where mail can go is the next control, and Part 4 builds it.")
     _both = ""
     if _ds == 10 and _dl == 10:
-        _both = f"\n\n**Same ten calls, same person.** The bad calls were {_say(_bad[0])}, and {_say(_bad[1])}."
+        _both = f"\n\nSame ten calls, same person. The bad calls were {_say(_bad[0])}, and {_say(_bad[1])}."
     mo.vstack([
         mo.md(_line("With the model's summary", _ds, _hs, _as) + "\n" + _line("With the literal call", _dl, _hl, _al) + _both),
         mo.md("A summary is written by the model that was just steered, so it can describe a bad call in the words of the task: *the follow-up Alice asked for*, "
@@ -1115,10 +1056,10 @@ def _(attack_table, chip, kt, mine_tools, mo, my_dep, my_pass, my_status, status
         _msg = ("Write the remaining " + str(3 - len(_live)) + " function" + ("s" if 3 - len(_live) != 1 else "") + " above and the table updates. "
                 "Anything still marked as shipped is an open door in this deployment.")
     elif _ok and _n == 0 and _passing < 3:
-        _msg = (f"🟡 **The attack set is held, but {3 - _passing} of your functions still fail{'s' if 3 - _passing == 1 else ''} rows above.** The attack set tries only four things; the rows try the "
-                "cases it does not. Fix the ✗ rows and this turns green.")
+        _msg = (f"**The attack set is held, but {3 - _passing} of your functions still fail{'s' if 3 - _passing == 1 else ''} rows above.** The attack set tries only four things; the rows try the "
+                "cases it does not. Fix the ✗ rows and this passes.")
     elif _ok and _n == 0:
-        _msg = ("🟢 **Four attacks held, and the real task still works.** The three functions you wrote are the checkpoint. None of them asked the model for "
+        _msg = ("**Four attacks held, and the real task still works.** The three functions you wrote are the checkpoint. None of them asked the model for "
                 "its opinion, and none of them reads a word of the stranger&rsquo;s note: the note changed what the model asked for, and the deployment was "
                 "already smaller than that request.\n\n"
                 "**What this deployment still leaves open.** It holds the four attacks in this set, not every attack. Mail can still go to any address: the gate counts "
@@ -1126,13 +1067,13 @@ def _(attack_table, chip, kt, mine_tools, mo, my_dep, my_pass, my_status, status
                 "email. Searches and exports sit outside the object check in this lab, the flags string stays free until Part 3, and the tools themselves are Part 4, "
                 "which also shows the control for the destination.")
     elif not _ok:
-        _msg = ("🟡 **The real task is broken.** A deployment that refuses Alice&rsquo;s reply is not secure, it is switched off. Look at the reason the real task "
+        _msg = ("**The real task is broken.** A deployment that refuses Alice&rsquo;s reply is not secure, it is switched off. Look at the reason the real task "
                 "was refused and fix that layer; a check that fails closed on the legitimate call is the commonest mistake.")
     else:
-        _msg = (f"🔴 **{_n} of 4 still land.** Read the red rows: each names the outcome, and the layer that should have seen it is the one whose function "
+        _msg = (f"**{_n} of 4 still land.** Read the LANDED rows: each names the outcome, and the layer that should have seen it is the one whose function "
                 "does not yet look at the right thing.")
     mo.vstack([
-        mo.Html(f'<div style="margin:2px 0 6px;display:flex;flex-wrap:wrap;gap:6px;">{_chips}</div>'),
+        mo.Html(f'<div class="sad-chips">{_chips}</div>'),
         mo.Html(_tbl),
         mo.md(_msg),
     ])
@@ -1174,7 +1115,7 @@ def _(hat, mo):
             "| `--ignore-case` | `-i` | match without regard to case |\n| `--line-number` | `-n` | prefix each match with its line number |\n"
             "| `--context N` | `-c N` | show N lines around each match |\n| `--exec CMD` | `-x CMD` | run a command for each match |\n\n"
             "Like GNU `getopt_long` and Python&rsquo;s `argparse`, it accepts any unambiguous *abbreviation* of a long option, lets short options *bundle* together, and takes a value "
-            "either glued on or as the next word. **Your job: get it to run a command.** Type a flags string. The page shows what the check said and what the "
+            "either glued on or as the next word. Your job: get it to run a command. Type a flags string. The page shows what the check said and what the "
             "tool actually understood."),
         flag_try,
     ])
@@ -1193,7 +1134,7 @@ def _(flag_try, html, kt, mo, scenario_html, status_chip):
         _msg = ("The shipped check refused it: it saw the spelling it knows. But does the tool accept that option under another spelling? "
                 "Open the hints if you are stuck.")
     elif _exec:
-        _msg = ("🔴 **It ran.** The check read your text; the tool parsed its meaning, and the two did not agree. A check on the *spelling* of a dangerous "
+        _msg = ("**It ran.** The check read your text; the tool parsed its meaning, and the two did not agree. A check on the *spelling* of a dangerous "
                 "option has to guess every spelling the parser accepts, and the parser has more than one.")
     elif _perr:
         _msg = "The tool rejected that as a malformed option, so nothing ran. Try again."
@@ -1203,8 +1144,8 @@ def _(flag_try, html, kt, mo, scenario_html, status_chip):
     _shipped = kt.open_deployment()["valid_flags"]
     _right = sum(1 for _f2, _ in kt.FLAG_BYPASS if not _shipped(_f2))
     mo.vstack([
-        mo.Html('<div style="display:flex;flex-wrap:wrap;gap:6px;margin:2px 0 4px;">' + _verdict_chip
-                + f'<span style="font:12.5px Consolas,monospace;color:#13262f;align-self:center;">the tool understood: {html.escape(_parsed)}</span></div>'),
+        mo.Html('<div class="sad-chips">' + _verdict_chip
+                + f'<span class="sad-mono">the tool understood: {html.escape(_parsed)}</span></div>'),
         mo.Html(_view),
         mo.md(_msg),
         mo.accordion({
@@ -1225,7 +1166,7 @@ def _(flag_try, html, kt, mo, scenario_html, status_chip):
 
 @app.cell
 def _(hat, kt, mo):
-    flags_code = mo.ui.code_editor(value=kt.STARTERS["valid_flags"], language="python", debounce=True)
+    flags_code = mo.ui.code_editor(theme="dark", value=kt.STARTERS["valid_flags"], language="python", debounce=True)
     mo.vstack([
         hat("blue", "Write the rule that stops you", "an allowlist of whole tokens"),
         mo.md("A blocklist has to anticipate every way of saying the dangerous thing. Turn it round: list the few things you want to allow and refuse the rest. "
@@ -1285,9 +1226,9 @@ def _(flags_code, kt, mo, own_flags, scenario_html):
         _dep = kt.deployment(valid_flags=_fn)
         _view, _steps = scenario_html("exec", _dep, "your rule", flags=own_flags.value)
         _won = bool(kt.landed(_steps))
-        _msg = ("🔴 **You beat your own rule.** It allowed that string and the tool would run a command. Read what the tool understood, then fix the rule so that "
+        _msg = ("**You beat your own rule.** It allowed that string and the tool would run a command. Read what the tool understood, then fix the rule so that "
                 "it names only what you meant to allow." if _won else
-                "🟢 **Your rule held.** Either it refused the string or the tool would not run a command for it. Try a bundle, a value attached with `=`, an abbreviation.")
+                "**Your rule held.** Either it refused the string or the tool would not run a command for it. Try a bundle, a value attached with `=`, an abbreviation.")
         _out = mo.vstack([mo.Html(_view), mo.md(_msg)])
     _out
     return
@@ -1319,7 +1260,7 @@ def _(flag_try, kt, mo, scenario_html, typed_sw):
     _real = kt.run_calls([("logsearch", {"pattern": "error", "ignore_case": True})], _dep)
     mo.vstack([
         mo.Html(_view),
-        mo.md(("🟢 **Nothing to land on.** The model can still search with `pattern`, `ignore_case` and `line_numbers`, and the real call below works. "
+        mo.md(("**Nothing to land on.** The model can still search with `pattern`, `ignore_case` and `line_numbers`, and the real call below works. "
                "It cannot ask for an option because the tool has no parameter that expresses one." if typed_sw.value else
                "Switch typed arguments on to compare. Same attempt, same fooled model, a tool that takes values instead of syntax.")
               + f"\n\nThe real call, `logsearch(pattern='error', ignore_case=True)`: **{'works' if kt.completed(_real) else 'refused'}**."),
@@ -1399,7 +1340,6 @@ def _(hat, kt, mo):
 
 @app.cell
 def _(AMBER, console_html, html, kt, mo, status_chip, sw_allow, sw_pin, sw_scan, variant_pick):
-    _SANS = "-apple-system,Segoe UI,system-ui,sans-serif"
     _key = variant_pick.value
     _v = kt.TOOL_VARIANTS[_key]
     _steps, _landed = kt.poisoned_tool_run(_key, pin=sw_pin.value, scan=sw_scan.value, allowlist=sw_allow.value)
@@ -1410,11 +1350,11 @@ def _(AMBER, console_html, html, kt, mo, status_chip, sw_allow, sw_pin, sw_scan,
                              + (AMBER(html.escape(d["description"][_cut:])) if mark else html.escape(d["description"][_cut:])))
     _same = _v["approved"] == _v["served"]
     _box = lambda title, d, mark, note: (
-        f'<div style="flex:1 1 300px;min-width:0;border:1px solid #d7dee0;border-radius:8px;padding:9px 13px;background:#fafcfc;">'
-        f'<div style="font:600 10px system-ui;color:#5e7278;letter-spacing:.06em;text-transform:uppercase;margin-bottom:3px;">{title}</div>'
-        f'<div style="font:12.5px/1.55 Consolas,monospace;color:#13262f;word-break:break-word;">{_desc(d, mark)}</div>'
-        f'<div style="font:11.5px {_SANS};color:#5e7278;margin-top:5px;">hash <code>{kt.tool_hash(d)}</code> &middot; {note}</div></div>')
-    _defs = ('<div style="display:flex;gap:10px;flex-wrap:wrap;max-width:900px;margin:4px 0;">'
+        '<div class="sad-panel sad-grow">'
+        f'<p class="sad-cap">{title}</p>'
+        f'<div class="sad-mono">{_desc(d, mark)}</div>'
+        f'<p class="sad-cap sad-gap">hash <code>{kt.tool_hash(d)}</code> &middot; {note}</p></div>')
+    _defs = ('<div class="sad-pair">'
              + _box("What you approved", _v["approved"], _v["approved"] != kt.CLEAN_DEF, "the definition you reviewed")
              + _box("What the server sends now", _v["served"], _v["served"] != kt.CLEAN_DEF,
                     "identical to what you approved" if _same else "changed after you approved it")
@@ -1422,12 +1362,12 @@ def _(AMBER, console_html, html, kt, mo, status_chip, sw_allow, sw_pin, sw_scan,
     _reply = ("I could not load the weather tool, so I could not check the forecast." if _steps[0]["blocked"]
               else "Tomorrow in Larnaca: sunny, around 27 degrees.")
     if _landed:
-        _msg = ("🔴 **It landed, and the user saw nothing.** The reply is an ordinary weather report. The poisoned description told the assistant to copy the user&rsquo;s "
+        _msg = ("**It landed, and the user saw nothing.** The reply is an ordinary weather report. The poisoned description told the assistant to copy the user&rsquo;s "
                 "message to an address outside the company, and `send_email` did, with Alice&rsquo;s own authority.")
     elif _steps[0]["blocked"]:
-        _msg = f"🟢 **Stopped at load by the {_steps[0]['layer']}.** The tool never reached the model."
+        _msg = f"**Stopped at load by the {_steps[0]['layer']}.** The tool never reached the model."
     else:
-        _msg = "🟢 **The tool loaded, and the mail it asked for was refused.** The allowlist never read the description; it only knows who the mail tool may reach."
+        _msg = "**The tool loaded, and the mail it asked for was refused.** The allowlist never read the description; it only knows who the mail tool may reach."
     mo.vstack([
         mo.Html(_defs),
         mo.Html(console_html(_steps, 0, _label, user="What is the weather in Larnaca tomorrow?", reply=_reply)),
@@ -1439,17 +1379,15 @@ def _(AMBER, console_html, html, kt, mo, status_chip, sw_allow, sw_pin, sw_scan,
 @app.cell
 def _(kt, mo):
     _names = {"none": "no control", "pin": "pin", "scan": "scanner", "allowlist": "allowlist"}
-    _cell = lambda landed: ('<span style="background:#fbe6e1;color:#9c3a27;font:600 11px system-ui;padding:2px 9px;border-radius:9px;">lands</span>' if landed
-                            else '<span style="background:#e4f3ec;color:#1d6b52;font:600 11px system-ui;padding:2px 9px;border-radius:9px;">held</span>')
-    _head = "".join(f'<th style="text-align:left;padding:5px 10px;font:600 11px system-ui;color:#5e7278;">{n}</th>' for n in _names.values())
+    _cell = lambda landed: ('<span class="sad-st" data-k="bad">lands</span>' if landed else '<span class="sad-st" data-k="good">held</span>')
+    _head = "".join(f"<th>{n}</th>" for n in _names.values())
     _body = ""
     for _k, _v in kt.TOOL_VARIANTS.items():
-        _cells = "".join(f'<td style="padding:6px 10px;">{_cell(kt.poisoned_tool_run(_k, **({} if c == "none" else {c: True}))[1])}</td>' for c in _names)
-        _body += f'<tr style="border-top:1px solid #eef1f2;"><td style="padding:6px 10px;font:13px system-ui;color:#13262f;">{_v["label"]}</td>{_cells}</tr>'
+        _cells = "".join(f'<td>{_cell(kt.poisoned_tool_run(_k, **({} if c == "none" else {c: True}))[1])}</td>' for c in _names)
+        _body += f'<tr><td>{_v["label"]}</td>{_cells}</tr>'
     mo.vstack([
         mo.md("### What each control catches\n\nThe whole matrix, computed from the same lab. Read it by column."),
-        mo.Html('<div style="max-width:900px;overflow-x:auto;border:1px solid #e3e9ea;border-radius:8px;background:#fff;margin:4px 0;">'
-                f'<table style="border-collapse:collapse;width:100%;"><tr><th style="text-align:left;padding:5px 10px;font:600 11px system-ui;color:#5e7278;">how it is poisoned</th>{_head}</tr>{_body}</table></div>'),
+        mo.Html(f'<div class="sad-tablebox"><table class="sad-table"><tr><th>how it is poisoned</th>{_head}</tr>{_body}</table></div>'),
         mo.md("- **Pin** is a bound on *change*. It catches the rug pull, where the text differs from what you approved, and nothing that was poisoned before you looked. "
               "Cursor&rsquo;s MCPoison is the case for pinning: the approval was attached to a name instead of to the command, so a later change went unseen.\n"
               "- **Scanner** looks for what it already knows. It caught the loud wording and missed the reworded one. Treat every scanner as a reducer: it lowers the odds and "
@@ -1533,9 +1471,9 @@ def _(mo):
         ("A system-prompt rule: only use the tools the task needs", "Reducer", "the model can be talked out of it. Removing the tool cannot be talked out of."),
         ("Alerts on a run of denied calls, and a log of who each call was for", "Detect", "refusals are the footprint of an attack in progress. It buys time and names the attack, and it stops nothing by itself."),
     ]
-    _row = lambda i, s: ('<div style="display:flex;flex-wrap:wrap;align-items:center;gap:4px 14px;padding:5px 0;border-top:1px solid #eef1f2;">'
-                         f'<div style="flex:0 0 330px;font:600 14px system-ui;color:#13262f;">{s}</div><div>{{r{i}}}</div></div>')
-    sort_picks = mo.Html('<div style="max-width:860px;">' + "".join(_row(_i, _s[0]) for _i, _s in enumerate(SORT3)) + "</div>").batch(
+    _row = lambda i, s: ('<div class="sad-row">'
+                         f'<div class="sad-col-label sad-title">{s}</div><div>{{r{i}}}</div></div>')
+    sort_picks = mo.Html('<div class="sad-items">' + "".join(_row(_i, _s[0]) for _i, _s in enumerate(SORT3)) + "</div>").batch(
         **{f"r{_i}": mo.ui.radio(options=["Reducer", "Boundary", "Detect"], inline=True) for _i in range(len(SORT3))})
     mo.vstack([
         mo.md("### Reducer, boundary, or detect?\n\nModule 02 gave you the question: does a control *reduce the odds* an attack lands, *bound* what a landed attack can do, "
@@ -1553,8 +1491,8 @@ def _(SORT3, mo, results_table, sort_picks):
     mo.vstack([
         mo.hstack([mo.stat(f"{_n}/10", label="sorted right", bordered=True)], justify="start"),
         mo.Html(results_table("your sort", _rows)),
-        mo.md("✅ **Only the boundary controls bound anything.** The reduce layer buys odds and the detect layer buys time." if _n == 10
-              else ("🟡 The rows marked ✗ are wrong. Ask of each: does it change the odds, change what a landed attack can reach, or only tell you afterwards?"
+        mo.md("Only the boundary controls bound anything. The reduce layer buys odds and the detect layer buys time." if _n == 10
+              else ("The rows marked ✗ are wrong. Ask of each: does it change the odds, change what a landed attack can reach, or only tell you afterwards?"
                     if any(_r[2] is False for _r in _rows) else "")),
     ])
     return
@@ -1737,7 +1675,7 @@ def _(kt, mo, my_dep, my_status, results_table):
     _mut = [a for a in kt.ATTACKS if kt.landed(kt.run_scenario(a, _weak))]
     mo.vstack([
         mo.Html(results_table("pytest, run on your deployment", _rows)),
-        mo.md(("🟢 **Green.** " if _green else "🔴 **Red, which is what a test is for.** ")
+        mo.md(("**Green.** " if _green else "**Red, which is what a test is for.** ")
               + (f"Your deployment has {_live} of 3 functions live; the test reads them as they are now." if _live < 3 else "All three of your functions are live.")),
         mo.md(f"A test earns its keep by failing when it should. Take the object check out of the reference deployment and the same test goes red on "
               f"**{', '.join(_mut) or 'nothing'}**: that is the mutation check. Add one case to this file for each documented case that applies to your agent, "
@@ -1773,10 +1711,10 @@ def _(CASES, mo):
         ("openai_hf", "Agents in a sandbox with no direct internet access reached it through the package proxy, the route out they were meant to use for packages.", "Isolate it",
          "egress through a tool is still egress. Harden and adversarially test that boundary, and layer independent controls. Module 06 goes deeper.", "Approval gate the agent cannot reach"),
     ]
-    _row = lambda i, q: ('<div style="padding:7px 0;border-top:1px solid #eef1f2;">'
-                         f'<div style="font:700 13.5px system-ui;color:#13262f;">{i + 1}. {CASES[q[0]]["title"]} <span style="font-weight:500;color:#5e7278;">({CASES[q[0]]["date"].split(" (")[0]})</span></div>'
-                         f'<div style="font:13px/1.5 system-ui;color:#1b2a30;margin:1px 0 4px;">{q[1]}</div><div>{{k{i}}}</div></div>')
-    quiz_picks = mo.Html('<div style="max-width:900px;">' + "".join(_row(_i, _q) for _i, _q in enumerate(QUIZ)) + "</div>").batch(
+    _row = lambda i, q: ('<div class="sad-item">'
+                         f'<div class="sad-title">{i + 1}. {CASES[q[0]]["title"]} <span class="sad-sub2">({CASES[q[0]]["date"].split(" (")[0]})</span></div>'
+                         f'<div class="sad-sub2 sad-gap">{q[1]}</div><div class="sad-gap">{{k{i}}}</div></div>')
+    quiz_picks = mo.Html('<div class="sad-items">' + "".join(_row(_i, _q) for _i, _q in enumerate(QUIZ)) + "</div>").batch(
         **{f"k{_i}": mo.ui.radio(options=QUIZ_OPTIONS, inline=True) for _i in range(len(QUIZ))})
     mo.vstack([
         mo.md("### Which layer would have held?\n\nNine documented cases from this module, one line each. For each, choose the layer whose absence **mattered most**. Several layers "
@@ -1806,7 +1744,7 @@ def _(mo):
     mo.vstack([
         mo.md("### Four things to attack next, and one to read\n\nYou defended a deployment. These let you attack one, in this order. Each says what it needs; links open in a new tab."),
         mo.Html(
-            '<ol style="max-width:880px;font:14px/1.6 -apple-system,Segoe UI,system-ui,sans-serif;color:#1b2a30;padding-left:22px;">'
+            '<ol class="sad-ol">'
             f'<li><b>{_a("https://github.com/skills/secure-code-game", "GitHub Secure Code Game, Season 4")}</b> (about two hours, in Codespaces). The nearest public match to this '
             "module&rsquo;s syllabus: a bash and web agent, then MCP servers, then skills and memory, then a level titled Confused Deputy. It is offence only, so it pairs with your defence work here.</li>"
             f'<li><b>{_a("https://portswigger.net/web-security/llm-attacks/lab-exploiting-llm-apis-with-excessive-agency", "PortSwigger: exploiting LLM APIs with excessive agency")}</b>, '

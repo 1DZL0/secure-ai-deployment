@@ -7,89 +7,19 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Case library and attack atlas</title>
-<style>
-  :root{
-    --slate:#0f3a42; --accent:#b05a00; --accent-dark:#934a00; --accent-light:#f2a65a;
-    --green:#2e8b6f; --green-text:#1d6b52; --red:#c8553d; --red-text:#9c3a27; --amber:#b07d2b; --amber-text:#7a5a16;
-    --ink:#1b2a30; --muted:#5e7278; --faint:#64777d; --line:#dde4e7; --panel:#fafcfc; --bg:#ffffff;
-    --sans:-apple-system,"Segoe UI",system-ui,sans-serif; --mono:Consolas,"SFMono-Regular",monospace;
-  }
-  *{box-sizing:border-box}
-  html{-webkit-text-size-adjust:100%}
-  body{margin:0;font:15px/1.55 var(--sans);color:var(--ink);background:var(--bg)}
-  a{color:var(--accent);text-decoration:none} a:hover{text-decoration:underline}
-  a:focus-visible,button:focus-visible,summary:focus-visible,input:focus-visible,.chip:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-  code{font:12.5px var(--mono);background:#eef2f3;border-radius:4px;padding:0 4px}
-  .wrap{max-width:1000px;margin:0 auto;padding:18px 16px 60px}
-  .hero{background:#13262f;border-radius:14px;padding:22px 26px;margin:2px 0 14px}
-  .hero .eyebrow{color:var(--accent-light);font:700 11px var(--sans);letter-spacing:.17em;text-transform:uppercase}
-  .hero h1{color:#fff;font-size:26px;line-height:1.2;margin:8px 0 8px}
-  .hero p{color:#b7c4c8;margin:0;max-width:780px;font-size:14.5px}
-  .method{font-size:13.5px;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin:0 0 14px}
-  .method b{color:#13262f}
-  .tabs{display:flex;flex-wrap:wrap;gap:2px;border-bottom:2px solid var(--line);margin:0 0 14px}
-  .tabs button{font:700 14px var(--sans);background:none;border:none;border-bottom:3px solid transparent;margin-bottom:-2px;padding:9px 16px;color:var(--muted);cursor:pointer}
-  .tabs button:hover{color:#13262f} .tabs button[aria-selected=true]{color:#13262f;border-bottom-color:var(--accent)}
-  .panel[hidden]{display:none}
-  .note{font-size:13.5px;border:1px dashed #cfd8db;border-radius:9px;padding:9px 13px;margin:0 0 12px;background:#fff}
-  .summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;margin:0 0 14px}
-  .box{border:1px solid var(--line);border-radius:10px;padding:10px 14px;background:#fff}
-  .box h2{font:700 11px var(--sans);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:0 0 6px}
-  .bar{display:flex;align-items:center;gap:8px;margin:3px 0;font-size:12.5px}
-  .bar .lab{flex:0 0 150px;color:var(--ink)} .bar .track{flex:1;background:#eef2f3;border-radius:4px;height:11px;overflow:hidden}
-  .bar .fill{display:block;height:100%;background:#13262f;border-radius:4px} .bar .n{flex:0 0 28px;text-align:right;color:var(--muted);font-variant-numeric:tabular-nums}
-  .filters{border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin:0 0 12px;background:var(--panel)}
-  .frow{display:grid;grid-template-columns:130px 1fr;gap:3px 10px;align-items:start;margin:7px 0}
-  .frow .fl{padding-top:5px;font:700 11px var(--sans);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
-  .frow .fc{display:flex;flex-wrap:wrap;gap:6px}
-  .chip{display:inline-block;border:1px solid #cfd8db;background:#fff;color:#13262f;font:600 12px var(--sans);padding:3px 11px;border-radius:14px;cursor:pointer;user-select:none}
-  .chip:hover{border-color:#9db0b6} .chip[aria-pressed=true]{background:#13262f;color:#fff;border-color:#13262f}
-  .search{width:100%;max-width:420px;font:14px var(--sans);padding:7px 11px;border:1px solid #cfd8db;border-radius:9px;background:#fff;color:var(--ink)}
-  .count{font:600 13px var(--sans);color:var(--ink);margin:10px 0 6px}
-  .clear{font:600 12px var(--sans);color:var(--accent);background:none;border:none;cursor:pointer;padding:0 0 0 10px}
-  details.case{border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:9px;margin:8px 0;background:#fff}
-  details.case[open]{box-shadow:0 2px 10px rgba(19,38,47,.08)}
-  details.case > summary{list-style:none;cursor:pointer;padding:10px 14px;display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline}
-  details.case > summary::-webkit-details-marker{display:none}
-  .num{flex:0 0 auto;font:700 12px var(--mono);color:#fff;background:#13262f;border-radius:6px;padding:1px 7px}
-  .ttl{flex:1 1 320px;font:700 15px var(--sans);color:#13262f;min-width:0} .ttl .sub2{font-weight:500;color:var(--muted);font-size:13px}
-  .dt{flex:0 0 auto;font:12px var(--sans);color:var(--muted)}
-  .tags{flex:1 1 100%;display:flex;flex-wrap:wrap;gap:4px 6px;margin-top:2px}
-  .tag{font:600 11px var(--sans);padding:1px 8px;border-radius:9px;border:1px solid #d7dee0;background:#eef2f3;color:#13262f;white-space:nowrap}
-  .tag.layer{background:#13262f;color:#fff;border-color:#13262f}
-  .tag.ok,.tag.bound{background:#e4f3ec;color:var(--green-text);border-color:#b9dccd} .tag.warn,.tag.reduce{background:#f6eedb;color:var(--amber-text);border-color:#e3d3a8}
-  .tag.detect{background:#eef2f3;color:#44555c;border-color:#d0d9dc}
-  .tag.t1{background:#fff3e3;color:#7a4300;border-color:#f0cfa4} .tag.wr{white-space:normal}
-  .crow .head .tag{margin-left:auto}
-  .detail{padding:2px 16px 14px;border-top:1px solid #eef1f2}
-  .detail h3{font:700 11px var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin:12px 0 2px}
-  .detail p{margin:0;font-size:14px}
-  .src{margin-top:12px;font-size:12.5px;color:var(--muted)} .src a{margin-right:10px;word-break:break-all}
-  .sec{margin-top:26px}
-  .sec h2{font:700 20px var(--sans);color:#13262f;margin:0 0 4px}
-  .sec .sub{color:var(--muted);font-size:13.5px;margin:0 0 10px}
-  ol.pat{padding-left:22px;margin:0} ol.pat li{margin:7px 0;font-size:14px}
-  table.vp{border-collapse:collapse;width:100%;font-size:13.5px} table.vp th,table.vp td{text-align:left;padding:6px 10px;border-top:1px solid #eef1f2;vertical-align:top}
-  table.vp th{font:700 11px var(--sans);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);border-top:none}
-  .fam{font:700 12px var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:18px 0 4px}
-  .crow{border:1px solid var(--line);border-radius:9px;margin:7px 0;padding:9px 14px;background:#fff}
-  .crow .head{display:flex;flex-wrap:wrap;gap:4px 8px;align-items:baseline}
-  .crow .cid{font:700 12px var(--mono);color:#fff;background:#13262f;border-radius:6px;padding:1px 7px}
-  .crow .ct{font:700 14.5px var(--sans);color:#13262f;flex:1 1 260px;min-width:0}
-  .crow p{margin:4px 0 0;font-size:13.5px} .crow .lb{font:700 10.5px var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
-  .none{color:var(--muted);padding:18px 0}
-  @media (max-width:560px){.frow{grid-template-columns:1fr}.frow .fl{padding-top:0}.bar .lab{flex-basis:110px}.hero{padding:18px}.tabs button{padding:8px 11px;font-size:13px}}
-</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="../course.css">
 </head>
-<body>
+<body class="library">
 <div class="wrap">
-  <div class="hero">
-    <div class="eyebrow">Secure AI Deployment &middot; companion to Module 03</div>
+  <header class="page-head">
+    <p class="eyebrow">Secure AI Deployment &middot; companion to Module 03</p>
     <h1>Case library and attack atlas</h1>
-    <p>Fifty-four documented cases from 2023 to 2026 in which an agent&rsquo;s tools, credentials, approvals or tool definitions did, or could have done, the damage, then the 23 attack classes
+    <p class="lede">Fifty-four documented cases from 2023 to 2026 in which an agent&rsquo;s tools, credentials, approvals or tool definitions did, or could have done, the damage, then the 23 attack classes
        they fall into and the 37 controls that bound, reduce or detect them. Everything is described by mechanism (what text got in, what call resulted, whose authority it used) and mapped
        to the layer of the Module 03 lab that would have bounded it.</p>
-  </div>
+  </header>
   <p class="method"><b>How to read this.</b> Not every case is a breach: each says whether it rests on a vendor advisory, a finder&rsquo;s write-up, an operator&rsquo;s report or press. Every case was checked on 24 October 2026. <b>Verified</b> means a primary source was read: the finder&rsquo;s own write-up, a vendor advisory,
     a CVE record or the operator&rsquo;s report. <b>Corroborated</b> means the original statement could not be read but independent outlets agree.
     <b>Partial</b> means only secondary reports were readable and a material detail is missing, which the entry states. A finding that rests on one researcher&rsquo;s account says so.
@@ -160,7 +90,7 @@
     <div id="listk"></div>
   </section>
 
-  <p class="sub" style="margin-top:22px;color:var(--muted);font-size:13.5px">Part of the <a href="../" target="_top">Secure AI Deployment</a> course.</p>
+  <p class="foot">Part of the <a href="../" target="_top">Secure AI Deployment</a> course.</p>
 </div>
 
 <script>
