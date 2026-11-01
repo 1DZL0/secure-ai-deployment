@@ -420,9 +420,9 @@ def _():
          "desc": "The agent's own tools and MCP servers carry, or over-grant, authority."},
         {"name": "Insecure code execution", "layer": 1, "module": "06", "owasp": "OWASP LLM05:2025 / LLM10:2026", "status": "coming",
          "desc": "Model output run as code escapes its sandbox."},
-        {"name": "Memory & persistence", "layer": 1, "module": "07", "owasp": "OWASP Agentic: Memory Poisoning", "status": "coming",
+        {"name": "Memory & persistence", "layer": 1, "module": "07", "owasp": "OWASP Agentic ASI06: Memory and Context Poisoning", "status": "coming",
          "desc": "A planted memory re-fires the attack in later sessions."},
-        {"name": "Multi-agent spread (A2A)", "layer": 1, "module": "08", "owasp": "OWASP Agentic: Agent Comms", "status": "coming",
+        {"name": "Multi-agent spread (A2A)", "layer": 1, "module": "08", "owasp": "OWASP Agentic ASI07: Insecure Inter-Agent Communication", "status": "coming",
          "desc": "One agent's injected output becomes another agent's instruction."},
         {"name": "Data leakage & output", "layer": 0, "module": "05", "owasp": "OWASP LLM02 / LLM05:2025 (LLM10:2026)", "status": "coming",
          "desc": "Sensitive data crosses the egress boundary in an answer or a URL."},
@@ -493,8 +493,8 @@ def _():
                  ("04", "Poisoned retrieval", "OWASP LLM08:2025 / LLM09:2026", "live"),
                  ("05", "Data leakage & output handling", "OWASP LLM02 / LLM05:2025 (LLM10:2026)", "coming"),
                  ("06", "Isolated code execution & sandboxing", "OWASP LLM05:2025 / LLM10:2026", "coming"),
-                 ("07", "Memory & persistence", "OWASP Agentic: Memory Poisoning", "coming"),
-                 ("08", "Multi-agent systems", "OWASP Agentic: Agent Comms", "coming"),
+                 ("07", "Memory & persistence", "OWASP Agentic ASI06: Memory and Context Poisoning", "coming"),
+                 ("08", "Multi-agent systems", "OWASP Agentic ASI07: Insecure Inter-Agent Communication", "coming"),
                  ("09", "Monitoring, evaluation & governance", "NIST AI RMF / EU AI Act", "coming")]
         _body = ""
         for _num, _title, _owasp, _status in _rows:

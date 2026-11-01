@@ -3,7 +3,7 @@
 <head>
 <!-- Maintainers: this page is static and reads two data files that sit beside it. cases.json holds the 54 cases and the patterns across them
      (per case: n, title, date, tags, status, tier, sub F/P/A, layer, themes, fields by label, urls). atlas.json holds the 23 attack classes and the control table.
-     Edit the JSON, not this file, to change content. Each entry was checked against its primary source on 24 October 2026; keep it that way. -->
+     Edit the JSON, not this file, to change content. Each entry was checked against its primary source on 24 October 2026 and again on 1 November 2026; keep it that way. -->
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Case library and attack atlas</title>
@@ -20,7 +20,7 @@
        they fall into and the 37 controls that bound, reduce or detect them. Everything is described by mechanism (what text got in, what call resulted, whose authority it used) and mapped
        to the layer of the Module 03 lab that would have bounded it.</p>
   </header>
-  <p class="method"><b>How to read this.</b> Not every case is a breach: each says whether it rests on a vendor advisory, a finder&rsquo;s write-up, an operator&rsquo;s report or press. Every case was checked on 24 October 2026. <b>Verified</b> means a primary source was read: the finder&rsquo;s own write-up, a vendor advisory,
+  <p class="method"><b>How to read this.</b> Not every case is a breach: each says whether it rests on a vendor advisory, a finder&rsquo;s write-up, an operator&rsquo;s report or press. Every case was checked on 24 October 2026 and again on 1 November 2026. <b>Verified</b> means a primary source was read: the finder&rsquo;s own write-up, a vendor advisory,
     a CVE record or the operator&rsquo;s report. <b>Corroborated</b> means the original statement could not be read but independent outlets agree.
     <b>Partial</b> means only secondary reports were readable and a material detail is missing, which the entry states. A finding that rests on one researcher&rsquo;s account says so.
     No payload text or exploit commands are reproduced. Source pages are third-party material and open in a new tab.</p>
@@ -52,14 +52,14 @@
       <table class="vp"><thead><tr><th>Position</th><th>Who</th><th>Case</th></tr></thead><tbody>
         <tr><td>&ldquo;a known issue&rdquo;</td><td>Cursor, on the Jira ticket chain</td><td><a href="#case-21" data-case="21">21</a></td></tr>
         <tr><td>&ldquo;the user&rsquo;s responsibility&rdquo;</td><td>Cursor and GitHub, on rules files</td><td><a href="#case-47" data-case="47">47</a></td></tr>
-        <tr><td>&ldquo;expected behaviour&rdquo;</td><td>Anthropic, on MCP STDIO, as OX Security reports it</td><td><a href="#case-28" data-case="28">28</a></td></tr>
+        <tr><td>&ldquo;expected behaviour&rdquo;</td><td>Anthropic&rsquo;s MCP project, among the vendors OX Security says dismissed its findings</td><td><a href="#case-28" data-case="28">28</a></td></tr>
         <tr><td>&ldquo;documented and expected&rdquo;</td><td>AWS, on AgentCore default roles, as Zenity quotes it</td><td><a href="#case-31" data-case="31">31</a></td></tr>
         <tr><td>&ldquo;intended&rdquo;</td><td>ServiceNow, on default agent discovery, as AppOmni reports it</td><td><a href="#case-40" data-case="40">40</a></td></tr>
         <tr><td>&ldquo;a duplicate&rdquo;</td><td>Google, on the Antigravity approval prompt, as the finder reports it</td><td><a href="#case-25" data-case="25">25</a></td></tr>
         <tr><td>&ldquo;working as designed&rdquo;</td><td>Anthropic, on Auto Mode, as the finder reports it</td><td><a href="#case-51" data-case="51">51</a></td></tr>
         <tr><td>&ldquo;first requires system compromise&rdquo;</td><td>AWS, on the Amazon Q Developer command list, as the finder reports it</td><td><a href="#case-49" data-case="49">49</a></td></tr>
         <tr><td>&ldquo;outside our threat model&rdquo;</td><td>opencode, on a 2026 advisory</td><td><a href="#case-54" data-case="54">54</a></td></tr>
-        <tr><td>no answer in more than 120 days</td><td>Cognition, to the researcher who reported two Devin issues</td><td><a href="#case-15" data-case="15">15</a>, <a href="#case-33" data-case="33">33</a></td></tr>
+        <tr><td>no answer on a fix in more than 120 days</td><td>Cognition, to the researcher who reported two Devin issues</td><td><a href="#case-15" data-case="15">15</a>, <a href="#case-33" data-case="33">33</a></td></tr>
         <tr><td>&ldquo;user access control issue, not an AI autonomy issue&rdquo;</td><td>Amazon, on the Kiro outage report</td><td><a href="#case-18" data-case="18">18</a></td></tr>
       </tbody></table>
     </div>
@@ -68,7 +68,7 @@
   <section class="panel" id="p-classes" role="tabpanel" aria-labelledby="tab-classes" hidden>
     <p class="note"><b>Twenty-three attack classes in five families</b>, each with its mechanism, the standards that name it, a documented example, the control that bounds it and where in Module 03 you meet it.
       OWASP LLM Top 10 ids here use the 2025 numbering. The August 2026 edition renumbers them: Excessive Agency is LLM03:2026, Supply Chain is LLM04:2026, Unbounded Consumption is LLM06:2026 and Improper Output Handling is LLM10:2026.
-      ATLAS ids are from content version 2026.09. The standards disagree at the edges, so where one entry sits in more than one place the entry says so.</p>
+      ATLAS ids are from content version 2026.10 (28 October 2026). The standards disagree at the edges, so where one entry sits in more than one place the entry says so.</p>
     <div class="filters" role="group" aria-label="Attack class filters">
       <div class="frow"><span class="fl">Search</span><input class="search" id="qa" type="search" placeholder="class, standard id, product, control" aria-label="Search the attack classes"></div>
       <div class="frow"><span class="fl">Family</span><span class="fc" id="fa-fam"></span></div>

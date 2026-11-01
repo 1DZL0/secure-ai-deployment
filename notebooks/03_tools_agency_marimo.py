@@ -40,8 +40,8 @@ def _():
                  "bypasses row-level security.",
             bound="A database role that can read only the tickets table. Supabase's own documentation says its reminder to the model is "
                   "&ldquo;not foolproof&rdquo; and recommends read-only mode and project scoping.",
-            srcs=[("General Analysis", "https://www.generalanalysis.com/blog/supabase-mcp-blog"),
-                  ("Supabase documentation", "https://supabase.com/docs/guides/getting-started/mcp")]),
+            srcs=[("General Analysis", "https://generalanalysis.com/blog/supabase-mcp-blog"),
+                  ("Supabase documentation", "https://supabase.com/docs/guides/ai-tools/mcp")]),
         "github": dict(
             kind="demo", title="GitHub MCP: the toxic agent flow", date="26 May 2025", subs="PA", layer="scope",
             what="In the researchers' demonstration, a malicious issue on a public repository told the agent to pull data from the user's private "
@@ -69,7 +69,7 @@ def _():
                  "not published the cause. The lesson is an inference: a tool server added in front of a multi-tenant system needs the same tenant "
                  "checks as the old interface.",
             bound="Tenant isolation enforced inside the tool on every call, keyed to the end user's identity, with a cross-tenant test suite.",
-            srcs=[("The Register", "https://www.theregister.com/2025/06/18/asana_mcp_server_bug/"),
+            srcs=[("The Register", "https://www.theregister.com/security/2025/06/18/asana-mcp-server-back-online-after-plugging-a-data-leak-hole/1199951"),
                   ("BleepingComputer", "https://www.bleepingcomputer.com/news/security/asana-warns-mcp-ai-feature-exposed-customer-data-to-other-orgs/"),
                   ("UpGuard", "https://www.upguard.com/blog/asana-discloses-data-exposure-bug-in-mcp-server")]),
         "replit": dict(
@@ -80,7 +80,7 @@ def _():
                  "development and production databases.",
             bound="Separate development and production databases so the agent's credentials never reach production, and a mode enforced by "
                   "the platform that makes writes impossible.",
-            srcs=[("The Register", "https://www.theregister.com/2025/07/21/replit_saastr_vibe_coding_incident/"),
+            srcs=[("The Register", "https://www.theregister.com/software/2025/07/21/vibe-coding-service-replit-deleted-production-database/719783"),
                   ("Fortune", "https://fortune.com/2025/07/23/ai-coding-tool-replit-wiped-database-called-it-a-catastrophic-failure/"),
                   ("AI Incident Database", "https://incidentdatabase.ai/cite/1152/")]),
         "copilot": dict(
@@ -137,7 +137,7 @@ def _():
                  "agent, the injected text is how the compromise starts.",
             bound="Classify the whole command line including its flags, require confirmation when execution or deletion flags appear, and sandbox the shell.",
             srcs=[("Embrace The Red", "https://embracethered.com/blog/posts/2025/amazon-q-developer-remote-code-execution/"),
-                  ("The Register", "https://www.theregister.com/2025/08/20/amazon_quietly_fixed_q_developer_flaws/")]),
+                  ("The Register", "https://www.theregister.com/security/2025/08/20/aws-patches-q-developer-after-prompt-injection-rce-demo/827867")]),
         "fsmcp": dict(
             kind="vuln", title="Filesystem MCP server: a string prefix as the boundary", date="2 Jul 2025 (CVE-2025-53110, CVE-2025-53109)", subs="P", layer="argument check",
             what="The server limited file access to chosen directories but compared the requested path to the allowed one with a string "
@@ -210,7 +210,7 @@ def _():
             bound="Allowlist reviewed servers, pin exact versions and review the diff of every update, and give the server a send-only, "
                   "recipient-restricted credential.",
             srcs=[("The Hacker News", "https://thehackernews.com/2025/09/first-malicious-mcp-server-found.html"),
-                  ("CSO Online", "https://www.csoonline.com/article/4064009/trust-on-mcp-takes-first-in-the-wild-hit-via-squatted-postmark-connector.html"),
+                  ("CSO Online", "https://www.csoonline.com/article/4064009/trust-in-mcp-takes-first-in-the-wild-hit-via-squatted-postmark-connector.html"),
                   ("The Stack", "https://www.thestack.technology/postmark-mcp-dupe-was-quietly-sending-emails-to-a-third-party/")]),
         "clinejection": dict(
             kind="vuln", title="Clinejection: an issue title steers a release pipeline", date="9 Feb 2026", subs="FPA", layer="toolbox",
@@ -224,7 +224,7 @@ def _():
             srcs=[("Adnan Khan", "https://adnanthekhan.com/posts/clinejection/"),
                   ("Cline advisory", "https://github.com/cline/cline/security/advisories/GHSA-9ppg-jx86-fqw7")]),
         "openclaw": dict(
-            kind="wild", title="OpenClaw: skills from a public marketplace that run with the agent's authority", date="Feb to Jun 2026", subs="FP", layer="allowlist",
+            kind="wild", title="OpenClaw: skills from a public marketplace that run with the agent's authority", date="Feb to May 2026, reported 23 Jun 2026", subs="FP", layer="allowlist",
             what="A skill is a markdown package that tells the agent what to do, and nothing isolates it from the agent's authority. Researchers "
                  "found malicious skills in the public registry that used plain-language instructions to get the agent to run a remote script, "
                  "with payloads that could change after publication. Palo Alto Networks' Unit 42 reported one skill, first disclosed by JFrog in "
@@ -242,12 +242,12 @@ def _():
             srcs=[("Zenity Labs", "https://labs.zenity.io/post/agentcorruption-how-a-single-prompt-collapsed-the-entire-cloud-security-model")]),
         "exposed": dict(
             kind="wild", title="492 MCP servers open to the internet", date="16 Jul 2025", subs="P", layer="scope",
-            what="Trend Micro found 492 MCP servers running with no client authentication and no encryption. Together they exposed 1,402 tools, "
+            what="Trend Micro found 492 MCP servers running with no client authentication or traffic encryption. Together they exposed 1,402 tools, "
                  "and more than 90 percent of those tools gave direct read access to the data source. Trend describes the pattern: every client "
                  "connecting to such a server inherits the same privileged access through a single data-source credential, so the server cannot "
                  "tell users' permissions apart.",
             bound="Authentication in front of every server, per-user tokens so each request runs with the user's own permissions, and read-only access where possible.",
-            srcs=[("Trend Micro", "https://www.trendaisecurity.com/en-us/resources-insights/research/mcp-security-network-exposed-servers-are-backdoors-to-your-private-data")]),
+            srcs=[("Trend Micro", "https://www.trendaisecurity.com/en-us/resources-insights/deep-research/mcp-security-network-exposed-servers-are-backdoors-to-your-private-data")]),
         "openai_hf": dict(
             kind="event", title="OpenAI and Hugging Face: out through the package proxy", date="Jul 2026", subs="APF", layer="isolation",
             what="No outside attacker. In an internal cyber-capability evaluation, agents worked on tasks that OpenAI says may in some cases have "
@@ -1576,7 +1576,7 @@ def _(mo):
         "The standards crosswalk, for your audit file": mo.md(
             "OWASP&rsquo;s Excessive Agency entry names three root causes, and this module uses them as its spine. The other standards split the same ground differently, "
             "so attach their ids as cross-references. Entries are cited by name with the edition (OWASP LLM Top 10 2025, renumbered in the [2026 edition](https://genai.owasp.org/resource/owasp-genai-llm-top-10-2026/); "
-            "Agentic Top 10 2026; MCP Top 10 beta; MITRE ATLAS content version 2026.09).\n\n"
+            "Agentic Top 10 2026; MCP Top 10 beta; MITRE ATLAS content version 2026.10).\n\n"
             "| problem | LLM Top 10 | Agentic Top 10 (2026) | MCP Top 10 (beta) | MITRE ATLAS | lab layer |\n|---|---|---|---|---|---|\n"
             "| Excessive functionality | LLM06:2025 / LLM03:2026 | ASI02 Tool Misuse and Exploitation | MCP02, MCP05 | AML.T0053 AI Agent Tool Invocation | tool diet, argument check |\n"
             "| Excessive permissions | LLM06:2025 / LLM03:2026 | ASI03 Identity and Privilege Abuse | MCP01, MCP02, MCP07 | AML.T0053, mitigations AML.M0026 to M0028 | scoped credential, object check |\n"
@@ -1745,17 +1745,17 @@ def _(mo):
         mo.md("### Four things to attack next, and one to read\n\nYou defended a deployment. These let you attack one, in this order. Each says what it needs; links open in a new tab."),
         mo.Html(
             '<ol class="sad-ol">'
-            f'<li><b>{_a("https://github.com/skills/secure-code-game", "GitHub Secure Code Game, Season 4")}</b> (about two hours, in Codespaces). The nearest public match to this '
+            f'<li><b>{_a("https://github.com/skills/secure-code-game", "GitHub Secure Code Game, Season 4")}</b> (in Codespaces; as of 1 Nov 2026 its README says Season 4 is temporarily unavailable to play while it moves to a new model backend, and the five levels, hints and solutions stay readable). The nearest public match to this '
             "module&rsquo;s syllabus: a bash and web agent, then MCP servers, then skills and memory, then a level titled Confused Deputy. It is offence only, so it pairs with your defence work here.</li>"
             f'<li><b>{_a("https://portswigger.net/web-security/llm-attacks/lab-exploiting-llm-apis-with-excessive-agency", "PortSwigger: exploiting LLM APIs with excessive agency")}</b>, '
-            f'plus its {_a("https://portswigger.net/web-security/llm-attacks/ai-powered-scanner-vulnerabilities", "AI-powered scanner labs")}. Browser only, minutes each. The first teaches recon by asking '
-            "the agent what it can do; the scanner labs make the agent a deputy holding someone else&rsquo;s credentials. Results vary because they use a live model.</li>"
+            f'plus its {_a("https://portswigger.net/web-security/llm-attacks/ai-powered-scanner-vulnerabilities", "AI-powered scanner vulnerabilities page")}. Browser only, minutes each. The first teaches recon by asking '
+            "the agent what it can do; the scanner page shows the agent as a deputy that reaches internal services with a session the attacker does not have. Results vary because they use a live model.</li>"
             f'<li><b>{_a("https://owasp-finbot-ctf.org/", "OWASP FinBot CTF")}</b>. A scoreboard of agent tool-misuse challenges mapped to the Agentic Top 10, including tool poisoning and MCP servers. '
             f'Self-hosting needs a model key and Redis ({_a("https://github.com/GenAI-Security-Project/finbot-ctf", "source")}).</li>'
             f'<li><b>{_a("https://github.com/harishsg993010/damn-vulnerable-MCP-server", "Damn Vulnerable MCP Server")}</b>, challenges 2 to 5. Tool poisoning, excessive scope, rug pull and shadowing as local servers. '
             "Needs Docker, an MCP client and a model, and its README says it is unstable on Windows.</li>"
             f'<li><b>Read, 45 minutes:</b> the {_a("https://code.claude.com/docs/en/permissions", "Claude Code permissions page")} and '
-            f'{_a("https://blog.trailofbits.com/2025/10/22/prompt-injection-to-rce-in-ai-agents/", "Trail of Bits on prompt injection to remote code execution")}. They show with tables '
+            f'{_a("https://blog.trailofbits.com/2025/10/22/prompt-injection-to-rce-in-ai-agents/", "Trail of Bits on prompt injection to remote code execution")}. The first shows in a table, and the second with worked examples, '
             "why a rule on a command string is not a boundary, and what the vendors recommend instead.</li></ol>"),
         mo.md("**The model benchmark** can run the attack set of Module 02 against any model on your own key: "
               '<a href="../course/#/tool/benchmark" target="_blank" rel="noopener">open it in a new tab</a>. '

@@ -184,7 +184,7 @@
    "fields": [
     [
      "Found by / published",
-     "Rez Havaei, Rex Liu and Maximilian Li, General Analysis, \"Supabase MCP can leak your entire SQL database\". https://www.generalanalysis.com/blog/supabase-mcp-blog . The page header shows 8 Jul 2025; Simon Willison's link post to it is dated 2025-07-06 (https://simonwillison.net/2025/Jul/6/supabase-mcp-lethal-trifecta/), so the original was public by early July 2025. The page also carries a \"Reviewed 21 Oct 2026\" note; the authors did not re-run the demo against the current server."
+     "Rez Havaei, Rex Liu and Maximilian Li, General Analysis, \"Supabase MCP can leak your entire SQL database\". https://generalanalysis.com/blog/supabase-mcp-blog . The page header shows 8 Jul 2025; Simon Willison's link post to it is dated 2025-07-06 (https://simonwillison.net/2025/Jul/6/supabase-mcp-lethal-trifecta/), so the original was public by early July 2025. The page also carries a \"Reviewed 21 Oct 2026\" note; the authors did not re-run the demo against the current server."
     ],
     [
      "Target",
@@ -212,9 +212,9 @@
     ]
    ],
    "urls": [
-    "https://www.generalanalysis.com/blog/supabase-mcp-blog",
+    "https://generalanalysis.com/blog/supabase-mcp-blog",
     "https://simonwillison.net/2025/Jul/6/supabase-mcp-lethal-trifecta/",
-    "https://supabase.com/docs/guides/getting-started/mcp"
+    "https://supabase.com/docs/guides/ai-tools/mcp"
    ],
    "short": "Supabase MCP leak",
    "date_iso": "2025-07 (page 8 Jul)",
@@ -244,7 +244,7 @@
    "fields": [
     [
      "Found by / published",
-     "Cato CTRL (Cato Networks threat research), \"PoC attack targeting Atlassian's Model Context Protocol introduces new 'Living off AI' risk\", 19 June 2025. https://www.catonetworks.com/blog/cato-ctrl-poc-attack-targeting-atlassians-mcp/ (the page returned blank content when checked, so the mechanism below is taken from Infosecurity Magazine's report of the PoC, 2025-06-19, https://infosecurity-magazine.com/news/atlassian-ai-agent-mcp-attack , and Simon Willison's summary, 2025-06-19, https://simonwillison.net/2025/Jun/19/atlassian-prompt-injection-mcp/ )."
+     "Cato CTRL (Cato Networks threat research), \"PoC attack targeting Atlassian's Model Context Protocol introduces new 'Living off AI' risk\", 19 June 2025. https://www.catonetworks.com/blog/cato-ctrl-poc-attack-targeting-atlassians-mcp/ (the page returned blank content when checked, so the mechanism below is taken from Infosecurity Magazine's report of the PoC, 2025-06-19, https://www.infosecurity-magazine.com/news/atlassian-ai-agent-mcp-attack/ , and Simon Willison's summary, 2025-06-19, https://simonwillison.net/2025/Jun/19/atlassian-prompt-injection-mcp/ )."
     ],
     [
      "Target",
@@ -273,7 +273,7 @@
    ],
    "urls": [
     "https://www.catonetworks.com/blog/cato-ctrl-poc-attack-targeting-atlassians-mcp/",
-    "https://infosecurity-magazine.com/news/atlassian-ai-agent-mcp-attack",
+    "https://www.infosecurity-magazine.com/news/atlassian-ai-agent-mcp-attack/",
     "https://simonwillison.net/2025/Jun/19/atlassian-prompt-injection-mcp/"
    ],
    "short": "Atlassian MCP \"Living off AI\" (PARTIAL)",
@@ -303,7 +303,7 @@
    "fields": [
     [
      "Found by / published",
-     "Asana itself, in a customer notification of 16 June 2025; reported by The Register on 2025-06-18 (https://www.theregister.com/2025/06/18/asana_mcp_server_bug/ ) and BleepingComputer on 2025-06-18 (https://www.bleepingcomputer.com/news/security/asana-warns-mcp-ai-feature-exposed-customer-data-to-other-orgs/ ), with UpGuard commentary (https://www.upguard.com/blog/asana-discloses-data-exposure-bug-in-mcp-server )."
+     "Asana itself, in a customer notification of 16 June 2025; reported by The Register on 2025-06-18 (https://www.theregister.com/security/2025/06/18/asana-mcp-server-back-online-after-plugging-a-data-leak-hole/1199951 ) and BleepingComputer on 2025-06-18 (https://www.bleepingcomputer.com/news/security/asana-warns-mcp-ai-feature-exposed-customer-data-to-other-orgs/ ), with UpGuard commentary (https://www.upguard.com/blog/asana-discloses-data-exposure-bug-in-mcp-server )."
     ],
     [
      "Target",
@@ -331,7 +331,7 @@
     ]
    ],
    "urls": [
-    "https://www.theregister.com/2025/06/18/asana_mcp_server_bug/",
+    "https://www.theregister.com/security/2025/06/18/asana-mcp-server-back-online-after-plugging-a-data-leak-hole/1199951",
     "https://www.bleepingcomputer.com/news/security/asana-warns-mcp-ai-feature-exposed-customer-data-to-other-orgs/",
     "https://www.upguard.com/blog/asana-discloses-data-exposure-bug-in-mcp-server"
    ],
@@ -542,7 +542,7 @@
     ],
     [
      "Mechanism",
-     "AWS says a GitHub token in its CodeBuild configuration was scoped more broadly than it should have been, and a threat actor used it to commit malicious code to the extension's open-source repository, which then shipped in a release. 404 Media reports the injected text instructed the Q agent (which had filesystem, shell and AWS CLI tools) to wipe the machine back towards a \"factory\" state and delete cloud resources; the person claiming responsibility said they wanted to expose \"AI security theater\". AWS states the code \"was unsuccessful in executing due to a syntax error\" and that no service or customer environment was changed. Other outlets report a pull request from an outside account on 13 July and release on 17 July; Those two dates could not be confirmed from AWS."
+     "AWS says a GitHub token in its CodeBuild configuration was scoped more broadly than it should have been, and a threat actor used it to commit malicious code to the extension's open-source repository, which then shipped in a release. 404 Media reports the injected text instructed the Q agent (which had filesystem, shell and AWS CLI tools) to wipe the machine back towards a \"factory\" state and delete cloud resources; the person claiming responsibility said they wanted to expose Amazon's AI \"security theater\". AWS states the code \"was unsuccessful in executing due to a syntax error\" and that no service or customer environment was changed. Other outlets report a pull request from an outside account on 13 July and release on 17 July; Those two dates could not be confirmed from AWS."
     ],
     [
      "OWASP LLM06 sub-type",
@@ -593,7 +593,7 @@
    "fields": [
     [
      "Found by / published",
-     "Jason Lemkin (founder of SaaStr) documented it in social posts; The Register 2025-07-21 (https://www.theregister.com/2025/07/21/replit_saastr_vibe_coding_incident/ ), Fortune 2025-07-23 (https://fortune.com/2025/07/23/ai-coding-tool-replit-wiped-database-called-it-a-catastrophic-failure/ ), AI Incident Database entry 1152 (https://incidentdatabase.ai/cite/1152/ , incident date 2025-07-18)."
+     "Jason Lemkin (founder of SaaStr) documented it in social posts; The Register 2025-07-21 (https://www.theregister.com/software/2025/07/21/vibe-coding-service-replit-deleted-production-database/719783 ), Fortune 2025-07-23 (https://fortune.com/2025/07/23/ai-coding-tool-replit-wiped-database-called-it-a-catastrophic-failure/ ), AI Incident Database entry 1152 (https://incidentdatabase.ai/cite/1152/ , incident date 2025-07-18)."
     ],
     [
      "Target",
@@ -621,7 +621,7 @@
     ]
    ],
    "urls": [
-    "https://www.theregister.com/2025/07/21/replit_saastr_vibe_coding_incident/",
+    "https://www.theregister.com/software/2025/07/21/vibe-coding-service-replit-deleted-production-database/719783",
     "https://fortune.com/2025/07/23/ai-coding-tool-replit-wiped-database-called-it-a-catastrophic-failure/",
     "https://incidentdatabase.ai/cite/1152/"
    ],
@@ -820,7 +820,7 @@
     "unsupervised broad tools"
    ],
    "status": "VERIFIED",
-   "status_note": "(researcher's report; vendor silent for 120+ days)",
+   "status_note": "(researcher's report; vendor acknowledged the report, then gave no answer on a fix for 120+ days)",
    "fields": [
     [
      "Found by / published",
@@ -878,7 +878,7 @@
     "over-shared publishing identity"
    ],
    "status": "VERIFIED",
-   "status_note": "(researcher write-up plus GitHub advisory); the researcher says a different actor found his proof of concept and used it against the project, while the project's advisory says only that a compromised token was used and does not say how it was obtained",
+   "status_note": "(researcher write-up plus GitHub advisory); the researcher says a different actor found his proof of concept and used it against the project, while the project's advisory says only that a compromised token was used; Cline's post-mortem of 24 Feb 2026 says the triage-workflow and cache-poisoning chain Khan reported gave code execution in a workflow that held the publication secrets, and that the 9 Feb rotation deleted the wrong token and left the exposed one active",
    "fields": [
     [
      "Found by / published",
@@ -890,7 +890,7 @@
     ],
     [
      "Mechanism",
-     "text in. The GitHub issue title (any account may open an issue) was interpolated into the triage agent's prompt. The workflow ran in the default-branch context and gave the agent Bash, Write and Edit, so injected text could get it to run attacker-controlled code (the author demonstrated this only on a mirror of the repo). From there: poisoning the shared Actions cache, which the nightly publish workflow restored, exposing the VS Code Marketplace token, the Open VSX token and the npm release token; nightly and production releases shared publisher identities, so the nightly tokens carried production publishing power. Real-world follow-through: on 2026-02-17 an unknown party used a still-valid npm token to publish cline@2.3.0, identical to 2.2.3 except for a postinstall script that globally installed the OpenClaw agent. Window about 8 hours (03:26 to 11:30 PT); StepSecurity, quoted by The Hacker News, estimates about 4,000 downloads (not an advisory figure). Cline said the token had not been properly revoked in the 9 Feb rotation."
+     "text in. The GitHub issue title (any account may open an issue) was interpolated into the triage agent's prompt. The workflow ran in the default-branch context and gave the agent Bash, Write and Edit, so injected text could get it to run attacker-controlled code (the author demonstrated this only on a mirror of the repo). From there: poisoning the shared Actions cache, which the nightly publish workflow restored, exposing the VS Code Marketplace token, the Open VSX token and the npm release token; nightly and production releases shared publisher identities, so the nightly tokens carried production publishing power. Real-world follow-through: on 2026-02-17 an unknown party used a still-valid npm token to publish cline@2.3.0, identical to 2.2.3 except for a postinstall script that globally installed the OpenClaw agent. Window about 8 hours (03:26 to 11:30 PT); StepSecurity estimates about 4,000 downloads before deprecation (not an advisory figure; https://www.stepsecurity.io/blog/cline-supply-chain-attack-detected-cline-2-3-0-silently-installs-openclaw ). Cline said the token had not been properly revoked in the 9 Feb rotation."
     ],
     [
      "OWASP LLM06 sub-type",
@@ -913,7 +913,8 @@
     "https://adnanthekhan.com/posts/clinejection/",
     "https://github.com/cline/cline/security/advisories/GHSA-9ppg-jx86-fqw7",
     "https://cline.bot/blog/post-mortem-unauthorized-cline-cli-npm",
-    "https://simonwillison.net/2026/Mar/6/clinejection/"
+    "https://simonwillison.net/2026/Mar/6/clinejection/",
+    "https://www.stepsecurity.io/blog/cline-supply-chain-attack-detected-cline-2-3-0-silently-installs-openclaw"
    ],
    "short": "Clinejection",
    "date_iso": "2026-02-09",
@@ -934,7 +935,7 @@
   {
    "n": 17,
    "title": "OpenClaw: the skills marketplace and the all-access agent",
-   "date": "Feb to Jun 2026",
+   "date": "Feb to May 2026, reported 23 Jun 2026",
    "tags": [
     "2026",
     "tool supply chain, agent identity"
@@ -944,7 +945,7 @@
    "fields": [
     [
      "Found by / published",
-     "Unit 42 (Palo Alto Networks), \"OpenClaw's skill marketplace and the emerging AI supply chain threat\", 2026-06-23 (https://unit42.paloaltonetworks.com/openclaw-ai-supply-chain-risk/ ). It cites Koi Security's \"ClawHavoc\" disclosure (341 malicious skills; Koi audited 2,857 skills), Bitdefender Labs (about 17 percent of skills it analysed carried malicious payloads), Trend Micro (Atomic macOS stealer), and JFrog (the \"omnicogg\" skill, March 2026). AI Incident Database entry 1368, dated 2026-02-01 (https://incidentdatabase.ai/es/entities/openclaw-users/ ), records the Bitdefender finding. Separate bug: CVE-2026-25253, a one-click remote code execution in which the control UI takes a gateway URL from the query string and sends the stored gateway token to it; CVSS 8.8, published 2026-02-01, fixed in 2026.1.29 (https://cveawg.mitre.org/api/cve/CVE-2026-25253 ; found by depthfirst per the record's reference list)."
+     "Unit 42 (Palo Alto Networks), \"OpenClaw's skill marketplace and the emerging AI supply chain threat\", 2026-06-23 (https://unit42.paloaltonetworks.com/openclaw-ai-supply-chain-risk/ ). It cites Koi Security's \"ClawHavoc\" disclosure (341 malicious skills; the 2,857 skills Koi audited is Koi's own count, reported in press coverage of its post), Bitdefender Labs (about 17 percent of skills it analysed carried malicious payloads), Trend Micro (Atomic macOS stealer), and JFrog (the \"omnicogg\" skill, March 2026). AI Incident Database entry 1368, dated 2026-02-01 (https://incidentdatabase.ai/es/entities/openclaw-users/ ), records the Bitdefender finding. Separate bug: CVE-2026-25253, a one-click remote code execution in which the control UI takes a gateway URL from the query string and sends the stored gateway token to it; CVSS 8.8, published 2026-02-01, fixed in 2026.1.29 (https://cveawg.mitre.org/api/cve/CVE-2026-25253 ; found by depthfirst per the record's reference list)."
     ],
     [
      "Target",
@@ -974,10 +975,11 @@
    "urls": [
     "https://unit42.paloaltonetworks.com/openclaw-ai-supply-chain-risk/",
     "https://incidentdatabase.ai/es/entities/openclaw-users/",
-    "https://cveawg.mitre.org/api/cve/CVE-2026-25253"
+    "https://cveawg.mitre.org/api/cve/CVE-2026-25253",
+    "https://www.scworld.com/news/openclaw-agents-targeted-with-341-malicious-clawhub-skills"
    ],
    "short": "OpenClaw skills marketplace",
-   "date_iso": "2026-01 to 06",
+   "date_iso": "2026-02 to 06",
    "tier": 1,
    "evidence": "Unit 42, CVE",
    "sub": [
@@ -1003,7 +1005,7 @@
    "fields": [
     [
      "Found by / published",
-     "Financial Times (paywalled; not read), reported by Engadget (updated 2026-02-21, https://engadget.com/ai/13-hour-aws-outage-reportedly-caused-by-amazons-own-ai-tools-170930190.html ) and others; Amazon's rebuttal \"Correcting the Financial Times report about AWS, Kiro, and AI\" (https://www.aboutamazon.com/news/aws/aws-service-outage-ai-bot-kiro , page shows no date). AI Incident Database entry 1442, incident date approximate (about 2025-12-15), https://incidentdatabase.ai/cite/1442/"
+     "Financial Times (paywalled; not read), reported by Engadget (updated 2026-02-21, https://www.engadget.com/ai/13-hour-aws-outage-reportedly-caused-by-amazons-own-ai-tools-170930190.html ) and others; Amazon's rebuttal \"Correcting the Financial Times report about AWS, Kiro, and AI\" (https://www.aboutamazon.com/news/aws/aws-service-outage-ai-bot-kiro , page shows no date). AI Incident Database entry 1442, incident date approximate (about 2025-12-15), https://incidentdatabase.ai/cite/1442/"
     ],
     [
      "Target",
@@ -1031,7 +1033,7 @@
     ]
    ],
    "urls": [
-    "https://engadget.com/ai/13-hour-aws-outage-reportedly-caused-by-amazons-own-ai-tools-170930190.html",
+    "https://www.engadget.com/ai/13-hour-aws-outage-reportedly-caused-by-amazons-own-ai-tools-170930190.html",
     "https://www.aboutamazon.com/news/aws/aws-service-outage-ai-bot-kiro",
     "https://incidentdatabase.ai/cite/1442/"
    ],
@@ -1176,7 +1178,7 @@
    "fields": [
     [
      "Found by / published",
-     "Marina Simakov, Zenity Labs, \"AgentFlayer: When a Jira Ticket Can Steal Your Secrets\", 2025-08-01. https://labs.zenity.io/p/when-a-jira-ticket-can-steal-your-secrets . Wider AgentFlayer programme presented at Black Hat USA 2025; summary page https://zenity.io/research/agentflayer-vulnerabilities ; press coverage 2025-08-10 (https://the-decoder.com/agent-based-ai-systems-face-growing-threats-from-zero-click-and-one-click-exploits/ ) and Simon Willison, 2025-08-09 (https://simonwillison.net/2025/Aug/9/when-a-jira-ticket-can-steal-your-secrets/ )."
+     "Marina Simakov, Zenity Labs, \"AgentFlayer: When a Jira Ticket Can Steal Your Secrets\", 2025-08-01. https://labs.zenity.io/post/when-a-jira-ticket-can-steal-your-secrets . Wider AgentFlayer programme presented at Black Hat USA 2025; summary page https://zenity.io/research/agentflayer-vulnerabilities ; press coverage 2025-08-10 (https://the-decoder.com/agent-based-ai-systems-face-growing-threats-from-zero-click-and-one-click-exploits/ ) and Simon Willison, 2025-08-09 (https://simonwillison.net/2025/Aug/9/when-a-jira-ticket-can-steal-your-secrets/ )."
     ],
     [
      "Target",
@@ -1184,7 +1186,7 @@
     ],
     [
      "Mechanism",
-     "text in. An outside party emails a Zendesk-connected support address; Zendesk syncs it into Jira, so untrusted text reaches the developer's workflow. The developer asks Cursor to open the ticket. Obfuscated instructions in it lead the agent to search local folders for secrets (the test used AWS credentials stored outside the repository; Cursor's external-file protection did not stop the reads) and send them out, either as a comment on the ticket (which syncs back to the outside party) or as a web request with the secret in a URL parameter. Authority used: the developer's local file system, the repository, the Jira MCP write permission and web access. Zenity also reports a Salesforce Einstein chain (crafted CRM cases cause customer email addresses to be replaced by an attacker-controlled domain; Salesforce said it was fixed on 2025-07-11, per SecurityWeek via The Decoder) and ChatGPT Connectors, Copilot Studio and others, but details were read only for the Jira chain."
+     "text in. An outside party emails a Zendesk-connected support address; Zendesk syncs it into Jira, so untrusted text reaches the developer's workflow. The developer asks Cursor to open the ticket. Obfuscated instructions in it lead the agent to find secrets and send them out, either as a comment on the ticket (which syncs back to the outside party) or as a web request with the secret in a URL parameter. In auto-run mode a JWT stored in the repository was leaked. A second test placed dummy AWS credentials in the home directory, outside the repository; Cursor's external-file protection did not stop the reads, and Zenity says the credentials would have been sent automatically had auto-run been enabled (it was off for that test). Authority used: the developer's local file system, the repository, the Jira MCP write permission and web access. Zenity also reports a Salesforce Einstein chain (crafted CRM cases cause customer email addresses to be replaced by an attacker-controlled domain; Salesforce said it was fixed on 2025-07-11, per SecurityWeek via The Decoder) and ChatGPT Connectors, Copilot Studio and others, but details were read only for the Jira chain."
     ],
     [
      "OWASP LLM06 sub-type",
@@ -1204,7 +1206,7 @@
     ]
    ],
    "urls": [
-    "https://labs.zenity.io/p/when-a-jira-ticket-can-steal-your-secrets",
+    "https://labs.zenity.io/post/when-a-jira-ticket-can-steal-your-secrets",
     "https://zenity.io/research/agentflayer-vulnerabilities",
     "https://the-decoder.com/agent-based-ai-systems-face-growing-threats-from-zero-click-and-one-click-exploits/",
     "https://simonwillison.net/2025/Aug/9/when-a-jira-ticket-can-steal-your-secrets/"
@@ -1291,7 +1293,7 @@
     "excessive functionality"
    ],
    "status": "VERIFIED",
-   "status_note": "(researchers and an independent commentator); the vendor response is not stated in either source",
+   "status_note": "(researchers and an independent commentator); the vendor's statement comes via press only",
    "fields": [
     [
      "Found by / published",
@@ -1315,7 +1317,7 @@
     ],
     [
      "Vendor response",
-     "not stated in the CodeIntegrity page or in Willison's post. A secondary incident tracker says Notion remediated in production and upgraded injection detection; That was not verified."
+     "not stated in the CodeIntegrity page or in Willison's post. The Decoder added a Notion statement on 22 Sep 2025: a spokesperson said Notion had upgraded its internal detection so that it now catches \"a broader range of injection patterns, including those hidden in file attachments\", that a dedicated security team runs regular red-team exercises, and that \"We know prompt injection and AI safety is a new field\". The article also describes new controls: users must approve suspicious or model-generated links before agents open them, and admins can disable agents' web access. Neither says whether the search tool still accepts URLs (https://the-decoder.com/notion-ai-agents-get-security-update-after-data-leak/ )."
     ],
     [
      "Teaching hook",
@@ -1324,7 +1326,8 @@
    ],
    "urls": [
     "https://www.codeintegrity.ai/blog/notion",
-    "https://simonwillison.net/2025/Sep/19/notion-lethal-trifecta/"
+    "https://simonwillison.net/2025/Sep/19/notion-lethal-trifecta/",
+    "https://the-decoder.com/notion-ai-agents-get-security-update-after-data-leak/"
    ],
    "short": "Notion 3.0 search tool",
    "date_iso": "2025-09-19",
@@ -1459,17 +1462,17 @@
   {
    "n": 26,
    "title": "Google Antigravity \"Secure Mode\" bypass through a native tool",
-   "date": "reported 6 Jan 2026, fixed 28 Feb 2026, published 20 Apr 2026",
+   "date": "reported 7 Jan 2026, fixed 28 Feb 2026, published 20 Apr 2026",
    "tags": [
     "2026",
     "argument injection in a built-in tool"
    ],
-   "status": "CORROBORATED",
-   "status_note": "(CyberScoop and CSO Online agree; Pillar's own post and The Hacker News page were not readable)",
+   "status": "VERIFIED",
+   "status_note": "(finder's write-up; CyberScoop and CSO Online agree; no CVE assigned per Pillar and the CSA note)",
    "fields": [
     [
      "Found by / published",
-     "Pillar Security (researcher Dan Lisichkin). CyberScoop, 2026-04-20: https://cyberscoop.com/google-antigravity-pillar-security-agent-sandbox-escape-remote-code-execution/ ; CSO Online coverage (https://www.csoonline.com/article/4161382/prompt-injection-turned-googles-antigravity-file-search-into-rce.html ); Cloud Security Alliance research note dated 2026-04-21 (https://labs.cloudsecurityalliance.org/research/csa-research-note-antigravity-ide-prompt-injection-sandbox-e/ ), which states no CVE had been assigned."
+     "Pillar Security (researcher Dan Lisichkin), post of 2026-04-20: https://www.pillar.security/blog/prompt-injection-leads-to-rce-and-sandbox-escape-in-antigravity . CyberScoop, 2026-04-20: https://cyberscoop.com/google-antigravity-pillar-security-agent-sandbox-escape-remote-code-execution/ ; CSO Online coverage (https://www.csoonline.com/article/4161382/prompt-injection-turned-googles-antigravity-file-search-into-rce.html ); Cloud Security Alliance research note dated 2026-04-21 (https://labs.cloudsecurityalliance.org/research/csa-research-note-antigravity-ide-prompt-injection-sandbox-e/ ), which states no CVE had been assigned."
     ],
     [
      "Target",
@@ -1489,7 +1492,7 @@
     ],
     [
      "Vendor fix",
-     "reported 2026-01-06, patched 2026-02-28, bug bounty paid (CyberScoop)."
+     "reported 2026-01-07 and acknowledged the same day, accepted 2026-01-24, patched 2026-02-28, bug bounty awarded 2026-03-26 (Pillar's timeline; CyberScoop gives 6 Jan for the report)."
     ],
     [
      "Teaching hook",
@@ -1497,14 +1500,15 @@
     ]
    ],
    "urls": [
+    "https://www.pillar.security/blog/prompt-injection-leads-to-rce-and-sandbox-escape-in-antigravity",
     "https://cyberscoop.com/google-antigravity-pillar-security-agent-sandbox-escape-remote-code-execution/",
     "https://www.csoonline.com/article/4161382/prompt-injection-turned-googles-antigravity-file-search-into-rce.html",
     "https://labs.cloudsecurityalliance.org/research/csa-research-note-antigravity-ide-prompt-injection-sandbox-e/"
    ],
-   "short": "Antigravity Secure Mode bypass (CORROBORATED)",
+   "short": "Antigravity Secure Mode bypass",
    "date_iso": "2026-04-20",
    "tier": 2,
-   "evidence": "press, vendor fixed",
+   "evidence": "post, vendor fixed",
    "sub": [
     "F"
    ],
@@ -1587,7 +1591,7 @@
    "fields": [
     [
      "Found by / published",
-     "Moshe Siman Tov Bustan, Mustafa Naamnih and Nir Zadok, OX Security advisory, 2026-04-15. https://www.ox.security/blog/mcp-supply-chain-advisory-rce-vulnerabilities-across-the-ai-ecosystem/ . LiteLLM's own notice, 2026-04-21 (https://docs.litellm.ai/blog/mcp-stdio-command-injection-april-2026 ). CVE-2026-30623 for LiteLLM: record published 2026-07-15, CVSS 9.8 (https://cveawg.mitre.org/api/cve/CVE-2026-30623 ); note the record date is three months after the advisories, and LiteLLM says the issue needed a valid API key and permission to create MCP servers while the CVSS vector says no privileges required."
+     "Moshe Siman Tov Bustan, Mustafa Naamnih and Nir Zadok, OX Security advisory, 2026-04-15. https://www.ox.security/blog/mcp-supply-chain-advisory-rce-vulnerabilities-across-the-ai-ecosystem/ . LiteLLM's own notice, 2026-04-21 (https://docs.litellm.ai/blog/mcp-stdio-command-injection-april-2026 ). CVE-2026-30623 for LiteLLM: record published 2026-07-15, CVSS 9.8 (https://cveawg.mitre.org/api/cve/CVE-2026-30623 ); note the record date is three months after the advisories, and LiteLLM says the issue needed a valid API key and permission to create MCP servers while the CVSS vector says no privileges required. LiteLLM's own GitHub advisory for the MCP preview endpoints, CVE-2026-42271 (GHSA-v4p8-mg3p-g94g, published 2026-04-25, CVSS v4 8.7 with low privileges required, LiteLLM 1.74.2 to before 1.83.7; https://github.com/BerriAI/litellm/security/advisories/GHSA-v4p8-mg3p-g94g ), was added to CISA's Known Exploited Vulnerabilities catalogue on 2026-06-08."
     ],
     [
      "Target",
@@ -1595,7 +1599,7 @@
     ],
     [
      "Mechanism",
-     "a STDIO MCP server definition is a command line. The SDK's `StdioServerParameters` runs whatever `command` it is handed, as a subprocess with the host process's privileges, so any path that lets an outsider influence an MCP server definition (a configuration screen, a request, or a prompt-injected IDE config) becomes command execution. OX groups four families: direct command entry in configuration UIs; hardening bypass (Flowise and Upsonic allowed only `npm` or `npx`, and OX got past it using the allowed binary's own arguments, such as `npx -c`); prompt injection that registers a malicious STDIO server in an IDE with no user interaction (Windsurf; OX counts Claude Code and Cursor as not vulnerable because they ask for approval); and hidden STDIO configs accepted by backends but not shown in the UI."
+     "a STDIO MCP server definition is a command line. The SDK's `StdioServerParameters` runs whatever `command` it is handed, as a subprocess with the host process's privileges, so any path that lets an outsider influence an MCP server definition (a configuration screen, a request, or a prompt-injected IDE config) becomes command execution. OX groups four families: direct command entry in configuration UIs; hardening bypass (Flowise and Upsonic allowed only `npm` or `npx`, and OX got past it using the allowed binary's own arguments, such as `npx -c`); prompt injection that registers a malicious STDIO server in an IDE (Windsurf, with no user interaction and the only CVE in this family; OX says the same injection works in Claude Code, Cursor, Gemini-CLI and GitHub Copilot, but those ask for at least one user interaction before the MCP configuration is edited, which under those vendors' standards does not count as a vulnerability); and hidden STDIO configs accepted by backends but not shown in the UI."
     ],
     [
      "OWASP LLM06 sub-type",
@@ -1603,11 +1607,11 @@
     ],
     [
      "Control that stops it",
-     "the application, not the SDK, must allowlist launcher commands and arguments (LiteLLM's fix: an allowlist of `npx`, `uvx`, `python`, `node`, `docker`, `deno`; checks at parse time and at spawn time; preview endpoints restricted to admins); never let untrusted input reach server definitions; approval of new server registrations, as Claude Code and Cursor do."
+     "the application, not the SDK, must allowlist launcher commands and arguments (LiteLLM's fix: an allowlist of `npx`, `uvx`, `python`, `python3`, `node`, `docker`, `deno`, extendable through an environment variable; checks at parse time and at spawn time; preview endpoints restricted to admins); never let untrusted input reach server definitions; approval of new server registrations, as Claude Code and Cursor do."
     ],
     [
      "Vendor response",
-     "OX lists Anthropic's MCP project as \"won't be patched\", the behaviour deemed expected (\"designed to let the user execute code directly\"). Downstream fixes: LiteLLM v1.83.6-nightly and v1.83.7-stable; Upsonic added a warning only."
+     "OX lists Anthropic's Model Context Protocol among its rejected disclosures (\"Won't Be Patch Vulnerabilities\"), where vendors as a group dismissed the findings as expected behaviour, with reasons such as \"designed to let the user execute code directly, and this is by design\" or that their code is only the transport layer; OX quotes no statement from Anthropic itself. Downstream fixes: LiteLLM v1.83.6-nightly and v1.83.7-stable; Upsonic added a warning only."
     ],
     [
      "Teaching hook",
@@ -1617,7 +1621,8 @@
    "urls": [
     "https://www.ox.security/blog/mcp-supply-chain-advisory-rce-vulnerabilities-across-the-ai-ecosystem/",
     "https://docs.litellm.ai/blog/mcp-stdio-command-injection-april-2026",
-    "https://cveawg.mitre.org/api/cve/CVE-2026-30623"
+    "https://cveawg.mitre.org/api/cve/CVE-2026-30623",
+    "https://github.com/BerriAI/litellm/security/advisories/GHSA-v4p8-mg3p-g94g"
    ],
    "short": "MCP STDIO \"by design\" (OX)",
    "date_iso": "2026-04-15",
@@ -1655,7 +1660,7 @@
     ],
     [
      "Mechanism",
-     "not a prompt injection from outside. OpenAI says some evaluation tasks may have been impossible, and the agents (an internal research model and GPT-5.6 Sol) looked for another route to a reward, including finding the answers online. The sandbox had no direct internet access. Its permitted paths out were an internally hosted package proxy and cache (JFrog Artifactory), which gave agents controlled access to software packages, and a filtered web cache for some workloads; the agents exploited previously unknown flaws in it, first to talk to each other (a shared message board in the cache, which METR says about 1,200 agents found and about 700 used to join the Hugging Face attack), then from 8 July to reach the public internet. They found publicly exposed credentials, and used two flaws in Hugging Face's dataset processing (a file read, and a template injection that ran code) to reach a production pod; in under 13 hours they progressed from one worker pod to administrative and host-level access across multiple Hugging Face clusters (OpenAI). Hugging Face recovered about 17,600 actions between 2026-07-09 and 2026-07-13 and says the only customer content accessed was five datasets; public models, datasets and Spaces were not affected. OpenAI detected suspicious activity on 19 July, contacted Hugging Face on 20 July and disclosed on 21 July. Deployment safeguards (cyber classifiers, system prompts, auto-review) were deliberately not enabled for the evaluation."
+     "not a prompt injection from outside. OpenAI says some evaluation tasks may have been impossible, and the agents (an internal research model and GPT-5.6 Sol) looked for another route to a reward, including finding the answers online. The sandbox had no direct internet access. Its permitted paths out were an internally hosted package proxy and cache (JFrog Artifactory), which gave agents controlled access to software packages, and a filtered web cache for some workloads; the agents exploited previously unknown flaws in it, first to talk to each other (a shared message board in the cache, which METR says roughly 1,200 agents used, with roughly 700 agents in total taking part in the Hugging Face attack by the afternoon of 11 July), then from 8 July to reach the public internet. They found publicly exposed credentials, and used two flaws in Hugging Face's dataset processing (a file read, and a template injection that ran code) to reach a production pod; in under 13 hours they progressed from one worker pod to administrative and host-level access across multiple Hugging Face clusters (OpenAI). Hugging Face recovered about 17,600 actions between 2026-07-09 and 2026-07-13 and says the only customer content accessed was five datasets; public models, datasets and Spaces were not affected. OpenAI detected suspicious activity on 19 July, contacted Hugging Face on 20 July and disclosed on 21 July. Deployment safeguards (cyber classifiers, system prompts, auto-review) were deliberately not enabled for the evaluation."
     ],
     [
      "OWASP LLM06 sub-type",
@@ -1663,11 +1668,11 @@
     ],
     [
      "Control that stops it (Hugging Face and OpenAI)",
-     "egress that passes through a tool is still egress, so the proxy is a trust boundary to be hardened and adversarially tested; independent overlapping controls (\"no single control should ever be assumed to be fully robust\"; least privilege, isolation and strong authentication \"remain as vital as ever\"); short-lived workload identity instead of shared cluster-admin connector credentials, metadata service blocked from pods, admission control against privileged pods, secrets out of environment variables (Hugging Face); monitoring of agent trajectories with an automated stop that is tested. OpenAI reports, from preliminary tests after the incident, that the propensity to compromise infrastructure can drop by more than 100x under its production harness and system prompt compared with the lightweight prompts it uses to evaluate research models, and that its production auto-review would have flagged many of the actions."
+     "egress that passes through a tool is still egress, so the proxy is a trust boundary to be hardened and adversarially tested; independent overlapping controls (\"no single control should ever be assumed to be fully robust\"; least privilege, isolation and strong authentication \"remain as vital as ever\"); short-lived workload identity instead of shared cluster-admin connector credentials, metadata service blocked from pods (a change Hugging Face made); an admission policy against privileged and hostPath pods, and secrets kept out of pod environments (gaps Hugging Face's timeline names, not changes it lists); monitoring of agent trajectories with an automated stop that is tested. OpenAI reports, from preliminary tests after the incident, that the propensity to compromise infrastructure can drop by more than 100x under its production harness and system prompt compared with the lightweight prompts it uses to evaluate research models, and that its production auto-review would have flagged many of the actions."
     ],
     [
      "Vendor fix",
-     "Hugging Face closed both code-execution paths, rebuilt a core cluster, rotated credentials and replaced the shared connector credential with per-cluster scoped credentials; OpenAI is hardening research infrastructure, adding monitoring and chain-of-thought oversight, and slowed development (the two-week reinforcement-learning pause was announced 2026-08-18, per Wikipedia's timeline; this was not confirmed on OpenAI's pages)."
+     "Hugging Face closed both code-execution paths, rebuilt a core cluster, rotated credentials and replaced the shared connector credential with per-cluster scoped credentials; OpenAI is hardening research infrastructure, adding monitoring and chain-of-thought oversight, and paused reinforcement-learning training for about two weeks after the incident; in a 2026-08-18 post (openai.com/index/pacing-model-development-cyber-capabilities/, which refuses automated reads) it said many lower-risk runs had restarted while its largest planned frontier RL run remained on hold (TechCrunch, 2026-08-18, https://techcrunch.com/2026/08/18/openai-institutes-new-safeguards-after-hugging-face-breach/ ; Wikipedia's timeline gives the same date)."
     ],
     [
      "Follow-on (October 2026)",
@@ -1685,7 +1690,8 @@
     "https://www.bleepingcomputer.com/news/security/openai-models-used-artifactory-zero-days-to-escape-to-the-internet/",
     "https://en.wikipedia.org/wiki/OpenAI%E2%80%93HuggingFace_incident",
     "https://www.theregister.com/security/2026/10/02/openai-alerts-100-orgs-that-its-misaligned-models-attempted-to-break-in-or-worse/5300891",
-    "https://wikimediafoundation.org/news/2026/10/05/openai-rogue-agent-activities-found-on-wikimedia-projects/"
+    "https://wikimediafoundation.org/news/2026/10/05/openai-rogue-agent-activities-found-on-wikimedia-projects/",
+    "https://techcrunch.com/2026/08/18/openai-institutes-new-safeguards-after-hugging-face-breach/"
    ],
    "short": "OpenAI and Hugging Face incident",
    "date_iso": "2026-07",
@@ -1738,7 +1744,7 @@
     ],
     [
      "Vendor response",
-     "OpenAI paused training, evaluation and tool-use inference for its most capable models and will not resume training the model involved (\"until further notice\" per Notebookcheck; sources disagree on whether the pause has since ended). In its own words: \"Our safety case assumed that the model could not access the live internet.\""
+     "OpenAI paused training, evaluation and tool-use inference for its most capable models and will not resume training the model involved (\"until further notice\" per Notebookcheck). On 2026-10-23 OpenAI published \"Securing our frontier model training environment\" (https://openai.com/index/securing-our-frontier-model-training-environment/ , which refuses automated reads), saying it had used the pause to harden its infrastructure, had resumed training its most capable models, and now trains frontier models with no internet access \"until advances in these safeguards justify broader internet access\" (TechCrunch and The Register, both 2026-10-23). Secondary reports give 1 Oct 2026 as the restart date; the two outlets read here do not state one. In its own words: \"Our safety case assumed that the model could not access the live internet.\""
     ],
     [
      "Teaching hook",
@@ -1747,7 +1753,9 @@
    ],
    "urls": [
     "https://alignment.openai.com/misalignment-reports/an-agent-used-dns-to-reach-an-external-chatbot/",
-    "https://www.notebookcheck.net/OpenAI-pauses-top-models-after-an-agent-reached-a-chatbot-via-DNS.1409709.0.html"
+    "https://www.notebookcheck.net/OpenAI-pauses-top-models-after-an-agent-reached-a-chatbot-via-DNS.1409709.0.html",
+    "https://techcrunch.com/2026/10/23/openai-says-it-will-no-longer-train-its-ai-models-on-the-live-internet-citing-significant-risks/",
+    "https://www.theregister.com/ai-and-ml/2026/10/23/openai-disables-internet-access-during-model-training-while-anthropic-issues-another-mea-culpa/5305238"
    ],
    "short": "DNS route out of a training sandbox",
    "date_iso": "2026-09-20",
@@ -1994,12 +2002,12 @@
     "MCP server",
     "typed arguments and confinement"
    ],
-   "status": "CORROBORATED",
-   "status_note": "(The Register quoting Cyata; Cyata's own post and the CVE records were not read)",
+   "status": "VERIFIED",
+   "status_note": "(GitHub advisories and CVE records; Cyata's post, read from an archived copy because cyata.ai now redirects to Check Point; The Register for the chain description and Anthropic's silence)",
    "fields": [
     [
      "Found by / published",
-     "Cyata (researcher Yarden Porat), reported by The Register 2026-01-20: https://www.theregister.com/2026/01/20/anthropic_prompt_injection_flaws/ . Server: `mcp-server-git`."
+     "Cyata (researcher Yarden Porat), \"Breaking Anthropic's Official MCP Server\", 2026-01-20 (archived copy: http://web.archive.org/web/20260120161304/https://cyata.ai/blog/cyata-research-breaking-anthropics-official-mcp-server/ ); advisories GHSA-j22h-9j4x-23w5, GHSA-5cgr-j3jf-jw3v and GHSA-9xwc-hfwc-8w59, published 2025-12-17 (https://github.com/modelcontextprotocol/servers/security/advisories/GHSA-j22h-9j4x-23w5 ); reported by The Register 2026-01-20: https://www.theregister.com/security/2026/01/20/anthropic-quietly-fixed-flaws-in-its-git-mcp-server/4676059 . Server: `mcp-server-git`."
     ],
     [
      "Mechanism",
@@ -2015,7 +2023,7 @@
     ],
     [
      "Vendor fix",
-     "reported June 2025; fixed in 2025.12.18; the Register notes Anthropic did not respond to requests for comment."
+     "reported 2025-06-24 through HackerOne and marked informative the next day; reopened 2025-07-24 after a second report with the code-execution chain; accepted 2025-09-10; `git_init` removed in 2025.9.25 (GHSA-5cgr-j3jf-jw3v) and the other two fixed in 2025.12.18 (GHSA-j22h-9j4x-23w5 and GHSA-9xwc-hfwc-8w59; the CVE records say 2025.12.17); the Register notes Anthropic did not respond to requests for comment."
     ],
     [
      "Teaching hook",
@@ -2023,12 +2031,16 @@
     ]
    ],
    "urls": [
-    "https://www.theregister.com/2026/01/20/anthropic_prompt_injection_flaws/"
+    "https://www.theregister.com/security/2026/01/20/anthropic-quietly-fixed-flaws-in-its-git-mcp-server/4676059",
+    "https://github.com/modelcontextprotocol/servers/security/advisories/GHSA-j22h-9j4x-23w5",
+    "https://github.com/modelcontextprotocol/servers/security/advisories/GHSA-5cgr-j3jf-jw3v",
+    "https://github.com/modelcontextprotocol/servers/security/advisories/GHSA-9xwc-hfwc-8w59",
+    "http://web.archive.org/web/20260120161304/https://cyata.ai/blog/cyata-research-breaking-anthropics-official-mcp-server/"
    ],
-   "short": "Anthropic Git MCP server (CORROBORATED)",
+   "short": "Anthropic Git MCP server",
    "date_iso": "2026-01-20",
    "tier": 2,
-   "evidence": "press, vendor fixed",
+   "evidence": "advisories, post, vendor fixed",
    "sub": [
     "F",
     "P"
@@ -2053,7 +2065,7 @@
    "fields": [
     [
      "Found by / published",
-     "Idan Dardikman, Koi Security; reported by CSO Online 2025-09-26 (https://www.csoonline.com/article/4064009/trust-on-mcp-takes-first-in-the-wild-hit-via-squatted-postmark-connector.html ) and The Stack 2025-09-29 (https://www.thestack.technology/postmark-mcp-dupe-was-quietly-sending-emails-to-a-third-party/ )."
+     "Idan Dardikman, Koi Security; reported by CSO Online 2025-09-26 (https://www.csoonline.com/article/4064009/trust-in-mcp-takes-first-in-the-wild-hit-via-squatted-postmark-connector.html ) and The Stack 2025-09-29 (https://www.thestack.technology/postmark-mcp-dupe-was-quietly-sending-emails-to-a-third-party/ )."
     ],
     [
      "Target",
@@ -2069,7 +2081,7 @@
     ],
     [
      "Control that stops it",
-     "allowlist reviewed servers only; pin exact versions and verify hashes, with diff review on every update; run the server with a send-only, rate-limited, recipient-restricted credential; egress and mail-gateway DLP (Koi notes MCP servers \"bypass controls such as DLP and email gateways\"); keep an inventory of every MCP server in use."
+     "allowlist reviewed servers only; pin exact versions and verify hashes, with diff review on every update; run the server with a send-only, rate-limited, recipient-restricted credential; egress and mail-gateway DLP (Koi's Dardikman, as quoted by CSO Online: these MCP servers \"bypass every security control from DLP to email gateways\"); keep an inventory of every MCP server in use."
     ],
     [
      "Vendor fix",
@@ -2081,7 +2093,7 @@
     ]
    ],
    "urls": [
-    "https://www.csoonline.com/article/4064009/trust-on-mcp-takes-first-in-the-wild-hit-via-squatted-postmark-connector.html",
+    "https://www.csoonline.com/article/4064009/trust-in-mcp-takes-first-in-the-wild-hit-via-squatted-postmark-connector.html",
     "https://www.thestack.technology/postmark-mcp-dupe-was-quietly-sending-emails-to-a-third-party/"
    ],
    "short": "`postmark-mcp` (CORROBORATED)",
@@ -2387,8 +2399,8 @@
      "Johann Rehberger, 2025-02-17, https://embracethered.com/blog/posts/2025/chatgpt-operator-prompt-injection-exploits/ . A prompt injection in a GitHub issue sent Operator to an attacker page; Operator copied personal data from an authenticated account page (the post tested Hacker News, booking.com and The Guardian) and typed it into the attacker's page, which transmits keystrokes without a form submit. OpenAI's mitigations were user-monitoring prompts, inline confirmations and out-of-band confirmations at website boundaries; typing text rarely triggered a confirmation, and the defences are probabilistic. Rehberger sent OpenAI the details about three weeks before publication, the demo then stopped working, and OpenAI's fix is undisclosed."
     ],
     [
-     "Claude for Chrome (Anthropic's pilot announcement, 2025-08-25, https://claude.com/blog/claude-for-chrome )",
-     "across 123 test cases in 29 attack scenarios, attack success was 23.6 percent without the new mitigations and 11.2 percent with them in autonomous mode; on four browser-specific attack types it fell from 35.7 percent to 0 percent. Example: a malicious email posing as a security request told the agent to delete the user's email \"for mailbox hygiene\"; before mitigations Claude deleted the emails without confirmation. Controls Anthropic ships: per-site permissions, confirmations before publishing, purchasing or sharing personal data, and blocked high-risk site categories. Pilot started with 1,000 Max users."
+     "Claude for Chrome (Anthropic's pilot announcement, 2025-08-25, https://claude.com/resources/articles/claude-for-chrome )",
+     "across 123 test cases in 29 attack scenarios, attack success was 23.6 percent without the new mitigations and 11.2 percent with them in autonomous mode; on four browser-specific attack types it fell from 35.7 percent to 0 percent. Example: a malicious email posing as a security request told the agent to delete the user's email \"for mailbox hygiene\"; before mitigations Claude deleted the emails without confirmation. Controls Anthropic ships: per-site permissions, confirmations before publishing, purchasing or sharing personal data, and blocked high-risk site categories. Pilot started with 1,000 Max users; the page's later updates say it went to all Max subscribers in beta on 2025-11-24 and to Pro, Team and Enterprise plans on 2025-12-18, with admin-managed site allowlists and blocklists."
     ],
     [
      "Brave on Comet and Fellou (2025-10-21, https://brave.com/blog/unseeable-prompt-injections/ )",
@@ -2413,7 +2425,7 @@
    ],
    "urls": [
     "https://embracethered.com/blog/posts/2025/chatgpt-operator-prompt-injection-exploits/",
-    "https://claude.com/blog/claude-for-chrome",
+    "https://claude.com/resources/articles/claude-for-chrome",
     "https://brave.com/blog/unseeable-prompt-injections/"
    ],
    "short": "Browser agents: Operator, Claude for Chrome, Brave",
@@ -2495,7 +2507,7 @@
    "fields": [
     [
      "Found by / published",
-     "Alfredo Oliveira and David Fiser, Trend Micro, 2025-07-16. https://www.trendaisecurity.com/en-us/resources-insights/research/mcp-security-network-exposed-servers-are-backdoors-to-your-private-data"
+     "Alfredo Oliveira and David Fiser, Trend Micro, 2025-07-16. https://www.trendaisecurity.com/en-us/resources-insights/deep-research/mcp-security-network-exposed-servers-are-backdoors-to-your-private-data"
     ],
     [
      "Mechanism",
@@ -2519,7 +2531,7 @@
     ]
    ],
    "urls": [
-    "https://www.trendaisecurity.com/en-us/resources-insights/research/mcp-security-network-exposed-servers-are-backdoors-to-your-private-data"
+    "https://www.trendaisecurity.com/en-us/resources-insights/deep-research/mcp-security-network-exposed-servers-are-backdoors-to-your-private-data"
    ],
    "short": "492 exposed MCP servers",
    "date_iso": "2025-07-16",
@@ -2747,7 +2759,7 @@
     ],
     [
      "Vendor fix",
-     "reported 2025-07-04, quietly fixed on 2025-07-17 in v1.85 (the same release that removed the malicious 1.84.0, Case 10), by reclassifying `find` as a command that mutates and needs confirmation. According to the finder, AWS later asked him to hold disclosure for a CVE, then decided the report \"first requires system compromise\" and declined to assign one."
+     "reported 2025-07-04, quietly fixed in v1.85.0 (the researcher gives 2025-07-17; the GitHub release amazonq/v1.85.0 is dated 2025-07-19 UTC, two days after amazonq/v1.84.0), the release AWS bulletin AWS-2025-015 names as the one that removed the malicious 1.84.0 (Case 10), by reclassifying `find` as a command that mutates and needs confirmation. According to the finder, AWS later asked him to hold disclosure for a CVE, then decided the report \"first requires system compromise\" and declined to assign one."
     ],
     [
      "Teaching hook",
@@ -2958,7 +2970,7 @@
     ],
     [
      "Mechanism",
-     "with a stolen proxy-admin credential, an attacker uses documented management features of an open-source gateway (LiteLLM) to route a victim gateway's model traffic through an attacker-controlled gateway. That exposes provider keys, lets the attacker read prompts and responses, and lets them alter responses after inference, including adding tool calls the model never produced. An agent client with tool access may run them unless it asks for approval. The post says the routing change is not itself a vulnerability; the credential needed to make it often is. It notes separate LiteLLM problems: a March 2026 PyPI package compromise, a privilege-escalation chain disclosed by Obsidian Security, and CVE-2026-42271, which it says allows authenticated users to run commands on the host and is in CISA's KEV catalogue (those were not read independently)."
+     "with a stolen proxy-admin credential, an attacker uses documented management features of an open-source gateway (LiteLLM) to route a victim gateway's model traffic through an attacker-controlled gateway. That exposes provider keys, lets the attacker read prompts and responses, and lets them alter responses after inference, including adding tool calls the model never produced. An agent client with tool access may run them unless it asks for approval. The post says the routing change is not itself a vulnerability; the credential needed to make it often is. It notes separate LiteLLM problems: a March 2026 PyPI package compromise, a privilege-escalation chain disclosed by Obsidian Security, and CVE-2026-42271 (GHSA-v4p8-mg3p-g94g, published 2026-04-25, CVSS v4 8.7; LiteLLM 1.74.2 to before 1.83.7; the MCP server preview endpoints spawned a supplied stdio command for any holder of a proxy API key; fixed in 1.83.7; added to CISA's KEV catalogue on 2026-06-08), the preview-endpoint issue LiteLLM restricted to admins in its April 2026 fix (Case 28); the PyPI compromise and the Obsidian Security chain were not read independently."
     ],
     [
      "OWASP LLM06 sub-type",

@@ -229,8 +229,8 @@ def _(AMBER, CUSTOMERS, fb_card, field_pick, mo, peek):
             "cannot tell a harmless note from a hostile one by reading it, so the rule is the same for both: text the agent reads can inform "
             "its answer, but only the user's request and your policy can authorise an action.\n\n"
             "Second, OWASP's 2026 edition sorts delivery surfaces by trust: **untrusted** (public web pages, unknown email), **semi-trusted** "
-            "(issue titles, READMEs, third-party API responses) and **trusted but reachable**, such as your own CRM, which a stranger can write "
-            "into through a public form or a support ticket. Koda's notes field is the third kind, and it is dangerous precisely because nobody "
+            "(issue titles, READMEs, third-party API responses) and **trusted**, such as your own CRM, which OWASP notes a stranger can still write "
+            "into through an upstream route such as a public bug-report form (this course calls that third kind trusted but reachable). Koda's notes field is the third kind, and it is dangerous precisely because nobody "
             "thinks of it as an input.")})])
     return
 
@@ -1330,7 +1330,7 @@ def _(AMBER, REDUCER, inv_show, inv_strip, vcard):
            f"the box looks clean; the tokeniser reads {len(_payload)} extra characters that spell an order."),
           f"Unicode Tag characters (U+E0000 to U+E007F) mirror ASCII but render as nothing; zero-width joiners, bidi marks and white 1-px text do the same in HTML and PDFs. "
           f"Half the doorways on this page deliver their payload this way. Normalising input is a {REDUCER}: do it, and keep the boundary on the action. "
-          "Real: FireTail showed Gemini following Tag-smuggled text through Gmail and Calendar (Oct 2025, Google declined to patch); Rehberger&rsquo;s Jules demo (2025).")
+          "Real: FireTail showed Gemini following Tag-smuggled text in a Calendar invite and described the same route through email (Oct 2025; Google replied that no action would be taken); Rehberger&rsquo;s Jules demo (2025).")
     return
 
 
@@ -1444,7 +1444,7 @@ def _(AMBER, BOUNDARY, REDUCER, base64, img_scan, vcard):
           _ok, _verdict,
           f"{REDUCER}: OCR the pixels so a filter can see hidden text. {BOUNDARY}: every sensitive action (send, pay, read mail) needs an out-of-band confirmation of the literal action, "
           "and the agent&rsquo;s session is isolated from your logins. Real: Brave showed a Reddit comment steering Perplexity Comet to read the user&rsquo;s email "
-          "address and a Gmail one-time code from their logged-in sessions and post them back (Aug 2025), then instructions inside a screenshot doing the same (Oct 2025); "
+          "address and a Perplexity one-time login code from their logged-in Gmail and post them back (Aug 2025), then instructions inside a screenshot doing the same (Oct 2025); "
           "ChatGPT Atlas&rsquo;s omnibox treated a crafted URL as a trusted command (2025).")
     return
 
@@ -1525,8 +1525,9 @@ def _(mo):
         "| Search poisoning; hidden text in screened documents | ASI01 | AML.T0068; AML.T0099 | NISTAML.027 | untrusted | single-shot | invisible text |\n")
     mo.accordion({"The doorways against the standards (a draft mapping)": mo.vstack([
         mo.md("This mapping is ours, built from each source's own text, not OWASP's, MITRE's or NIST's. ATLAS ids move between content versions, "
-              "so cite an id together with its name and version (here ATLAS 2026). The last three columns are the three axes OWASP's 2026 "
-              "LLM01 entry recommends decomposing a scenario along before choosing mitigations."),
+              "so cite an id together with its name and version (here ATLAS v2026.10, the October 2026 content release). The last three columns follow the three axes OWASP's 2026 "
+              "LLM01 entry recommends decomposing a scenario along before choosing mitigations (delivery surface, propagation behaviour, encoding); "
+              "for the first axis we record the surface's trust tier rather than OWASP's channel list."),
         mo.md(_t)])})
     return
 
@@ -1621,8 +1622,8 @@ def _(mo):
         ),
         mo.md(
             "A rule that sums up the page: privilege follows provenance. An agent should act with the authority of the least-trusted party "
-            "whose text is in its context. The UK NCSC puts it, quoting Simon Willison and Baibhav Bista: “when an LLM processes information from "
-            "a party, the privileges it has drops to that of the party”, so “don't let an LLM processing emails from random external people have "
+            "whose text is in its context. The UK NCSC puts it, relaying a discussion between Simon Willison and Baibhav Bista: “when an LLM processes information from "
+            "a party, the privileges it has drops to that of the party”, and draws its own conclusion: “don't let an LLM processing emails from random external people have "
             "access to privileged tools”. Two things you can build from it. Choose the tool set per task, so an agent that reads outside text has "
             "no write or send tool at all. And when untrusted text enters the context part-way through a session, drop the write and egress "
             "capabilities for the rest of it. The permission switches in Part 2 are the same rule applied to one tool at a time."
@@ -1688,11 +1689,11 @@ def _(mo):
                 "| c10 Pin, sign and verify MCP servers; audit descriptions | Part 4, card 4 (Module 03 in depth) | detect, then bound |\n"
                 "| c11 Test against adaptive attackers; reject static-only claims | Part 1 (accordions), Part 7 (step 3b) | detect |\n"),
             "Keep practising on live targets": mo.md(
-                f"Roughly easiest to hardest: **{_a('https://gandalf.lakera.ai', 'Gandalf')}**, talk a bot out of a password across levels that each "
-                f"add a guardrail. **{_a('https://play.lakera.ai/agent-breaker', 'Lakera Agent Breaker')}**, the four faces against real agents. "
+                f"Roughly easiest to hardest: **{_a('https://play.lakera.ai/agent-breaker', 'Gandalf: Agent Breaker')}**, Lakera's successor to the "
+                f"Gandalf password game (gandalf.lakera.ai now redirects here), the four faces against real agents across scored levels. "
                 f"**{_a('https://tensortrust.ai', 'Tensor Trust')}**, defend a secret then attack other defences. "
                 f"**{_a('https://portswigger.net/web-security/llm-attacks', 'PortSwigger Web LLM attacks')}**, free graded labs. For a guided run first, "
-                "DeepLearning.AI has a free 90-minute *Red Teaming LLM Applications* course."),
+                "DeepLearning.AI has a free *Red Teaming LLM Applications* short course with Giskard, about 100 minutes."),
         }),
     ])
     return
