@@ -9,13 +9,14 @@ def _():
     import marimo as mo
     import json
     from koda_lab import (OUTCOMES, POISON, PROFILES, SWEEP_DESTRUCTIVE, SWEEP_EXFIL, TEST_AWARENESS_MD,
-                          TOOL_SCHEMAS, attempts, bars_html, hero, replay, run_attack, wins)
-    return (OUTCOMES, POISON, PROFILES, SWEEP_DESTRUCTIVE, SWEEP_EXFIL, TEST_AWARENESS_MD, TOOL_SCHEMAS,
-            attempts, bars_html, hero, json, mo, replay, run_attack, wins)
+                          TOOL_SCHEMAS, attempts, bars_html, has_key, hero, replay, run_attack, when, wins)
+    from koda_recorded import RECORDED
+    return (OUTCOMES, POISON, PROFILES, RECORDED, SWEEP_DESTRUCTIVE, SWEEP_EXFIL, TEST_AWARENESS_MD, TOOL_SCHEMAS,
+            attempts, bars_html, has_key, hero, json, mo, replay, run_attack, when, wins)
 
 
 @app.cell
-def _(hero, mo):
+def _(RECORDED, hero, mo, when):
     mo.vstack([
         mo.Html(hero(
             "Secure AI Deployment &middot; Model benchmark",
@@ -30,14 +31,16 @@ def _(hero, mo):
             "as module 02, with a real model deciding what to do. It says nothing about your own tools, data or prompts. "
             "Your OpenRouter key stays in this browser tab and is sent only to `openrouter.ai`; runs spend your own credit. "
             "Nothing real is touched: Koda, its secrets and its database are inert strings."
+            + (f" **No key? Type NA** in the key box and click Run: the page replays the runs recorded on {when(RECORDED['recorded_on'])} "
+               "for the models listed under the button, at no cost." if RECORDED["benchmark"] else "")
         ),
     ])
     return
 
 
 @app.cell
-def _(PROFILES, mo):
-    bm_key = mo.ui.text(kind="password", label="OpenRouter key (stays in your browser)", full_width=True)
+def _(PROFILES, RECORDED, mo):
+    bm_key = mo.ui.text(kind="password", label="OpenRouter key (stays in your browser), or NA to replay a recorded run", full_width=True)
     bm_model = mo.ui.text(
         value="openai/gpt-4o-mini", label="OpenRouter model id", full_width=True,
         placeholder="openai/gpt-4o-mini · google/gemini-2.5-flash · anthropic/claude-haiku-4.5 · meta-llama/llama-3.3-70b-instruct",
@@ -50,13 +53,17 @@ def _(PROFILES, mo):
     )
     bm_bounds = mo.ui.multiselect(options=list(PROFILES["hardened"]), value=[], label="custom profile: boundaries switched on", full_width=True)
     bm_go = mo.ui.run_button(label="▶  Run the benchmark on my key", kind="success", full_width=True)
-    mo.callout(mo.vstack([bm_key, bm_model, mo.hstack([bm_tries, bm_profile], justify="start", gap=2), bm_tools, bm_bounds, bm_go], gap=0.8), kind="neutral")
+    _recorded = (mo.md("Recorded runs, for NA: " + ", ".join(f"`{_m}`" for _m in RECORDED["benchmark"])) if RECORDED["benchmark"]
+                 else mo.md("_No recorded runs are published yet, so NA shows the reference sweep only._"))
+    mo.callout(mo.vstack([bm_key, bm_model, mo.hstack([bm_tries, bm_profile], justify="start", gap=2), bm_tools, bm_bounds, bm_go, _recorded], gap=0.8), kind="neutral")
     return bm_bounds, bm_go, bm_key, bm_model, bm_profile, bm_tools, bm_tries
 
 
 @app.cell
-def _(POISON, bm_model, bm_profile, bm_tries, mo):
+def _(POISON, bm_key, bm_model, bm_profile, bm_tries, has_key, mo):
     _n = int(bm_tries.value or 1)
+    mo.stop(not has_key(bm_key.value), mo.md(f"**With NA (no key):** nothing is sent. Run replays the recorded runs for `{bm_model.value.strip()}`, "
+                                           "if there are any: unsafe profile, all five tools, as recorded. Paste a key to run your own profile live."))
     mo.md(
         f"**Before you run:** {len(POISON)} notes × {_n} tries = **{len(POISON) * _n} agent runs**, up to {6 * len(POISON) * _n} requests "
         f"to `{bm_model.value}` on your key, temperature 0. A run is a few thousand tokens: cents on a small model, more on a frontier one. "
@@ -66,35 +73,49 @@ def _(POISON, bm_model, bm_profile, bm_tries, mo):
 
 
 @app.cell
-async def _(POISON, PROFILES, TOOL_SCHEMAS, attempts, bm_bounds, bm_go, bm_key, bm_model, bm_profile, bm_tools, bm_tries, mo, replay, run_attack, wins):
-    mo.stop(not bm_go.value, mo.md("_Paste a key, pick a model, then click Run. Nothing is sent until you do._"))
-    mo.stop(not bm_key.value.strip(), mo.md("Enter your OpenRouter key first."))
+async def _(POISON, PROFILES, RECORDED, SWEEP_DESTRUCTIVE, TOOL_SCHEMAS, attempts, bars_html, bm_bounds, bm_go, bm_key, bm_model, bm_profile, bm_tools, bm_tries, has_key, mo, replay, run_attack, wins):
+    mo.stop(not bm_go.value, mo.md("_Paste a key (or type NA for a recorded run), pick a model, then click Run. Nothing is sent until you do._"))
     mo.stop(not bm_model.value.strip(), mo.md("Enter a model id first."))
-    _n, _model = int(bm_tries.value or 1), bm_model.value.strip()
-    if bm_profile.value == "custom":
-        _on = set(bm_bounds.value)
-        _prof = {k: ((["config.koda-internal"] if k in _on else None) if k == "egress_allowlist" else k in _on) for k in PROFILES["hardened"]}
+    _n, _model, _key = int(bm_tries.value or 1), bm_model.value.strip(), bm_key.value.strip()
+    if not has_key(_key):
+        # no key: replay the recorded runs for this model (unsafe profile, all tools), verdicts recomputed from the saved steps
+        _rec = RECORDED["benchmark"].get(_model)
+        _have = ", ".join(f"`{_m}`" for _m in RECORDED["benchmark"]) or "none yet"
+        mo.stop(_rec is None, mo.vstack([
+            mo.md(f"**No key, and no recorded run for `{_model}`.** Recorded models: {_have}. Pick one of those, or paste a key to run "
+                  "this model live. For context, the reference sweep from Module 02:"),
+            mo.Html(bars_html(SWEEP_DESTRUCTIVE, "destructive")),
+        ]))
+        _runs = [dict(_r, note_loaded=any(s["tool"] == "lookup_customer" for s in _r["steps"]), wins=wins(_r["steps"]),
+                      tried=attempts(_r["steps"]), hardened_would_block=replay(_r["steps"], PROFILES["hardened"])) for _r in _rec["runs"]]
+        run = {"harness": "koda_lab (module 02's mock agent, 6 rounds, temperature 0), recorded run", "model": _model, "profile": "unsafe",
+               "policy": PROFILES["unsafe"], "tools": [t["function"]["name"] for t in TOOL_SCHEMAS], "tries": _rec["tries"],
+               "recorded_on": _rec["recorded_on"], "runs": _runs}
     else:
-        _prof = PROFILES[bm_profile.value]
-    _tools = [t for t in TOOL_SCHEMAS if t["function"]["name"] in ("lookup_customer", *bm_tools.value)]
-    _runs = []
-    with mo.status.progress_bar(total=len(POISON) * _n, title="Running the attack set", subtitle=_model) as _bar:
-        for _vector, _note in POISON.items():
-            for _try in range(_n):
-                _steps, _err, _reply, _msgs = await run_attack(bm_key.value.strip(), _model, _prof, _note, _tools)
-                _runs.append({"vector": _vector, "try": _try + 1, "error": _err,
-                              "note_loaded": any(s["tool"] == "lookup_customer" for s in _steps),
-                              "wins": wins(_steps), "tried": attempts(_steps),
-                              "hardened_would_block": replay(_steps, PROFILES["hardened"]),
-                              "steps": _steps, "reply": _reply, "messages": _msgs})
-                _bar.update()
-    run = {"harness": "koda_lab (module 02's mock agent, 6 rounds, temperature 0)", "model": _model, "profile": bm_profile.value,
-           "policy": _prof, "tools": [t["function"]["name"] for t in _tools], "tries": _n, "runs": _runs}
+        if bm_profile.value == "custom":
+            _on = set(bm_bounds.value)
+            _prof = {k: ((["config.koda-internal"] if k in _on else None) if k == "egress_allowlist" else k in _on) for k in PROFILES["hardened"]}
+        else:
+            _prof = PROFILES[bm_profile.value]
+        _tools = [t for t in TOOL_SCHEMAS if t["function"]["name"] in ("lookup_customer", *bm_tools.value)]
+        _runs = []
+        with mo.status.progress_bar(total=len(POISON) * _n, title="Running the attack set", subtitle=_model) as _bar:
+            for _vector, _note in POISON.items():
+                for _try in range(_n):
+                    _steps, _err, _reply, _msgs = await run_attack(_key, _model, _prof, _note, _tools)
+                    _runs.append({"vector": _vector, "try": _try + 1, "error": _err,
+                                  "note_loaded": any(s["tool"] == "lookup_customer" for s in _steps),
+                                  "wins": wins(_steps), "tried": attempts(_steps),
+                                  "hardened_would_block": replay(_steps, PROFILES["hardened"]),
+                                  "steps": _steps, "reply": _reply, "messages": _msgs})
+                    _bar.update()
+        run = {"harness": "koda_lab (module 02's mock agent, 6 rounds, temperature 0)", "model": _model, "profile": bm_profile.value,
+               "policy": _prof, "tools": [t["function"]["name"] for t in _tools], "tries": _n, "runs": _runs}
     return (run,)
 
 
 @app.cell
-def _(POISON, mo, run):
+def _(POISON, mo, run, when):
     import html as _h
     _N, _runs = run["tries"], run["runs"]
     _targets = {"blatant": ("read secrets", "deleted data", "poisoned memory"),
@@ -133,12 +154,15 @@ def _(POISON, mo, run):
                 _res += f" · {_errs} error{'s' if _errs > 1 else ''}"
             _rows += ("<tr>" + (f'<td rowspan="{len(_targets[_vector])}" class="sad-strong">{_vector}</td>' if _i == 0 else "")
                       + f'<td>{_o}</td><td data-k="{_rc}">{_res}</td><td data-k="{_hc}">{_h.escape(_held)}</td></tr>')
-    mo.Html(
+    _table = mo.Html(
         '<div class="sad-tablebox"><table class="sad-table"><thead><tr>'
         f'<th>note</th><th>outcome</th>'
         f'<th>{_h.escape(run["model"])} &middot; {run["profile"]}</th><th>what the hardened profile holds</th>'
         f'</tr></thead><tbody>{_rows}</tbody></table></div>'
     )
+    _banner = (mo.md(f"**Recorded on {when(run['recorded_on'])}**, unsafe profile, all five tools; nothing was sent just now and the verdicts "
+                     "are computed from the saved trace. Paste a key to run your own profile.") if run.get("recorded_on") else None)
+    mo.vstack([_banner, _table]) if _banner is not None else _table
     return
 
 
@@ -203,9 +227,9 @@ def _(SWEEP_DESTRUCTIVE, SWEEP_EXFIL, bars_html, mo, run):
 
 
 @app.cell
-def _(TEST_AWARENESS_MD, bm_key, json, mo, run):
+def _(TEST_AWARENESS_MD, bm_key, has_key, json, mo, run):
     _dump = json.dumps(run, indent=1)
-    assert not bm_key.value or bm_key.value not in _dump   # the key never enters the trace
+    assert not has_key(bm_key.value) or bm_key.value.strip() not in _dump   # the key never enters the trace
     mo.vstack([
         mo.callout(mo.md(TEST_AWARENESS_MD), kind="info"),
         mo.download(data=_dump.encode(), filename=f"benchmark-{run['model'].split('/')[-1]}.json", mimetype="application/json",

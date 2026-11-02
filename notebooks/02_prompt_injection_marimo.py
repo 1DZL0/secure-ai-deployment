@@ -10,12 +10,13 @@ def _():
     import base64
     import hashlib
     import json
-    from koda_lab import (CUSTOMERS, FACES, MIRROR, PLANNED, POISON, PROFILES, SWEEP_DESTRUCTIVE, SWEEP_EXFIL, SYSTEM, TASK,
-                          TOOL_SCHEMAS, WATCH, WRITE_VERBS, attempts, console_html, dispatch, divider, face_proof, flow_ok, hat_html, hero,
-                          host_of, mono_panel, plan, replay, results_table, run_agent, run_attack, wins, write_verbs)
-    return (CUSTOMERS, FACES, MIRROR, PLANNED, POISON, PROFILES, SWEEP_DESTRUCTIVE, SWEEP_EXFIL, SYSTEM, TASK, TOOL_SCHEMAS,
-            WATCH, WRITE_VERBS, attempts, base64, console_html, dispatch, divider, face_proof, flow_ok, hashlib, hat_html, hero, host_of, json,
-            mo, mono_panel, plan, replay, results_table, run_agent, run_attack, wins, write_verbs)
+    from koda_lab import (CUSTOMERS, FACES, LIVE_MODELS, MIRROR, PLANNED, POISON, PROFILES, SWEEP_DESTRUCTIVE, SWEEP_EXFIL, SYSTEM, TASK,
+                          TOOL_SCHEMAS, WATCH, WRITE_VERBS, attempts, console_html, dispatch, divider, face_proof, flow_ok, has_key, hat_html,
+                          hero, host_of, mono_panel, plan, replay, results_table, run_agent, run_attack, when, wins, write_verbs)
+    from koda_recorded import RECORDED
+    return (CUSTOMERS, FACES, LIVE_MODELS, MIRROR, PLANNED, POISON, PROFILES, RECORDED, SWEEP_DESTRUCTIVE, SWEEP_EXFIL, SYSTEM, TASK,
+            TOOL_SCHEMAS, WATCH, WRITE_VERBS, attempts, base64, console_html, dispatch, divider, face_proof, flow_ok, has_key, hashlib,
+            hat_html, hero, host_of, json, mo, mono_panel, plan, replay, results_table, run_agent, run_attack, when, wins, write_verbs)
 
 
 @app.cell
@@ -1067,14 +1068,15 @@ def _(SWITCHES, hat_html, mo):
 
 
 @app.cell
-async def _(PROFILES, TASK, attempts, console_html, hatted, json, live_key, live_model, mo, replay, rt_go, rt_note, run_attack, wins, write_verbs):
+async def _(PROFILES, TASK, attempts, console_html, has_key, hatted, json, live_key, live_model, mo, replay, rt_go, rt_note, run_attack, wins, write_verbs):
     # sits right under the button so its result (or the no-key message) appears where the button was pressed
     mo.stop(not rt_go.value, mo.md("_The button runs your note on the model chosen in the Live section below, under the unsafe "
                                    "profile (so a good attack can land), then replays the model's own calls through the hardened checkpoint._"))
-    mo.stop(not live_key.value, mo.md("Paste your OpenRouter key in the Live section below, then press the button again."))
+    mo.stop(not has_key(live_key.value), mo.md("No key in the Live section (blank or NA), so your note stays on the planner above. Firing *your own* "
+                                                "wording at a real model needs a key: nothing can be recorded for text nobody has typed yet."))
     mo.stop(not rt_note.value.strip(), mo.md("Write a note in the box first; the button fires whatever is in it at the model."))
     _note = rt_note.value
-    _steps, _err, _reply, _ = await run_attack(live_key.value, live_model.value, PROFILES["unsafe"], _note)   # the learner's own note
+    _steps, _err, _reply, _ = await run_attack(live_key.value.strip(), live_model.value, PROFILES["unsafe"], _note)   # the learner's own note
     if _err is not None:
         _view = mo.md(f"OpenRouter returned an error:\n\n```\n{json.dumps(_err)[:400]}\n```")
     else:
@@ -1159,30 +1161,48 @@ def _(MEETS, SWITCHES, console_html, fb_card, flag_code, hat, hatted, load_flags
 
 
 @app.cell
-def _(mo):
+def _(LIVE_MODELS, RECORDED, hat_html, mo, when):
     live_key = mo.ui.text(kind="password", label="OpenRouter key (stays in your browser)", full_width=True)
-    live_model = mo.ui.radio(
-        options=["openai/gpt-4o-mini", "openai/gpt-4o", "google/gemini-2.5-flash",
-                 "meta-llama/llama-3.3-70b-instruct", "anthropic/claude-haiku-4.5"],
-        value="openai/gpt-4o-mini", label="Model", inline=True,
-    )
+    live_model = mo.ui.radio(options=LIVE_MODELS, value="openai/gpt-4o-mini", label="Model", inline=True)
     live_go = mo.ui.run_button(label="▶  Inject customer 42 into a real model, unsafe vs hardened", kind="success", full_width=True)
     mo.vstack([
         mo.Html(hat_html("Live", "See it on a real model", "optional")),
         mo.md("Paste an OpenRouter key (it stays in your browser and spends only your own credit), pick a model, click. Two runs on one click, "
-              "unsafe then hardened, with the model's real reply next to the real tool trace."),
+              "unsafe then hardened, with the model's real reply next to the real tool trace."
+              + (f" **No key? Type NA** (or leave the box empty), pick a model and click: the same two runs, recorded on this exact "
+                 f"harness on {when(RECORDED['recorded_on'])}, play back at no cost." if RECORDED["module02"] else "")),
         mo.callout(mo.vstack([live_key, live_model, live_go], gap=0.9), kind="neutral"),
     ])
     return live_go, live_key, live_model
 
 
 @app.cell
-async def _(CUSTOMERS, PROFILES, TASK, attempts, console_html, json, live_go, live_key, live_model, mo, run_attack, wins, write_verbs):
-    mo.stop(not live_go.value, mo.md("_No key? The switchboard in Part 2 is this same run on the planner. With a key: pick a model and click; two runs on your credit._"))
-    mo.stop(not live_key.value, mo.md("Enter your OpenRouter key first."))
+async def _(CUSTOMERS, PROFILES, RECORDED, TASK, attempts, console_html, has_key, json, live_go, live_key, live_model, mo, run_agent, run_attack, when, wins, write_verbs):
+    mo.stop(not live_go.value, mo.md("_With a key: pick a model and click; two runs on your credit. No key? Type NA (or leave it blank) and click: "
+                                     + ("the same two runs, recorded earlier, play back at no cost._" if RECORDED["module02"]
+                                        else "the lab's planner stands in until a recorded run is published._")))
+    _live = has_key(live_key.value)
+    _rec = None if _live else RECORDED["module02"].get(live_model.value)
+    if _live:
+        _head, _src, _who = None, live_model.value, "The model"
+    elif _rec:
+        _head = mo.md(f"**Recorded run, nothing sent just now.** `{live_model.value}` was given this exact task and record on "
+                      f"{when(_rec['recorded_on'])}, on this harness, and its calls were saved. The verdicts below are recomputed from "
+                      "that trace. Paste a key to run it fresh on your own credit.")
+        _src, _who = f"{live_model.value}, recorded", "The model"
+    else:
+        _head = mo.md(f"**No key, and no recorded run for `{live_model.value}` yet**, so the lab's planner stands in: a keyword stand-in "
+                      "that reacts to `secrets`, `delete` and `remember`, not to meaning. The permissions behave exactly as they would "
+                      "on a model.")
+        _src, _who = "the planner, no model", "The planner"
     _views = []
     for _profile in ("unsafe", "hardened"):
-        _steps, _err, _reply, _ = await run_attack(live_key.value, live_model.value, PROFILES[_profile], CUSTOMERS[42]["notes"])
+        if _live:
+            _steps, _err, _reply, _ = await run_attack(live_key.value.strip(), live_model.value, PROFILES[_profile], CUSTOMERS[42]["notes"])
+        elif _rec:
+            _steps, _err, _reply = _rec[_profile]["steps"], None, _rec[_profile]["reply"]
+        else:
+            _steps, _err, _reply = run_agent(42, _profile), None, None
         if _err is not None:
             _views.append(mo.md(f"OpenRouter returned an error on the {_profile} run:\n\n```\n{json.dumps(_err)[:400]}\n```"))
             break
@@ -1193,7 +1213,7 @@ async def _(CUSTOMERS, PROFILES, TASK, attempts, console_html, json, live_go, li
         elif _got:
             _summary = f"**hardened: {len(_got)} still got through** ({', '.join(_got)})."
         elif _tried:
-            _summary = (f"**hardened: nothing got through.** The model still tried ({', '.join(_tried)}); the policy layer refused "
+            _summary = (f"**hardened: nothing got through.** {_who} still tried ({', '.join(_tried)}); the policy layer refused "
                         "each one, so the fix did not depend on the model.")
         else:
             _summary = "**hardened: nothing got through**, and this model did not try anything harmful either."
@@ -1203,9 +1223,10 @@ async def _(CUSTOMERS, PROFILES, TASK, attempts, console_html, json, live_go, li
                    if s["tool"] == "remember" and not s["blocked"] and not wins([s])]
         _views.append(mo.vstack([
             mo.Html(f'<div class="koda-side">{console_html(_steps, 42, _profile, user=TASK, reply=_reply)}</div>'),
-            mo.md(_summary + f"  \n*model: `{live_model.value}`, {len(_steps)} tool calls*" + ("  \n" + "  \n".join(_extra) if _extra else "")),
+            mo.md(_summary + f"  \n*model: `{_src}`, {len(_steps)} tool calls*" + ("  \n" + "  \n".join(_extra) if _extra else "")),
         ]))
-    mo.hstack(_views, widths="equal", gap=1, align="start", wrap=True)   # unsafe and hardened side by side
+    _side = mo.hstack(_views, widths="equal", gap=1, align="start", wrap=True)   # unsafe and hardened side by side
+    mo.vstack([_head, _side]) if _head is not None else _side
     return
 
 

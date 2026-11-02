@@ -7,8 +7,9 @@ app = marimo.App(width="medium", css_file="../course/course.css", app_title="How
 @app.cell
 def _():
     import marimo as mo
-    from koda_lab import hero, mono_panel
-    return hero, mo, mono_panel
+    from koda_lab import LIVE_MODELS, WEATHER_MSGS, WEATHER_TOOL, has_key, hero, mono_panel, when
+    from koda_recorded import RECORDED
+    return LIVE_MODELS, RECORDED, WEATHER_MSGS, WEATHER_TOOL, has_key, hero, mo, mono_panel, when
 
 
 @app.cell
@@ -207,24 +208,23 @@ def _(mo):
 
 
 @app.cell
-def _(mo):
+def _(LIVE_MODELS, RECORDED, mo, when):
     live_key = mo.ui.text(kind="password", label="OpenRouter key (optional, stays in your browser)", full_width=True)
-    live_model = mo.ui.dropdown(
-        options=["openai/gpt-4o-mini", "anthropic/claude-haiku-4.5", "google/gemini-2.5-flash"],
-        value="openai/gpt-4o-mini", label="model",
-    )
+    live_model = mo.ui.dropdown(options=LIVE_MODELS, value="openai/gpt-4o-mini", label="model")
     live_go = mo.ui.run_button(label="▶  Ask a real model (one tool-calling turn)")
     mo.vstack([
         mo.md("Optional: see the same two-field reply from a real model. No key is needed to learn any of this. If you "
               "have an OpenRouter key, paste it and run one turn: you will see the real reply come back with its `content` "
-              "empty and a `tool_call` filled in, exactly like the stand-in above."),
+              "empty and a `tool_call` filled in, exactly like the stand-in above."
+              + (f" No key? Type NA (or leave the box empty) and press the button: a reply recorded from that model on "
+                 f"{when(RECORDED['recorded_on'])} plays back instead." if RECORDED["module01"] else "")),
         mo.callout(mo.vstack([live_key, live_model, live_go], gap=0.8), kind="neutral"),
     ])
     return live_go, live_key, live_model
 
 
 @app.cell
-async def _(live_go, live_key, live_model, mo, mono_panel):
+async def _(RECORDED, WEATHER_MSGS, WEATHER_TOOL, has_key, live_go, live_key, live_model, mo, mono_panel, when):
     _saved = mo.Html(mono_panel(
         "saved example: a real reply",
         'reply.content: <b>null</b>'
@@ -233,21 +233,27 @@ async def _(live_go, live_key, live_model, mo, mono_panel):
         '<span class="sad-dim">   &larr; a request</span>'))
     if not live_go.value:
         _view = mo.vstack([mo.md("_Not clicked. Here is a saved reply so the point lands with no key:_"), _saved])
-    elif not live_key.value:
-        _view = mo.vstack([mo.md("Paste a key above, or just read the saved example:"), _saved])
+    elif not has_key(live_key.value):
+        _rec = RECORDED["module01"].get(live_model.value)
+        if _rec:
+            import html as _html
+            _calls = ", ".join(f'{_c["name"]}({_html.escape(_c.get("arguments") or "")})' for _c in _rec["tool_calls"]) or "(none)"
+            _view = mo.vstack([
+                mo.md(f"_No key, so this is a recorded reply: `{live_model.value}` was sent this exact request on "
+                      f"{when(_rec['recorded_on'])} and answered:_"),
+                mo.Html(mono_panel(f"recorded reply from {live_model.value}",
+                                   f'reply.content: <b>{_html.escape(_rec["content"] or "null")[:160]}</b>\nreply.tool_calls: {_calls}')),
+            ])
+        else:
+            _view = mo.vstack([mo.md("Paste a key above (nothing is recorded for this model yet), or just read the saved example:"), _saved])
     else:
         import json as _json
         import pyodide.http as _ph
-        _schema = [{"type": "function", "function": {
-            "name": "get_weather", "description": "Get the current weather for a city.",
-            "parameters": {"type": "object", "properties": {"city": {"type": "string"}}, "required": ["city"]}}}]
-        _msgs = [{"role": "system", "content": "You are a helpful assistant with a get_weather tool."},
-                 {"role": "user", "content": "What's the weather in Nicosia?"}]
         try:
             _resp = await _ph.pyfetch(
                 "https://openrouter.ai/api/v1/chat/completions", method="POST",
-                headers={"Authorization": f"Bearer {live_key.value}", "Content-Type": "application/json"},
-                body=_json.dumps({"model": live_model.value, "messages": _msgs, "tools": _schema, "temperature": 0}),
+                headers={"Authorization": f"Bearer {live_key.value.strip()}", "Content-Type": "application/json"},
+                body=_json.dumps({"model": live_model.value, "messages": WEATHER_MSGS, "tools": WEATHER_TOOL, "temperature": 0}),
             )
             _data = await _resp.json()
             if "choices" not in _data:
