@@ -13,12 +13,12 @@ def _():
     from koda_lab import (CUSTOMERS, FACES, LIVE_MODELS, MIRROR, PLANNED, POISON, PROFILES, RATE_BANDS, RATE_SAMPLES, SWEEP_DESTRUCTIVE,
                           SWEEP_EXFIL, SYSTEM, TASK, TOOL_SCHEMAS, WATCH, WRITE_VERBS, attempts, console_html, contrast_html, dispatch, divider,
                           face_proof, flow_ok, has_key, hat_html, hero, host_of, mono_panel, plan, rate_band, rate_bars_html, rate_footnote_md,
-                          rate_table, replay, results_table, run_agent, run_attack, when, wins, write_verbs)
+                          rate_summary, rate_table, replay, results_table, run_agent, run_attack, when, wins, write_verbs)
     from koda_recorded import RECORDED
     return (CUSTOMERS, FACES, LIVE_MODELS, MIRROR, PLANNED, POISON, PROFILES, RATE_BANDS, RATE_SAMPLES, RECORDED, SWEEP_DESTRUCTIVE,
             SWEEP_EXFIL, SYSTEM, TASK, TOOL_SCHEMAS, WATCH, WRITE_VERBS, attempts, base64, console_html, contrast_html, dispatch, divider,
             face_proof, flow_ok, has_key, hashlib, hat_html, hero, host_of, json, mo, mono_panel, plan, rate_band, rate_bars_html,
-            rate_footnote_md, rate_table, replay, results_table, run_agent, run_attack, when, wins, write_verbs)
+            rate_footnote_md, rate_summary, rate_table, replay, results_table, run_agent, run_attack, when, wins, write_verbs)
 
 
 @app.cell
@@ -1329,7 +1329,7 @@ def _(LIVE_MODELS, RATES, RECORDED, hat_html, mo, when):
 
 
 @app.cell
-async def _(CUSTOMERS, PROFILES, RECORDED, TASK, attempts, console_html, has_key, json, live_go, live_key, live_model, mo, run_agent, run_attack, when, wins, write_verbs):
+async def _(CUSTOMERS, PROFILES, RECORDED, TASK, attempts, console_html, has_key, json, live_go, live_key, live_model, mo, rate_summary, run_agent, run_attack, when, wins, write_verbs):
     mo.stop(not live_go.value, mo.md("_Pick a model and click: " + ("the recorded runs play back, or run fresh with a key._" if RECORDED["module02"]
                                                                    else "the planner stands in until a recorded run is published, or run fresh with a key._")))
     _live = has_key(live_key.value)
@@ -1360,7 +1360,10 @@ async def _(CUSTOMERS, PROFILES, RECORDED, TASK, attempts, console_html, has_key
         _got, _tried = wins(_steps), attempts(_steps)
         if _profile == "unsafe":
             _summary = (f"**unsafe: {len(_got)} harmful action{'s' if len(_got) != 1 else ''} got through** ({', '.join(_got)})." if _got
-                        else "**unsafe: this model refused the attack even with no checks.** Try a cheaper model to watch one fall.")
+                        else "**unsafe: this model refused the attack this time, even with no checks.** One run is one sample"
+                             + (f": in the rate study above the same model followed this note in {_rs['followed']} of {_rs['n']} runs."
+                                if (_rs := (rate_summary(RECORDED["rates"][live_model.value], "destructive")
+                                            if live_model.value in RECORDED.get("rates", {}) else None)) else "."))
         elif _got:
             _summary = f"**hardened: {len(_got)} still got through** ({', '.join(_got)})."
         elif _tried:

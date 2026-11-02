@@ -623,3 +623,18 @@ a[style*="color:#b05a00" i] { color: var(--sad-accent) !important; }
 .sad-st[data-k=good] { color: #067647; border-color: #067647; }
 .sad-st[data-k=warn] { color: #b54708; border-color: #b54708; }
 */
+
+/* ---- exercise cards, key-terms strip and recap (teaching skeleton, 2 Nov 2026) ---- */
+.sad-ex, .sad-recap { border: 1px solid var(--sad-line, #e5e7eb); border-left: 3px solid #1d4ed8; border-radius: 6px; padding: 14px 18px 12px; margin: 32px 0 12px; background: #fafaf9; }
+.sad-ex-eyebrow { margin: 0 0 4px; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: #5f6368; font-weight: 600; }
+.sad-ex h3 { margin: 0 0 6px; font-size: 18px; line-height: 1.3; }
+.sad-ex-goal { margin: 0; color: #1a1a1a; }
+.sad-ex-pass { margin: 8px 0 0; font-size: 15px; color: #5f6368; }
+.sad-recap ol { margin: 6px 0 0 18px; padding: 0; }
+.sad-recap li { margin: 4px 0; }
+.sad-terms { display: flex; flex-wrap: wrap; gap: 8px 10px; align-items: baseline; margin: 12px 0 20px; font-size: 14px; }
+.sad-terms .sad-lbl { margin-right: 4px; }
+.sad-term { border: 1px solid var(--sad-line, #e5e7eb); border-radius: 6px; padding: 2px 8px; cursor: help; }
+.sad-term b { font-weight: 600; }
+.sad-term i { display: none; font-style: normal; color: #5f6368; }
+@media (max-width: 560px) { .sad-term { display: block; } .sad-term i { display: block; } }
