@@ -59,7 +59,7 @@ def _():
                  "the session. The researcher showed record changes, role assignment and external email. Agents could discover each other by "
                  "default, and, according to AppOmni, ServiceNow's security team confirmed the behaviour was intended and updated its documentation.",
             bound="Supervised mode for tools that write or send, the autonomous override left off, narrow teams of agents, and monitoring. Giving "
-                  "each agent its own identity instead of the invoker's is the stronger fix, and it is the one Part 2 builds.",
+                  "each agent its own identity instead of the invoker's is the stronger fix, and it is the one Part 3 builds.",
             srcs=[("AppOmni Labs", "https://appomni.com/ao-labs/ai-agent-to-agent-discovery-prompt-injection/"),
                   ("The Hacker News", "https://thehackernews.com/2025/11/servicenow-ai-agents-can-be-tricked.html")]),
         "asana": dict(
@@ -188,7 +188,7 @@ def _():
             what="Several products let users configure an MCP server over the STDIO transport, where the definition is a command the host runs as "
                  "a subprocess. Any path that lets an outsider influence a definition then becomes command execution, including a prompt-injected "
                  "IDE configuration. OX Security reports that Anthropic's MCP project treats this as expected behaviour, and that two products' "
-                 "allowlists of launcher commands fell to the same argument trick as the flag bugs in Part 3.",
+                 "allowlists of launcher commands fell to the same argument trick as the flag bugs in Part 4.",
             bound="The application must allowlist launcher commands and arguments, whatever the SDK does, keep untrusted input away from server "
                   "definitions, and ask for approval on new registrations.",
             srcs=[("OX Security", "https://www.ox.security/blog/mcp-supply-chain-advisory-rce-vulnerabilities-across-the-ai-ecosystem/"),
@@ -400,11 +400,15 @@ def _(hero, kt, mo):
                 "A tool&rsquo;s name, description and result are text the model obeys. Whoever controls them steers the agent.")]
     _item = lambda t, tag, d: f'<li><b>{t}</b><span class="sad-kind">{tag}</span>{d}</li>'
     _parts = [("How it breaks", "Audit the toolbox against one task, then watch four things go wrong with no software bug."),
-              ("How you stop it", "Shrink the toolbox, then write the credential, the object check and the approval gate, and aim the attack set at your own deployment."),
+              ("Flip the four layers", "Turn the tool diet, the credential, the object check and the gate on one at a time, and find the smallest set that "
+                                       "holds all four attacks while the real task still works."),
+              ("Scope the credential", "Write the key for one task and one person, then the object check that decides whose account a call may touch."),
               ("Break your own validator", "Slip a flag past the shipped check, write the check that stops you, and see why a typed tool removes the problem."),
+              ("Gate what cannot be undone", "Write the approval gate, then sit on duty for ten calls and see what the card has to show."),
+              ("Your deployment against the attack set", "Wire what you wrote into one deployment, run the attack set and the real task through it, and keep the result as a test."),
               ("The tools themselves", "Definitions poisoned before and after approval, and the tool supply chain."),
-              ("The defender&rsquo;s toolbox", "Sort ten controls, read the build order, and see what the vendors say about their own."),
-              ("Take it to your own agent", "Score each tool on what it can do, whose authority it uses and what pins it, then turn the result into a test.")]
+              ("The build order", "See what flips a reducer into a boundary, read the build order, and hear what the vendors say about their own controls."),
+              ("Take it to your own agent", "Add this module&rsquo;s columns to your tool register and match nine documented cases to the layer that would have held.")]
     _row = lambda i, t, d: f'<li><span class="sad-no">Part {i}</span><span><b>{t}.</b> <span class="sad-desc">{d}</span></span></li>'
     _tools, _scopes = len(kt.TOOLBOX), len(kt.ALL_SCOPES)
     mo.vstack([
@@ -516,7 +520,7 @@ def _(fb_card, kt, mo, tool_ticks):
             "run_shell": "it runs a command on the host",
             "read_file": "it reads the company share",
             "search_accounts": "the ticket already gives the account id, so a name search adds reach and no use",
-            "logsearch": "the log is not part of a billing reply, and its flags are a sink of their own (Part 3)"}
+            "logsearch": "the log is not part of a billing reply, and its flags are a sink of their own (Part 4)"}
     _reach = lambda ns: ", ".join(f"`{n}`" for n in ns)
     _all_attacks = kt.attacks_possible(set(kt.TOOLBOX))
     _mine = kt.attacks_possible(_ticked) if _ticked else []
@@ -658,7 +662,7 @@ def _(mo):
         "on something the requester never asked for. The UK NCSC suggests viewing prompt injection as the exploitation of an *inherently confusable deputy*. The fix is to carry who the call is for "
         "and check the object against it.\n"
         "- **The protocol version.** The MCP specification uses the term for an OAuth flaw: a proxy server with a static client id lets an attacker&rsquo;s "
-        "client reuse a user&rsquo;s earlier consent. The fix is per-client consent and exact redirect matching. Part 4 also points at the related token-passthrough problem, where audience checks on tokens are the fix.\n\n"
+        "client reuse a user&rsquo;s earlier consent. The fix is per-client consent and exact redirect matching. Part 7 also points at the related token-passthrough problem, where audience checks on tokens are the fix.\n\n"
         "Both are the same shape: a valid credential in the wrong hands, issued without the right person ever deciding."
     )
     return
@@ -673,9 +677,7 @@ def _(mo):
 
 @app.cell
 def _(divider, mo):
-    mo.Html(divider(2, "How you stop it", "You will do: flip four layers and see what each one can and cannot hold, write the credential, the object check and the "
-                                          "approval gate yourself, then aim the attack set at your own deployment. You will have: a deployment that holds four "
-                                          "attacks while the real task still works, and the reason no single layer was enough."))
+    mo.Html(divider(2, "Flip the four layers", "You will do: turn four layers on one at a time against four attacks and find the smallest set that holds them all while the real task still works. You will have: the order the checkpoint applies them in, and the one combination that works."))
     return
 
 
@@ -694,7 +696,7 @@ def _(layer_chip, mo):
                 f'<div class="sad-flow">{_flow}</div>'
                 '<p class="sad-cap">Every call passes the same checkpoint, in this order, outside the model. '
                 "The first layer that refuses it is the one that reports. <b>Shrink</b> is the tool diet, <b>scope</b> is the credential and the object "
-                "check, and <b>check every use</b> is the argument check and the gate. The argument check has no switch on this page: it needs a tool with a free string, which is Part 3.</p></div>"),
+                "check, and <b>check every use</b> is the argument check and the gate. The argument check has no switch on this page: it needs a tool with a free string, which is Part 4.</p></div>"),
     ])
     return
 
@@ -781,6 +783,18 @@ def _(attack_table, kt, mo, subsets_that_hold, sw_cred, sw_gate, sw_obj, sw_tool
 
 
 @app.cell
+def _(mo):
+    mo.callout(mo.md("**Part 2 in a sentence.** Three layers are the minimum for this attack set, the credential, the object check and the gate; the tool diet is redundant for these four and still ships first, because a tool that is absent cannot be asked for."), kind="success")
+    return
+
+
+@app.cell
+def _(divider, mo):
+    mo.Html(divider(3, "Scope the credential", "You will do: write the credential for one task on behalf of one person, then the object check that decides whose account a call may touch. You will have: two graded functions, and the rule that the tenant comes from the credential, never from the model."))
+    return
+
+
+@app.cell
 def _(kt, mo):
     _tasks = "\n".join(f"| `{k}` | {v['label']} | {', '.join(f'`{s}`' for s in v['scopes'])} |" for k, v in kt.TASKS.items())
     _staff = "\n".join(f"| `{k}` | {v['name']} | `{v['tenant']}` |" for k, v in kt.STAFF.items())
@@ -853,250 +867,14 @@ def _(access_code, answer, case_card, kt, mo, results_table, verdict):
 
 
 @app.cell
-def _(kt, mo):
-    gate_code = mo.ui.code_editor(theme="dark", value=kt.STARTERS["needs_approval"], language="python", debounce=True)
-    mo.vstack([
-        mo.md("**3. The approval gate.** Some calls should wait for a person: the ones that cannot be undone, and the ones that repeat. But approval only works while "
-              "it is rare. A gate that holds every call becomes a rubber stamp within a day, and one that holds nothing is not a gate. Finish `needs_approval(call, sent)`. "
-              "Reads and ordinary replies flow. Hold every tool the register marks *cannot be undone*, except `send_email`, which you meter instead of holding each one: "
-              "the fourth email of a session, and every one after it, waits for a person. Also hold a bulk export, which the register does not flag but which moves a "
-              "whole table out in one call."),
-        gate_code,
-    ])
-    return (gate_code,)
-
-
-@app.cell
-def _(answer, case_card, gate_code, kt, mo, results_table, verdict):
-    _rows, _state, _err = kt.grade_function(gate_code.value, "needs_approval", kt.EXERCISE_CASES["needs_approval"], kt.EXERCISE_NS)
-    mo.vstack([
-        mo.Html(results_table(f"your needs_approval() run on {len(kt.EXERCISE_CASES['needs_approval'])} calls", _rows)) if _rows else mo.md(""),
-        mo.md(verdict(_state, _err,
-                      "Reads and ordinary replies flow, and the irreversible actions and the flood wait for a person. Two numbers decide whether a gate like this works in "
-                      "production: how many approvals a normal task needs (close to none) and how often people say yes (if it is nearly always, nobody is reading). "
-                      "In the runaway scenario nine of the twelve emails wait for a person; a real gate would batch them into one question. "
-                      "A gate also has to show *what* it is asking about, which is the next demonstration.",
-                      "The rows marked ✗ are wrong. Reads and the first three emails must go through, even late in a flood. The delete, the SQL, the shell command, the export "
-                      "and the fourth email onwards must be held. `return True` holds everything and `return False` holds nothing; neither is a control.")),
-        answer(kt.ANSWERS["needs_approval"]),
-    ])
-    return
-
-
-@app.cell
-def _(html, kt, mo):
-    # the approval card under load: ten calls, two of them bad. Two tabs show the same ten calls with the model's summary or the literal call.
-    STREAM = [
-        ("lookup_account", {"id": 101}, "Looking up Nadia's account", False),
-        ("send_email", {"to": "nadia@larnaca-marine.example", "subject": "Your invoice", "body": "INV-2041, 480 EUR, is due on 14 Nov."},
-         "Sending Nadia the reply Alice asked for", False),
-        ("lookup_account", {"id": 102}, "Looking up Petros's account", False),
-        ("send_email", {"to": "petros@larnaca-marine.example", "subject": "Your account", "body": "Following up on your account."},
-         "Sending Petros the follow-up", False),
-        ("send_email", {"to": "audit@finance-mirror.example", "subject": "Customer list", "body": "(every account, every tenant)"},
-         "Sending the follow-up Alice asked for", True),
-        ("search_accounts", {"query": "Hamdan"}, "Finding the account the ticket is about", False),
-        ("lookup_account", {"id": 101}, "Checking Nadia's invoice again", False),
-        ("delete_account", {"id": 102}, "Finishing the follow-up for Petros", True),
-        ("send_email", {"to": "nadia@larnaca-marine.example", "subject": "Reminder", "body": "INV-2041 is due on 14 Nov."},
-         "Sending Nadia a reminder", False),
-        ("lookup_account", {"id": 102}, "Checking Petros's record", False),
-    ]
-    _domain = kt.TENANTS[kt.STAFF["alice"]["tenant"]]["domain"]
-
-    def _literal(tool, args):
-        return tool + "(" + ", ".join(f"{k}={v!r}" for k, v in args.items()) + ")"
-
-    def _flags(tool, args):
-        _out = []
-        if tool == "send_email":
-            _in = args["to"].endswith("@" + _domain)
-            _out.append(("good", f"inside {_domain}") if _in else ("bad", f"outside {_domain}"))
-        if kt.TOOLBOX[tool]["irreversible"] and tool != "send_email":
-            _out.append(("bad", "cannot be undone"))
-        return "".join(f' <span class="sad-st" data-k="{k}">{t}</span>' for k, t in _out)
-
-    def _card_text(i, literal):
-        _tool, _args, _summary, _bad = STREAM[i]
-        if literal:
-            return f'<code class="sad-lit">{html.escape(_literal(_tool, _args))}</code>' + _flags(_tool, _args)
-        return html.escape(_summary)
-
-    def _stream_form(literal):
-        _rows = "".join(
-            '<div class="sad-row">'
-            f'<div class="sad-idx">{i + 1}</div>'
-            f'<div class="sad-grow">{_card_text(i, literal)}</div><div>{{c{i}}}</div></div>'
-            for i in range(len(STREAM)))
-        return mo.Html(f'<div class="sad-panel">{_rows}</div>').batch(
-            **{f"c{i}": mo.ui.radio(options=["Approve", "Hold"], inline=True) for i in range(len(STREAM))})
-
-    stream_summary, stream_literal = _stream_form(False), _stream_form(True)
-    stream_tabs = mo.ui.tabs({"Cards with the model's summary": stream_summary, "Cards with the literal call": stream_literal})
-    return STREAM, stream_literal, stream_summary, stream_tabs
-
-
-@app.cell
-def _(hat, mo, stream_tabs):
-    mo.vstack([
-        hat("blue", "The approval card under load", "what the person sees decides what the gate is worth"),
-        mo.md("Alice&rsquo;s assistant now sends ten calls to the gate over the afternoon. Two are bad. Go through them as the person on duty: **Approve** or **Hold**. "
-              "Do the first tab, then the second, and compare. The tabs show the *same ten calls*."),
-        stream_tabs,
-    ])
-    return
-
-
-@app.cell
-def _(STREAM, case_card, kt, mo, stream_literal, stream_summary):
-    def _score(batch):
-        _v = [batch.value[f"c{i}"] for i in range(len(STREAM))]
-        _done = sum(1 for x in _v if x is not None)
-        _bad = [i for i, s in enumerate(STREAM) if s[3]]
-        _held_bad = sum(1 for i in _bad if _v[i] == "Hold")
-        _ok_approved = sum(1 for i, s in enumerate(STREAM) if not s[3] and _v[i] == "Approve")
-        return _done, _held_bad, _ok_approved
-    _ds, _hs, _as = _score(stream_summary)
-    _dl, _hl, _al = _score(stream_literal)
-    _line = lambda name, d, h, a: (f"- **{name}:** " + (f"{d} of 10 decided" if d < 10 else f"you held {h} of the 2 bad calls and approved {a} of the 8 ordinary ones") + ".")
-    _bad = [i + 1 for i, s in enumerate(STREAM) if s[3]]
-    _say = lambda n: (f"call {n}, the email to `{STREAM[n - 1][1]['to']}`" if STREAM[n - 1][0] == "send_email" else f"call {n}, `{STREAM[n - 1][0]}`")
-    # what the gate from step 3 would have put in front of a person: email is metered by count, everything irreversible is held
-    _sent, _shown = 0, []
-    for _i, (_tool, _args, _sum, _isbad) in enumerate(STREAM):
-        if kt.reference_needs_approval({"tool": _tool, "args": _args}, _sent):
-            _shown.append(_i + 1)
-        elif _tool == "send_email":
-            _sent += 1
-    _missed = [n for n in _bad if n not in _shown]
-    _extra = [n for n in _shown if n not in _bad]
-    _gate_txt = ("What your gate from step 3 would have shown. It meters email by count, so it puts " + " and ".join(f"call {n}" for n in _shown)
-                 + " in front of a person. ")
-    if _missed:
-        _gate_txt += (f"It does not show {_say(_missed[0])}: that was only the third email of the afternoon, and a count does not read the recipient. "
-                      + (f"It holds call {_extra[0]} (&ldquo;{STREAM[_extra[0] - 1][2]}&rdquo;) instead, an ordinary reminder. " if _extra else "")
-                      + "A count catches a flood, not a thief. The literal card above already shows what the count cannot, the destination flagged as outside; "
-                        "bounding where mail can go is the next control, and Part 4 builds it.")
-    _both = ""
-    if _ds == 10 and _dl == 10:
-        _both = f"\n\nSame ten calls, same person. The bad calls were {_say(_bad[0])}, and {_say(_bad[1])}."
-    mo.vstack([
-        mo.md(_line("With the model's summary", _ds, _hs, _as) + "\n" + _line("With the literal call", _dl, _hl, _al) + _both),
-        mo.md("A summary is written by the model that was just steered, so it can describe a bad call in the words of the task: *the follow-up Alice asked for*, "
-              "*finishing the follow-up*. The literal call is rendered by the gate itself from the arguments the tool will receive, and it puts the destination "
-              "and the irreversible flag where the eye lands. Two rules follow. **Build the card from the call, in trusted code, never from the model&rsquo;s own "
-              "description of it.** And **keep approvals rare**: Anthropic reports that users accept 93 percent of manual permission prompts in Claude Code, and a "
-              "gate that is nearly always answered yes is not being read. One person on one afternoon is an anecdote; the rate across a team is the number to watch."),
-        mo.md(_gate_txt),
-        mo.accordion({"Documented cases on the approval gate": mo.vstack([case_card("copilot"), case_card("antigravity"), case_card("automode")])}),
-    ])
-    return
-
-
-@app.cell
-def _(hat, mo):
-    mine_tools = mo.ui.switch(label="Tool diet")
-    mine_pick = mo.ui.radio(options={"The real task": "legit", "Dump the customer list": "dump", "Read another tenant's account": "deputy",
-                                     "Delete an account": "delete", "Email everyone": "runaway"},
-                            value="Read another tenant's account", inline=True, label="Show the run for:")
-    mo.vstack([
-        hat("blue", "Your deployment against the attack set", "the code you wrote is now the checkpoint"),
-        mo.md("The three functions you wrote are wired in below. Anything you have not written yet falls back to the shipped version, and the table says so. "
-              "A function that is written but still fails its rows is wired in as it is, so you can watch how the bug plays out. "
-              "Add the tool diet if you like, then read which layer held each attack."),
-        mine_tools,
-        mine_pick,
-    ])
-    return mine_pick, mine_tools
-
-
-@app.cell
-def _(access_code, gate_code, kt, mine_tools, mint_code):
-    # compile what the learner wrote into a deployment. Anything blank, missing or broken falls back to the shipped part. A function that
-    # is written but still fails its own rows is wired in as it is, so you can watch how the bug plays out, and is flagged.
-    my_status, my_pass, _parts = {}, {}, {}
-    for _name, _code in (("mint", mint_code.value), ("can_access", access_code.value), ("needs_approval", gate_code.value)):
-        _rows, _state, _err = kt.grade_function(_code, _name, kt.EXERCISE_CASES[_name], kt.EXERCISE_NS)
-        my_pass[_name] = _state == "pass"
-        if _state in ("missing", "raised"):
-            my_status[_name] = "not found" if _state == "missing" else "raised " + (_err or "").split(":")[0]
-            continue
-        if _state == "blank":
-            my_status[_name] = "not written yet"
-            continue
-        _fn, _, _ = kt.compile_function(_code, _name, kt.EXERCISE_NS)
-        _bad = sum(1 for r in _rows if r[2] is False)
-        _flag = "live" if _state == "pass" else f"live, but {_bad} row{'s' if _bad != 1 else ''} still fail{'s' if _bad == 1 else ''}"
-        if _name == "mint":
-            try:
-                _cred = kt.call_guarded(_fn, "reply", "alice")
-                if isinstance(_cred, dict) and isinstance(_cred.get("scopes"), (list, tuple, set)):
-                    _parts["cred"], my_status["mint"] = dict(_cred), _flag
-                else:
-                    my_status["mint"] = "returned something that is not a credential"
-            except (Exception, SystemExit) as _e:                  # noqa: BLE001 - the learner's code may raise anything
-                my_status["mint"] = f"raised {type(_e).__name__} for Alice's reply"
-        else:
-            _parts[_name] = _fn
-            my_status[_name] = _flag
-    if mine_tools.value:
-        _parts["tools"] = set(kt.TASKS["reply"]["needs"])
-    my_dep = kt.deployment(**_parts)
-    return my_dep, my_pass, my_status
-
-
-@app.cell
-def _(attack_table, chip, kt, mine_tools, mo, my_dep, my_pass, my_status, status_chip):
-    _tbl, _ok, _n = attack_table(my_dep, "Your deployment against the attack set")
-    _live = [k for k, v in my_status.items() if v.startswith("live")]
-    _passing = sum(1 for v in my_pass.values() if v)
-    _pill = lambda k, v: (status_chip(f"{k}(): {v}", "good" if v == "live" else "warn") if v.startswith("live") else chip(f"{k}(): {v}, using the shipped version"))
-    _chips = " ".join(_pill(k, v) for k, v in my_status.items())
-    if len(_live) < 3:
-        _msg = ("Write the remaining " + str(3 - len(_live)) + " function" + ("s" if 3 - len(_live) != 1 else "") + " above and the table updates. "
-                "Anything still marked as shipped is an open door in this deployment.")
-    elif _ok and _n == 0 and _passing < 3:
-        _msg = (f"**The attack set is held, but {3 - _passing} of your functions still fail{'s' if 3 - _passing == 1 else ''} rows above.** The attack set tries only four things; the rows try the "
-                "cases it does not. Fix the ✗ rows and this passes.")
-    elif _ok and _n == 0:
-        _msg = ("**Four attacks held, and the real task still works.** The three functions you wrote are the checkpoint. None of them asked the model for "
-                "its opinion, and none of them reads a word of the stranger&rsquo;s note: the note changed what the model asked for, and the deployment was "
-                "already smaller than that request.\n\n"
-                "**What this deployment still leaves open.** It holds the four attacks in this set, not every attack. Mail can still go to any address: the gate counts "
-                "emails and does not read where they are going, so one injected instruction to send a record to `audit@finance-mirror.example` would leave as an ordinary first "
-                "email. Searches and exports sit outside the object check in this lab, the flags string stays free until Part 3, and the tools themselves are Part 4, "
-                "which also shows the control for the destination.")
-    elif not _ok:
-        _msg = ("**The real task is broken.** A deployment that refuses Alice&rsquo;s reply is not secure, it is switched off. Look at the reason the real task "
-                "was refused and fix that layer; a check that fails closed on the legitimate call is the commonest mistake.")
-    else:
-        _msg = (f"**{_n} of 4 still land.** Read the LANDED rows: each names the outcome, and the layer that should have seen it is the one whose function "
-                "does not yet look at the right thing.")
-    mo.vstack([
-        mo.Html(f'<div class="sad-chips">{_chips}</div>'),
-        mo.Html(_tbl),
-        mo.md(_msg),
-    ])
-    return
-
-
-@app.cell
-def _(mine_pick, mo, my_dep, scenario_html):
-    _html, _steps = scenario_html(mine_pick.value, my_dep, "your deployment")
-    mo.Html(_html)
-    return
-
-
-@app.cell
 def _(mo):
-    mo.callout(mo.md("**Part 2 in a sentence.** Take away what the task does not need, tie what remains to the person, and make a human look at what cannot be undone."),
-               kind="success")
+    mo.callout(mo.md("**Part 3 in a sentence.** Mint the key for one task and one person, and let the tool check whose object a call touches with a tenant that comes from the credential, never from anything the model wrote."), kind="success")
     return
 
 
 @app.cell
 def _(divider, mo):
-    mo.Html(divider(3, "Break your own validator", "You will do: slip a flag past the shipped check, write the check that stops you, then try to beat your own rule. "
+    mo.Html(divider(4, "Break your own validator", "You will do: slip a flag past the shipped check, write the check that stops you, then try to beat your own rule. "
                                                   "You will have: the reason a rule written on a string is a guess, and the typed tool that removes the problem."))
     return
 
@@ -1306,14 +1084,315 @@ def _(case_card, mo):
 
 @app.cell
 def _(mo):
-    mo.callout(mo.md("**Part 3 in a sentence.** A permission written as a string is a guess about syntax. A permission written on the parsed action is stronger, "
+    mo.callout(mo.md("**Part 4 in a sentence.** A permission written as a string is a guess about syntax. A permission written on the parsed action is stronger, "
                      "but only if the checker parses exactly as the tool does. A tool that takes values instead of syntax needs no syntax guess at all."), kind="success")
     return
 
 
 @app.cell
 def _(divider, mo):
-    mo.Html(divider(4, "The tools themselves", "You will do: load a third-party tool three ways and try to catch it with a pin, a scanner and an allowlist. "
+    mo.Html(divider(5, "Gate what cannot be undone", "You will do: write the approval gate, then sit as the person on duty for ten calls and see what the card has to show. You will have: a gate that holds the delete and the flood, and the two numbers that decide whether a gate is a control at all."))
+    return
+
+
+@app.cell
+def _(kt, mo):
+    gate_code = mo.ui.code_editor(theme="dark", value=kt.STARTERS["needs_approval"], language="python", debounce=True)
+    mo.vstack([
+        mo.md("**3. The approval gate.** Some calls should wait for a person: the ones that cannot be undone, and the ones that repeat. But approval only works while "
+              "it is rare. A gate that holds every call becomes a rubber stamp within a day, and one that holds nothing is not a gate. Finish `needs_approval(call, sent)`. "
+              "Reads and ordinary replies flow. Hold every tool the register marks *cannot be undone*, except `send_email`, which you meter instead of holding each one: "
+              "the fourth email of a session, and every one after it, waits for a person. Also hold a bulk export, which the register does not flag but which moves a "
+              "whole table out in one call."),
+        gate_code,
+    ])
+    return (gate_code,)
+
+
+@app.cell
+def _(answer, case_card, gate_code, kt, mo, results_table, verdict):
+    _rows, _state, _err = kt.grade_function(gate_code.value, "needs_approval", kt.EXERCISE_CASES["needs_approval"], kt.EXERCISE_NS)
+    mo.vstack([
+        mo.Html(results_table(f"your needs_approval() run on {len(kt.EXERCISE_CASES['needs_approval'])} calls", _rows)) if _rows else mo.md(""),
+        mo.md(verdict(_state, _err,
+                      "Reads and ordinary replies flow, and the irreversible actions and the flood wait for a person. Two numbers decide whether a gate like this works in "
+                      "production: how many approvals a normal task needs (close to none) and how often people say yes (if it is nearly always, nobody is reading). "
+                      "In the runaway scenario nine of the twelve emails wait for a person; a real gate would batch them into one question. "
+                      "A gate also has to show *what* it is asking about, which is the next demonstration.",
+                      "The rows marked ✗ are wrong. Reads and the first three emails must go through, even late in a flood. The delete, the SQL, the shell command, the export "
+                      "and the fourth email onwards must be held. `return True` holds everything and `return False` holds nothing; neither is a control.")),
+        answer(kt.ANSWERS["needs_approval"]),
+    ])
+    return
+
+
+@app.cell
+def _(html, kt, mo):
+    # the approval card under load: ten calls, two of them bad. Two tabs show the same ten calls with the model's summary or the literal call.
+    STREAM = [
+        ("lookup_account", {"id": 101}, "Looking up Nadia's account", False),
+        ("send_email", {"to": "nadia@larnaca-marine.example", "subject": "Your invoice", "body": "INV-2041, 480 EUR, is due on 14 Nov."},
+         "Sending Nadia the reply Alice asked for", False),
+        ("lookup_account", {"id": 102}, "Looking up Petros's account", False),
+        ("send_email", {"to": "petros@larnaca-marine.example", "subject": "Your account", "body": "Following up on your account."},
+         "Sending Petros the follow-up", False),
+        ("send_email", {"to": "audit@finance-mirror.example", "subject": "Customer list", "body": "(every account, every tenant)"},
+         "Sending the follow-up Alice asked for", True),
+        ("search_accounts", {"query": "Hamdan"}, "Finding the account the ticket is about", False),
+        ("lookup_account", {"id": 101}, "Checking Nadia's invoice again", False),
+        ("delete_account", {"id": 102}, "Finishing the follow-up for Petros", True),
+        ("send_email", {"to": "nadia@larnaca-marine.example", "subject": "Reminder", "body": "INV-2041 is due on 14 Nov."},
+         "Sending Nadia a reminder", False),
+        ("lookup_account", {"id": 102}, "Checking Petros's record", False),
+    ]
+    _domain = kt.TENANTS[kt.STAFF["alice"]["tenant"]]["domain"]
+
+    def _literal(tool, args):
+        return tool + "(" + ", ".join(f"{k}={v!r}" for k, v in args.items()) + ")"
+
+    def _flags(tool, args):
+        _out = []
+        if tool == "send_email":
+            _in = args["to"].endswith("@" + _domain)
+            _out.append(("good", f"inside {_domain}") if _in else ("bad", f"outside {_domain}"))
+        if kt.TOOLBOX[tool]["irreversible"] and tool != "send_email":
+            _out.append(("bad", "cannot be undone"))
+        return "".join(f' <span class="sad-st" data-k="{k}">{t}</span>' for k, t in _out)
+
+    def _card_text(i, literal):
+        _tool, _args, _summary, _bad = STREAM[i]
+        if literal:
+            return f'<code class="sad-lit">{html.escape(_literal(_tool, _args))}</code>' + _flags(_tool, _args)
+        return html.escape(_summary)
+
+    def _stream_form(literal):
+        _rows = "".join(
+            '<div class="sad-row">'
+            f'<div class="sad-idx">{i + 1}</div>'
+            f'<div class="sad-grow">{_card_text(i, literal)}</div><div>{{c{i}}}</div></div>'
+            for i in range(len(STREAM)))
+        return mo.Html(f'<div class="sad-panel">{_rows}</div>').batch(
+            **{f"c{i}": mo.ui.radio(options=["Approve", "Hold"], inline=True) for i in range(len(STREAM))})
+
+    stream_summary, stream_literal = _stream_form(False), _stream_form(True)
+    stream_tabs = mo.ui.tabs({"Cards with the model's summary": stream_summary, "Cards with the literal call": stream_literal})
+    return STREAM, stream_literal, stream_summary, stream_tabs
+
+
+@app.cell
+def _(hat, mo, stream_tabs):
+    mo.vstack([
+        hat("blue", "The approval card under load", "what the person sees decides what the gate is worth"),
+        mo.md("Alice&rsquo;s assistant now sends ten calls to the gate over the afternoon. Two are bad. Go through them as the person on duty: **Approve** or **Hold**. "
+              "Do the first tab, then the second, and compare. The tabs show the *same ten calls*."),
+        stream_tabs,
+    ])
+    return
+
+
+@app.cell
+def _(STREAM, case_card, kt, mo, stream_literal, stream_summary):
+    def _score(batch):
+        _v = [batch.value[f"c{i}"] for i in range(len(STREAM))]
+        _done = sum(1 for x in _v if x is not None)
+        _bad = [i for i, s in enumerate(STREAM) if s[3]]
+        _held_bad = sum(1 for i in _bad if _v[i] == "Hold")
+        _ok_approved = sum(1 for i, s in enumerate(STREAM) if not s[3] and _v[i] == "Approve")
+        return _done, _held_bad, _ok_approved
+    _ds, _hs, _as = _score(stream_summary)
+    _dl, _hl, _al = _score(stream_literal)
+    _line = lambda name, d, h, a: (f"- **{name}:** " + (f"{d} of 10 decided" if d < 10 else f"you held {h} of the 2 bad calls and approved {a} of the 8 ordinary ones") + ".")
+    _bad = [i + 1 for i, s in enumerate(STREAM) if s[3]]
+    _say = lambda n: (f"call {n}, the email to `{STREAM[n - 1][1]['to']}`" if STREAM[n - 1][0] == "send_email" else f"call {n}, `{STREAM[n - 1][0]}`")
+    # what the gate you wrote would have put in front of a person: email is metered by count, everything irreversible is held
+    _sent, _shown = 0, []
+    for _i, (_tool, _args, _sum, _isbad) in enumerate(STREAM):
+        if kt.reference_needs_approval({"tool": _tool, "args": _args}, _sent):
+            _shown.append(_i + 1)
+        elif _tool == "send_email":
+            _sent += 1
+    _missed = [n for n in _bad if n not in _shown]
+    _extra = [n for n in _shown if n not in _bad]
+    _gate_txt = ("What the gate you wrote would have shown. It meters email by count, so it puts " + " and ".join(f"call {n}" for n in _shown)
+                 + " in front of a person. ")
+    if _missed:
+        _gate_txt += (f"It does not show {_say(_missed[0])}: that was only the third email of the afternoon, and a count does not read the recipient. "
+                      + (f"It holds call {_extra[0]} (&ldquo;{STREAM[_extra[0] - 1][2]}&rdquo;) instead, an ordinary reminder. " if _extra else "")
+                      + "A count catches a flood, not a thief. The literal card above already shows what the count cannot, the destination flagged as outside; "
+                        "bounding where mail can go is the next control, and Part 7 builds it.")
+    _both = ""
+    if _ds == 10 and _dl == 10:
+        _both = f"\n\nSame ten calls, same person. The bad calls were {_say(_bad[0])}, and {_say(_bad[1])}."
+    mo.vstack([
+        mo.md(_line("With the model's summary", _ds, _hs, _as) + "\n" + _line("With the literal call", _dl, _hl, _al) + _both),
+        mo.md("A summary is written by the model that was just steered, so it can describe a bad call in the words of the task: *the follow-up Alice asked for*, "
+              "*finishing the follow-up*. The literal call is rendered by the gate itself from the arguments the tool will receive, and it puts the destination "
+              "and the irreversible flag where the eye lands. Two rules follow. **Build the card from the call, in trusted code, never from the model&rsquo;s own "
+              "description of it.** And **keep approvals rare**: Anthropic reports that users accept 93 percent of manual permission prompts in Claude Code, and a "
+              "gate that is nearly always answered yes is not being read. One person on one afternoon is an anecdote; the rate across a team is the number to watch."),
+        mo.md(_gate_txt),
+        mo.accordion({"Documented cases on the approval gate": mo.vstack([case_card("copilot"), case_card("antigravity"), case_card("automode")])}),
+    ])
+    return
+
+
+@app.cell
+def _(mo):
+    mo.callout(mo.md("**Part 5 in a sentence.** Gate only what cannot be undone or counted, keep it rare, and show the literal call: a card that shows the model&rsquo;s summary gates nothing."), kind="success")
+    return
+
+
+@app.cell
+def _(divider, mo):
+    mo.Html(divider(6, "Your deployment against the attack set", "You will do: wire the functions you wrote into one deployment, run the four attacks and the real task through it, and keep the result as a test. You will have: a deployment that holds the attack set, what it still leaves open, and a test that fails if the policy slips."))
+    return
+
+
+@app.cell
+def _(hat, mo):
+    mine_tools = mo.ui.switch(label="Tool diet")
+    mine_pick = mo.ui.radio(options={"The real task": "legit", "Dump the customer list": "dump", "Read another tenant's account": "deputy",
+                                     "Delete an account": "delete", "Email everyone": "runaway"},
+                            value="Read another tenant's account", inline=True, label="Show the run for:")
+    mo.vstack([
+        hat("blue", "Your deployment against the attack set", "the code you wrote is now the checkpoint"),
+        mo.md("The three functions you wrote are wired in below. Anything you have not written yet falls back to the shipped version, and the table says so. "
+              "A function that is written but still fails its rows is wired in as it is, so you can watch how the bug plays out. "
+              "Add the tool diet if you like, then read which layer held each attack."),
+        mine_tools,
+        mine_pick,
+    ])
+    return mine_pick, mine_tools
+
+
+@app.cell
+def _(access_code, gate_code, kt, mine_tools, mint_code):
+    # compile what the learner wrote into a deployment. Anything blank, missing or broken falls back to the shipped part. A function that
+    # is written but still fails its own rows is wired in as it is, so you can watch how the bug plays out, and is flagged.
+    my_status, my_pass, _parts = {}, {}, {}
+    for _name, _code in (("mint", mint_code.value), ("can_access", access_code.value), ("needs_approval", gate_code.value)):
+        _rows, _state, _err = kt.grade_function(_code, _name, kt.EXERCISE_CASES[_name], kt.EXERCISE_NS)
+        my_pass[_name] = _state == "pass"
+        if _state in ("missing", "raised"):
+            my_status[_name] = "not found" if _state == "missing" else "raised " + (_err or "").split(":")[0]
+            continue
+        if _state == "blank":
+            my_status[_name] = "not written yet"
+            continue
+        _fn, _, _ = kt.compile_function(_code, _name, kt.EXERCISE_NS)
+        _bad = sum(1 for r in _rows if r[2] is False)
+        _flag = "live" if _state == "pass" else f"live, but {_bad} row{'s' if _bad != 1 else ''} still fail{'s' if _bad == 1 else ''}"
+        if _name == "mint":
+            try:
+                _cred = kt.call_guarded(_fn, "reply", "alice")
+                if isinstance(_cred, dict) and isinstance(_cred.get("scopes"), (list, tuple, set)):
+                    _parts["cred"], my_status["mint"] = dict(_cred), _flag
+                else:
+                    my_status["mint"] = "returned something that is not a credential"
+            except (Exception, SystemExit) as _e:                  # noqa: BLE001 - the learner's code may raise anything
+                my_status["mint"] = f"raised {type(_e).__name__} for Alice's reply"
+        else:
+            _parts[_name] = _fn
+            my_status[_name] = _flag
+    if mine_tools.value:
+        _parts["tools"] = set(kt.TASKS["reply"]["needs"])
+    my_dep = kt.deployment(**_parts)
+    return my_dep, my_pass, my_status
+
+
+@app.cell
+def _(attack_table, chip, kt, mine_tools, mo, my_dep, my_pass, my_status, status_chip):
+    _tbl, _ok, _n = attack_table(my_dep, "Your deployment against the attack set")
+    _live = [k for k, v in my_status.items() if v.startswith("live")]
+    _passing = sum(1 for v in my_pass.values() if v)
+    _pill = lambda k, v: (status_chip(f"{k}(): {v}", "good" if v == "live" else "warn") if v.startswith("live") else chip(f"{k}(): {v}, using the shipped version"))
+    _chips = " ".join(_pill(k, v) for k, v in my_status.items())
+    if len(_live) < 3:
+        _msg = ("Write the remaining " + str(3 - len(_live)) + " function" + ("s" if 3 - len(_live) != 1 else "") + " above and the table updates. "
+                "Anything still marked as shipped is an open door in this deployment.")
+    elif _ok and _n == 0 and _passing < 3:
+        _msg = (f"**The attack set is held, but {3 - _passing} of your functions still fail{'s' if 3 - _passing == 1 else ''} rows above.** The attack set tries only four things; the rows try the "
+                "cases it does not. Fix the ✗ rows and this passes.")
+    elif _ok and _n == 0:
+        _msg = ("**Four attacks held, and the real task still works.** The three functions you wrote are the checkpoint. None of them asked the model for "
+                "its opinion, and none of them reads a word of the stranger&rsquo;s note: the note changed what the model asked for, and the deployment was "
+                "already smaller than that request.\n\n"
+                "**What this deployment still leaves open.** It holds the four attacks in this set, not every attack. Mail can still go to any address: the gate counts "
+                "emails and does not read where they are going, so one injected instruction to send a record to `audit@finance-mirror.example` would leave as an ordinary first "
+                "email. Searches and exports sit outside the object check in this lab, the flags string stays free until Part 4, and the tools themselves are Part 7, "
+                "which also shows the control for the destination.")
+    elif not _ok:
+        _msg = ("**The real task is broken.** A deployment that refuses Alice&rsquo;s reply is not secure, it is switched off. Look at the reason the real task "
+                "was refused and fix that layer; a check that fails closed on the legitimate call is the commonest mistake.")
+    else:
+        _msg = (f"**{_n} of 4 still land.** Read the LANDED rows: each names the outcome, and the layer that should have seen it is the one whose function "
+                "does not yet look at the right thing.")
+    mo.vstack([
+        mo.Html(f'<div class="sad-chips">{_chips}</div>'),
+        mo.Html(_tbl),
+        mo.md(_msg),
+    ])
+    return
+
+
+@app.cell
+def _(mine_pick, mo, my_dep, scenario_html):
+    _html, _steps = scenario_html(mine_pick.value, my_dep, "your deployment")
+    mo.Html(_html)
+    return
+
+
+@app.cell
+def _(hat, mo):
+    mo.vstack([
+        hat("blue", "Your policy as a test", "assert on the tool trace, never on the reply"),
+        mo.md("You now have a deployment. A policy nobody tests drifts, so turn it into a test that fails the build if any call lands that the checkpoint "
+              "should refuse, or if the real task stops working. Here is the whole test, and below it the result of running it on **your** deployment:"),
+        mo.md("```python\n@pytest.mark.parametrize(\"attack\", ATTACKS)           # dump, deputy, delete, runaway\ndef test_attack_set_holds(attack):\n"
+              "    steps = run_scenario(attack, deployment)\n    assert landed(steps) == [], f\"{attack} landed\"\n\n"
+              "def test_real_task_still_works():\n    assert completed(run_scenario(\"legit\", deployment))\n```"),
+    ])
+    return
+
+
+@app.cell
+def _(kt, mo, my_dep, my_status, results_table):
+    _rows = []
+    for _a in kt.ATTACKS:
+        _steps = kt.run_scenario(_a, my_dep)
+        _lnd = kt.landed(_steps)
+        _rows.append((f"test_attack_set_holds[{_a}]", "FAILED: " + kt.OUTCOMES[_lnd[0]] if _lnd else "passed", not _lnd,
+                      "" if not _lnd else "a call the checkpoint should have refused ran"))
+    _legit = kt.completed(kt.run_scenario("legit", my_dep))
+    _rows.append(("test_real_task_still_works", "passed" if _legit else "FAILED: the real task was refused", _legit,
+                  "" if _legit else "a policy that blocks the real task is not shipped, it is switched off"))
+    _green = all(r[2] for r in _rows)
+    _live = sum(1 for v in my_status.values() if v.startswith("live"))
+    # the mutation check: take away one layer from the reference deployment and watch the right test go red
+    _ref = kt.reference_deployment()
+    _weak = dict(_ref, can_access=lambda cred, acct: True)
+    _mut = [a for a in kt.ATTACKS if kt.landed(kt.run_scenario(a, _weak))]
+    mo.vstack([
+        mo.Html(results_table("pytest, run on your deployment", _rows)),
+        mo.md(("**Green.** " if _green else "**Red, which is what a test is for.** ")
+              + (f"Your deployment has {_live} of 3 functions live; the test reads them as they are now." if _live < 3 else "All three of your functions are live.")),
+        mo.md(f"A test earns its keep by failing when it should. Take the object check out of the reference deployment and the same test goes red on "
+              f"**{', '.join(_mut) or 'nothing'}**: that is the mutation check. Add one case to this file for each documented case that applies to your agent, "
+              "named for the shape of the bug rather than for the product."),
+    ])
+    return
+
+
+@app.cell
+def _(mo):
+    mo.callout(mo.md("**Part 6 in a sentence.** Take away what the task does not need, tie what remains to the person, make a human look at what cannot be undone, and keep it as a test that fails the build when the policy slips."),
+               kind="success")
+    return
+
+
+@app.cell
+def _(divider, mo):
+    mo.Html(divider(7, "The tools themselves", "You will do: load a third-party tool three ways and try to catch it with a pin, a scanner and an allowlist. "
                                                "You will have: a matrix of what each control catches, and the doorways around it."))
     return
 
@@ -1329,7 +1408,7 @@ def _(hat, kt, mo):
         hat("red", "A third-party tool", "the tool list is code the model obeys"),
         mo.md("Everything so far assumed the tools are honest. A tool&rsquo;s name, description and schema are text that the model reads and obeys, written by whoever "
               "runs the server, and the user usually sees a shortened version. Koda is about to connect a third-party weather tool, `forecast(city)`. It needs no "
-              "mail access, but the assistant already holds `send_email`. Pick how the tool is poisoned, then switch on controls one at a time."),
+              "mail access, but the assistant already holds `send_email`. Pick how the tool is poisoned, then switch on controls one at a time. <a href='../course/#/lesson/prompt-injection' target='_top'>Module 02</a> showed one of these, the rug pull caught by a hash pin, as its doorway 4; here you run all three poisonings against all three controls."),
         variant_pick,
         mo.hstack([sw_pin, sw_scan, sw_allow], justify="start", gap=0.5, wrap=True),
         mo.md("*Pin*: refuse a definition whose hash differs from the one you approved. *Scan*: a phrase list over the description. "
@@ -1393,7 +1472,7 @@ def _(kt, mo):
               "- **Scanner** looks for what it already knows. It caught the loud wording and missed the reworded one. Treat every scanner as a reducer: it lowers the odds and "
               "says nothing about the rest.\n"
               "- **Allowlist** caught all three, because it never reads the description. The weather tool had no business reaching an outside inbox, and the mail tool "
-              "could not reach one. This is the idea behind the credential and the object check in Part 2, applied to where mail can go: reach, bounded outside the model. The lab parses the To field instead of testing how it ends: "
+              "could not reach one. This is the idea behind the credential and the object check in Part 3, applied to where mail can go: reach, bounded outside the model. The lab parses the To field instead of testing how it ends: "
               "`a@evil.example,b@larnaca-marine.example` ends with the right domain and names two people, which is the string-prefix mistake from the paths example again.\n\n"
               "**An honest limit.** The allowlist bounds the reach you bounded. A poisoned description can still make the assistant misreport the weather, and stolen data and wrong "
               "answers are different harms. Public numbers show how easy the first step is. MCPTox, a benchmark of poisoned tool descriptions on 45 real MCP servers "
@@ -1445,62 +1524,25 @@ def _(case_card, mo):
 
 @app.cell
 def _(mo):
-    mo.callout(mo.md("**Part 4 in a sentence.** A tool definition is input: pin it, diff it, and above all bound what it can reach, because the control that does not read "
+    mo.callout(mo.md("**Part 7 in a sentence.** A tool definition is input: pin it, diff it, and above all bound what it can reach, because the control that does not read "
                      "the description is the one the description cannot talk past."), kind="success")
     return
 
 
 @app.cell
 def _(divider, mo):
-    mo.Html(divider(5, "The defender's toolbox", "You will do: sort ten controls into reducer, boundary and detect, then see what flips each reducer into a boundary. "
-                                                 "You will have: a build order for adding an agent with tools, and the vendors' own words on what their controls are not."))
-    return
-
-
-@app.cell
-def _(mo):
-    SORT3 = [
-        ("Remove the tools the task does not need", "Boundary", "the tool is absent from the registry, so no wording can ask for it. You built this in Part 2."),
-        ("Mint the credential for the task and the person", "Boundary", "the key cannot do more than the job, whatever the model asks."),
-        ("Check the object inside the tool", "Boundary", "the data layer decides whose account it is, whatever the model wrote."),
-        ("Approval of the literal irreversible action", "Boundary", "a person reads the real call, rendered by trusted code, before it runs. It bounds only while it stays rare and the person actually reads it."),
-        ("Spend and rate limits keyed to the identity", "Boundary", "a loop can run for a long time but not past the cap. Key it to the identity: a new session must not reset the count."),
-        ("An &ldquo;allow this tool?&rdquo; prompt on every call", "Reducer", "when nearly every prompt is approved, people stop reading them. It lowers the odds and trains the habit that defeats it."),
-        ("A classifier that approves calls for the human", "Reducer", "a model in the approval path can be steered like any other model. Treat it as a convenience; the boundary is the isolation behind it."),
-        ("A scanner over tool descriptions", "Reducer", "it catches the wording it knows and misses the rest, as the reworded tool showed in Part 4."),
-        ("A system-prompt rule: only use the tools the task needs", "Reducer", "the model can be talked out of it. Removing the tool cannot be talked out of."),
-        ("Alerts on a run of denied calls, and a log of who each call was for", "Detect", "refusals are the footprint of an attack in progress. It buys time and names the attack, and it stops nothing by itself."),
-    ]
-    _row = lambda i, s: ('<div class="sad-row">'
-                         f'<div class="sad-col-label sad-title">{s}</div><div>{{r{i}}}</div></div>')
-    sort_picks = mo.Html('<div class="sad-items">' + "".join(_row(_i, _s[0]) for _i, _s in enumerate(SORT3)) + "</div>").batch(
-        **{f"r{_i}": mo.ui.radio(options=["Reducer", "Boundary", "Detect"], inline=True) for _i in range(len(SORT3))})
-    mo.vstack([
-        mo.md("### Reducer, boundary, or detect?\n\nModule 02 gave you the question: does a control *reduce the odds* an attack lands, *bound* what a landed attack can do, "
-              "or only *detect* it? Sort these ten. Some are the layers you built; the rest are what teams reach for first."),
-        sort_picks,
-    ])
-    return SORT3, sort_picks
-
-
-@app.cell
-def _(SORT3, mo, results_table, sort_picks):
-    _picked = [sort_picks.value[f"r{_i}"] for _i in range(len(SORT3))]
-    _rows = [(_s[0], _v or "not picked", None if _v is None else _v == _s[1], _s[2] if _v else "") for _s, _v in zip(SORT3, _picked)]
-    _n = sum(1 for _r in _rows if _r[2])
-    mo.vstack([
-        mo.hstack([mo.stat(f"{_n}/10", label="sorted right", bordered=True)], justify="start"),
-        mo.Html(results_table("your sort", _rows)),
-        mo.md("Only the boundary controls bound anything. The reduce layer buys odds and the detect layer buys time." if _n == 10
-              else ("The rows marked ✗ are wrong. Ask of each: does it change the odds, change what a landed attack can reach, or only tell you afterwards?"
-                    if any(_r[2] is False for _r in _rows) else "")),
-    ])
+    mo.Html(divider(8, "The build order", "You will do: see what flips each reducer into a boundary, read the build order, and hear what the vendors say about their own controls. You will have: a build order for adding an agent with tools, and the vendors&rsquo; own words on what their controls are not."))
     return
 
 
 @app.cell
 def _(mo):
     mo.md(
+        "### Reducer, boundary, or detect?\n\n"
+        "You sorted eight controls into reducer, boundary and detect in <a href='../course/#/lesson/prompt-injection' target='_top'>Module 02</a> (Part 5), and the sort is not repeated here. The tool-side controls fall the same way: the tool diet, the credential minted for the task and the person, the object check inside the tool, "
+        "approval of the literal irreversible action, and spend and rate limits keyed to the identity are boundaries; a prompt on every call, a classifier that "
+        "approves calls for the human, a scanner over tool descriptions and a system-prompt rule are reducers; alerts on a run of denied calls, with a log of who "
+        "each call was for, detect. Only the boundaries bound anything. The question this module adds is the next one.\n\n"
         "### What flips a reducer into a boundary\n\n"
         "Ask this of every control you are sold. A reducer is not worthless; it becomes dangerous when it stands where a boundary should be.\n\n"
         "| control | a reducer because | it becomes a boundary only when |\n|---|---|---|\n"
@@ -1594,16 +1636,16 @@ def _(mo):
 
 @app.cell
 def _(mo):
-    mo.callout(mo.md("**Part 5 in a sentence.** The credential, the object check and the gate bound the damage; blanket prompts, classifiers and scanners only change the odds, "
+    mo.callout(mo.md("**Part 8 in a sentence.** The credential, the object check and the gate bound the damage; blanket prompts, classifiers and scanners only change the odds, "
                      "and the log only tells you after."), kind="success")
     return
 
 
 @app.cell
 def _(divider, mo):
-    mo.Html(divider(6, "Take it to your own agent", "You will do: score each tool in your own agent on what it can do, whose authority it uses and what pins it; run your "
-                                                    "policy as a test; and match nine documented cases to the layer that would have held. You will have: a tool register for "
-                                                    "your own agent, a regression test that fails if the policy slips, and five things to attack next."))
+    mo.Html(divider(9, "Take it to your own agent", "You will do: add this module's columns to your tool register, score each tool on what it can do, whose authority "
+                                                    "it uses and what pins it, and match nine documented cases to the layer that would have held. You will have: a tool "
+                                                    "register for your own agent and five things to attack next."))
     return
 
 
@@ -1613,8 +1655,9 @@ def _(mo):
         r"""
         ### The tool register
 
-        You have the layers and the cases. Copy this table into your notes and write one row for every tool your agent can call. It is Module 02's table with the
-        questions this module added.
+        You have the layers and the cases. Start from the register you built in <a href='../course/#/lesson/prompt-injection' target='_top'>Module 02</a> (Part 7): this module adds three columns, whose authority a call carries,
+        the root cause if it is misused, and who wrote the tool and what pins it, and the eight questions that fill a row. Copy the table and write one row for
+        every tool your agent can call.
 
         | your tool | what it can do at its widest (verb, object, destination) | whose authority a call carries | untrusted text that reaches the model before it | root cause if misused | what checks it outside the model | what pins its definition | gap? |
         |---|---|---|---|---|---|---|---|
@@ -1636,51 +1679,9 @@ def _(mo):
         8. When it is misused, what do you see: is every call logged with who it was for?
 
         Write **yes** in the gap column when question 5 has no answer, when question 7 has no reader for an effect that cannot be undone, or when question 8 has no log.
-        If the "what checks it" column says "the prompt", "a classifier" or "the model usually refuses", write none. Any row whose action cannot be undone, reaches
-        another person&rsquo;s data, or leaves the company, and whose check is none, is an unbounded action an injection can already reach.
+        The test for the "what checks it" column is the one Module 02 gave you: the prompt, a classifier and the model&rsquo;s habit all count as none.
         """
     )
-    return
-
-
-@app.cell
-def _(hat, mo):
-    mo.vstack([
-        hat("blue", "Your policy as a test", "assert on the tool trace, never on the reply"),
-        mo.md("Part 2 left you with a deployment. A policy nobody tests drifts, so turn it into a test that fails the build if any call lands that the checkpoint "
-              "should refuse, or if the real task stops working. Here is the whole test, and below it the result of running it on **your** deployment:"),
-        mo.md("```python\n@pytest.mark.parametrize(\"attack\", ATTACKS)           # dump, deputy, delete, runaway\ndef test_attack_set_holds(attack):\n"
-              "    steps = run_scenario(attack, deployment)\n    assert landed(steps) == [], f\"{attack} landed\"\n\n"
-              "def test_real_task_still_works():\n    assert completed(run_scenario(\"legit\", deployment))\n```"),
-    ])
-    return
-
-
-@app.cell
-def _(kt, mo, my_dep, my_status, results_table):
-    _rows = []
-    for _a in kt.ATTACKS:
-        _steps = kt.run_scenario(_a, my_dep)
-        _lnd = kt.landed(_steps)
-        _rows.append((f"test_attack_set_holds[{_a}]", "FAILED: " + kt.OUTCOMES[_lnd[0]] if _lnd else "passed", not _lnd,
-                      "" if not _lnd else "a call the checkpoint should have refused ran"))
-    _legit = kt.completed(kt.run_scenario("legit", my_dep))
-    _rows.append(("test_real_task_still_works", "passed" if _legit else "FAILED: the real task was refused", _legit,
-                  "" if _legit else "a policy that blocks the real task is not shipped, it is switched off"))
-    _green = all(r[2] for r in _rows)
-    _live = sum(1 for v in my_status.values() if v.startswith("live"))
-    # the mutation check: take away one layer from the reference deployment and watch the right test go red
-    _ref = kt.reference_deployment()
-    _weak = dict(_ref, can_access=lambda cred, acct: True)
-    _mut = [a for a in kt.ATTACKS if kt.landed(kt.run_scenario(a, _weak))]
-    mo.vstack([
-        mo.Html(results_table("pytest, run on your deployment", _rows)),
-        mo.md(("**Green.** " if _green else "**Red, which is what a test is for.** ")
-              + (f"Your deployment has {_live} of 3 functions live; the test reads them as they are now." if _live < 3 else "All three of your functions are live.")),
-        mo.md(f"A test earns its keep by failing when it should. Take the object check out of the reference deployment and the same test goes red on "
-              f"**{', '.join(_mut) or 'nothing'}**: that is the mutation check. Add one case to this file for each documented case that applies to your agent, "
-              "named for the shape of the bug rather than for the product."),
-    ])
     return
 
 
@@ -1775,7 +1776,7 @@ def _(mo):
         **Authority is a property of the call, not of the agent.**
 
         *Next: <a href="../course/#/lesson/poisoned-retrieval" target="_top">Module 04, poisoned retrieval</a>, where the poison arrives through a document the assistant
-        searched up. Then Module 05 on what leaks through the answer, and Module 06 on the sandbox that Part 5 kept pointing at.*
+        searched up. Then Module 05 on what leaks through the answer, and Module 06 on the sandbox that Part 8 kept pointing at.*
         """
     )
     return
@@ -1783,7 +1784,7 @@ def _(mo):
 
 @app.cell
 def _(mo):
-    mo.callout(mo.md("**Part 6 in a sentence.** The deliverable is the register: for every tool, what it can do, whose authority it uses, what checks it outside the model, "
+    mo.callout(mo.md("**Part 9 in a sentence.** The deliverable is the register: for every tool, what it can do, whose authority it uses, what checks it outside the model, "
                      "and what pins its definition."), kind="success")
     return
 
