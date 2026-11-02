@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Record real-model runs for the course's no-key path, so a learner who types NA still sees a real trace.
 
-    OPENROUTER_API_KEY=sk-or-... python tools/record_live_runs.py             # all four sections, the five live models
+    python tools/record_live_runs.py        # all four sections, the five live models; key from the env or the gitignored .env
     python tools/record_live_runs.py --dry-run                               # print the plan and a rough cost, send nothing
     python tools/record_live_runs.py --what module02 --models openai/gpt-4o-mini
     python tools/record_live_runs.py --what rates --samples 20 --workers 4    # the Module 02 rate study only
@@ -199,6 +199,17 @@ async def record_rates(post, key, model, samples, temperature):
     return {"samples": samples, "temperature": temperature, "recorded_on": TODAY, "runs": runs}, None
 
 
+def key_from_dotenv(path):
+    """The OPENROUTER_API_KEY line of the repo's gitignored .env, if present; the value is never printed."""
+    if not path.exists():
+        return ""
+    for line in path.read_text(encoding="utf-8").splitlines():
+        name, _, value = line.partition("=")
+        if name.strip() == "OPENROUTER_API_KEY":
+            return value.strip().strip("'\"")
+    return ""
+
+
 def load_existing(path):
     if not path.exists():
         return empty_record(), ""
@@ -301,9 +312,9 @@ async def main():
         head = load_existing(OUT_DEFAULT)[1]
         rec = empty_record()
     else:
-        key = os.environ.get("OPENROUTER_API_KEY", "").strip()
+        key = os.environ.get("OPENROUTER_API_KEY", "").strip() or key_from_dotenv(ROOT / ".env")
         if not key:
-            print("set OPENROUTER_API_KEY in the environment first (nothing is read from any file)", file=sys.stderr)
+            print("set OPENROUTER_API_KEY in the environment, or put OPENROUTER_API_KEY=... in the repo's gitignored .env", file=sys.stderr)
             return 2
         post = make_post(workers=a.workers)
         out = pathlib.Path(a.out)
