@@ -497,6 +497,14 @@ div:has(> .cm-editor), [class*="cm-theme"] { border-color: transparent !importan
 .sad-legend { display: flex; gap: 16px; font: 400 13px var(--sad-font); color: var(--sad-muted); margin: 0 0 8px; }
 .sad-legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; background: var(--sad-ink); margin-right: 6px; }
 .sad-legend i.is-light { background: var(--sad-control); }
+/* the rate study (module 02): an outlined segment is an attempt the permissions refused; its value text is a short sentence */
+.sad-bar.is-outline, .sad-legend i.is-outline { background: transparent; border: 1px solid var(--sad-muted); box-sizing: border-box; }
+.sad-bars.is-rates .sad-bar-val { flex-basis: 150px; white-space: normal; line-height: 1.3; }
+@media (max-width: 560px) {
+  .sad-bars.is-rates .sad-bar-row { flex-wrap: wrap; }
+  .sad-bars.is-rates .sad-bar-name { flex-basis: 100%; }
+  .sad-bars.is-rates .sad-bar-val { flex-basis: auto; text-align: left; }
+}
 
 /* titled code panels and verdict cards: Module 02's doorway cards, the system prompt, the quarantine panes */
 .sad-mp { border: 1px solid var(--sad-line); border-radius: var(--sad-radius); overflow: hidden; margin: 8px 0; max-width: 900px; background: #fff; }

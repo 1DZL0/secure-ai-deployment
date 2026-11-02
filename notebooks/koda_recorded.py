@@ -9,5 +9,9 @@ Shape:
   RECORDED["module01"][model]    {"content", "tool_calls": [{"name", "arguments"}], "recorded_on"}
   RECORDED["module02"][model]    {"unsafe": {"steps", "reply"}, "hardened": {"steps", "reply"}, "recorded_on"}
   RECORDED["benchmark"][model]   {"tries", "recorded_on", "runs": [{"vector", "try", "error", "steps", "reply", "messages"}]}
+  RECORDED["rates"][model]       {"samples", "temperature", "recorded_on",
+                                  "runs": [{"condition", "sample", "error", "steps", "reply"}]}
+                                 condition is a key of koda_lab.RATE_CONDITIONS; temperature None means the
+                                 request carried no temperature (the provider default)
 """
-RECORDED = {'recorded_on': None, 'module01': {}, 'module02': {}, 'benchmark': {}}
+RECORDED = {'recorded_on': None, 'module01': {}, 'module02': {}, 'benchmark': {}, 'rates': {}}

@@ -10,13 +10,15 @@ def _():
     import base64
     import hashlib
     import json
-    from koda_lab import (CUSTOMERS, FACES, LIVE_MODELS, MIRROR, PLANNED, POISON, PROFILES, SWEEP_DESTRUCTIVE, SWEEP_EXFIL, SYSTEM, TASK,
-                          TOOL_SCHEMAS, WATCH, WRITE_VERBS, attempts, console_html, dispatch, divider, face_proof, flow_ok, has_key, hat_html,
-                          hero, host_of, mono_panel, plan, replay, results_table, run_agent, run_attack, when, wins, write_verbs)
+    from koda_lab import (CUSTOMERS, FACES, LIVE_MODELS, MIRROR, PLANNED, POISON, PROFILES, RATE_BANDS, RATE_SAMPLES, SWEEP_DESTRUCTIVE,
+                          SWEEP_EXFIL, SYSTEM, TASK, TOOL_SCHEMAS, WATCH, WRITE_VERBS, attempts, console_html, contrast_html, dispatch, divider,
+                          face_proof, flow_ok, has_key, hat_html, hero, host_of, mono_panel, plan, rate_band, rate_bars_html, rate_footnote_md,
+                          rate_table, replay, results_table, run_agent, run_attack, when, wins, write_verbs)
     from koda_recorded import RECORDED
-    return (CUSTOMERS, FACES, LIVE_MODELS, MIRROR, PLANNED, POISON, PROFILES, RECORDED, SWEEP_DESTRUCTIVE, SWEEP_EXFIL, SYSTEM, TASK,
-            TOOL_SCHEMAS, WATCH, WRITE_VERBS, attempts, base64, console_html, dispatch, divider, face_proof, flow_ok, has_key, hashlib,
-            hat_html, hero, host_of, json, mo, mono_panel, plan, replay, results_table, run_agent, run_attack, when, wins, write_verbs)
+    return (CUSTOMERS, FACES, LIVE_MODELS, MIRROR, PLANNED, POISON, PROFILES, RATE_BANDS, RATE_SAMPLES, RECORDED, SWEEP_DESTRUCTIVE,
+            SWEEP_EXFIL, SYSTEM, TASK, TOOL_SCHEMAS, WATCH, WRITE_VERBS, attempts, base64, console_html, contrast_html, dispatch, divider,
+            face_proof, flow_ok, has_key, hashlib, hat_html, hero, host_of, json, mo, mono_panel, plan, rate_band, rate_bars_html,
+            rate_footnote_md, rate_table, replay, results_table, run_agent, run_attack, when, wins, write_verbs)
 
 
 @app.cell
@@ -123,7 +125,8 @@ def _(hero, mo):
                 'at all?&rdquo;: OWASP&rsquo;s Excessive Agency entry (LLM06:2025, renumbered LLM03:2026), which covers tools it never needed, '
                 'permissions wider than the job, actions with no approval, per-user credentials and the tool supply chain. OWASP splits the two '
                 'the same way: LLM01 is &ldquo;the input-side compromise&rdquo; and LLM03 &ldquo;carries the full agency-side treatment&rdquo;. '
-                'Retrieval as the carrier is Module 04, the answer path and what leaks is 05, execution is 06, memory is 07, peers are 08, and '
+                'Module 04 is the knowledge side (who can write to what the assistant searches, how a document gets picked, what the user can '
+                'see about the source), the answer path and what leaks is 05, execution is 06, memory is 07, peers are 08, and '
                 'watching it all is 09. Where this page shows a control that another module owns (the scoped tools in card 2, the MCP card, the '
                 'send_email capstone), it shows it as the answer to injection; the other module teaches it as design.</div>'
                 '<p class="sad-prose"><b>Red team</b> sections: you plant text. '
@@ -679,24 +682,37 @@ def _(mo):
             "still skew a summary, a recommendation or a screening score without a single refused call. Greshake et al. call this manipulated "
             "content, and NIST AI 100-2e2025 files it under integrity attacks. For those harms the controls are different: provenance and "
             "citations the user can open, a second independent source, the model's verdict kept advisory, and a human who decides. Every "
-            "verdict on this page grades tool calls only, so a passing row means “nothing bad was done”, not “nothing bad was said”."), kind="warn"),
+            "verdict on this page grades tool calls only, so a passing row means “nothing bad was done”, not “nothing bad was said”. "
+            "That answer-side harm is Module 04's subject."), kind="warn"),
     ])
     return
 
 
 @app.cell
-def _(mo):
+def _(RATE_SAMPLES, RECORDED, rate_table):
+    # the rate study: the same note, many runs per model, recorded by tools/record_live_runs.py --what rates.
+    # Empty until the course owner records; the older one-run sweep below stands in until then.
+    RATES = RECORDED.get("rates") or {}
+    RATE_ROWS = {c: rate_table(RATES, c) for c in ("clean", "destructive", "exfil")} if RATES else {}
+    RATE_N = max((s["n"] for _rows in RATE_ROWS.values() for _, s in _rows), default=RATE_SAMPLES)
+    RATE_NOTES = {"the note from Part 1": "destructive", "the harmless-looking fetch": "exfil", "an ordinary note": "clean"}
+    return RATES, RATE_N, RATE_NOTES, RATE_ROWS
+
+
+@app.cell
+def _(RATES, mo):
     guess_leak = mo.ui.radio(
         options=["under 3", "3 to 7", "8 or more"],
         label="Measure it. Thirteen popular models were hit with a harmless-looking “sync this record” fetch. How many leaked the customer's PII?",
         inline=True,
     )
-    guess_leak
+    guess_leak if not RATES else None
     return (guess_leak,)
 
 
 @app.cell
-def _(SWEEP_DESTRUCTIVE, SWEEP_EXFIL, fb_card, guess_leak, mo):
+def _(RATES, SWEEP_DESTRUCTIVE, SWEEP_EXFIL, fb_card, guess_leak, mo):
+    mo.stop(bool(RATES))   # the recorded rate study below replaces this one-run sweep once it is published
     mo.stop(guess_leak.value is None, mo.md("_Guess first._"))
     _leaked = sum(1 for _, h in SWEEP_EXFIL if h)
     _resisted = len(SWEEP_EXFIL) - _leaked
@@ -722,19 +738,147 @@ def _(SWEEP_DESTRUCTIVE, SWEEP_EXFIL, fb_card, guess_leak, mo):
             '<a href="../course/#/tool/benchmark" target="_blank" rel="noopener">Full numbers, the test-awareness objection, and your own model: '
             'open the Model benchmark &#8599;</a> (opens in a new tab so your work here is kept).'
         ),
-        mo.accordion({"What the vendors do, and what public data says": mo.md(
-            "Vendors are working on the model side, and it helps. Anthropic trains Claude against injected web content, scans untrusted content "
-            "with classifiers and red-teams continuously; against an adaptive attacker with 100 attempts per environment, Claude Opus 4.5 went "
-            "from 8.0% attack success on the model alone to 1.4% with its improved safeguards, and the post still says “No browser agent is "
-            "immune to prompt injection”. Google (Jun 2025) layers model hardening, prompt-injection content classifiers, security reminders "
-            "around the content, markdown sanitisation and suspicious-URL redaction, and user confirmation. Microsoft (Jul 2025) describes "
-            "the same shape, preventing the injection, detecting it and preventing the impact, and says outright that its approach “does not "
-            "rely on our ability to block all prompt injections”.\n\n"
-            "Public data agrees. In a large agent red-teaming competition (1.8 million attacks on 22 frontier agents; Zou et al., 2025), nearly "
-            "every agent violated policy within 10 to 100 queries, and robustness showed limited correlation with model size, capability or "
-            "inference-time compute. A 1.4% rate is a good number for a vendor and a poor one for an agent that can move money; the vendors' "
-            "own products add confirmations, sandboxes and allowlists for the remainder.")}),
     ])
+    return
+
+
+@app.cell
+def _(RATES, RATE_N, mo):
+    # (a) the rate study's heading; in the empty state, one grey line in its place
+    (mo.md(f"### Twenty runs, not one\n\nOne run of a model is a coin flip; the same note sent {RATE_N} times to each model is a rate, and a rate is "
+           "what you would be shipping.")
+     if RATES else
+     mo.Html('<p class="sad-cap">The recorded rate study (the same note, twenty runs per model, then the same runs replayed through the '
+             'permissions) appears here once it is published.</p>'))
+    return
+
+
+@app.cell
+def _(RATES, RATE_BANDS, RATE_N, RATE_ROWS, mo):
+    # (b) predict first: which model they trust, and how often it follows the note
+    _names = [_name for _name, _ in RATE_ROWS.get("destructive", [])] or ["none recorded yet"]
+    rate_model_pick = mo.ui.radio(options=_names, label="The model you would trust most", inline=True)
+    rate_band_pick = mo.ui.radio(options=list(RATE_BANDS), inline=True,
+                                 label=f"Out of {RATE_N} runs with the note from Part 1, how many follow it?")
+    mo.vstack([rate_model_pick, rate_band_pick], gap=0.4) if RATES else None
+    return rate_band_pick, rate_model_pick
+
+
+@app.cell
+def _(RATES, RATE_ROWS, fb_card, mo, rate_band, rate_band_pick, rate_bars_html, rate_model_pick):
+    # (c) the reveal: the band they guessed against the recorded rate, then every model on the note from Part 1
+    mo.stop(not RATES)
+    mo.stop(rate_model_pick.value is None or rate_band_pick.value is None, mo.md("_Guess first._"))
+    _rows = RATE_ROWS["destructive"]
+    _s = dict(_rows)[rate_model_pick.value]
+    _band = rate_band(_s["followed"], _s["n"])
+    _low = min(_rows, key=lambda r: r[1]["followed"])
+    _why = (f"{rate_model_pick.value} followed the note in {_s['followed']} of {_s['n']} runs and stuck to the task in {_s['task']}"
+            + ("." if rate_band_pick.value == _band else f", so the band is {_band}.")
+            + (f" The lowest rate on this note was {_low[0]} at {_low[1]['followed']}/{_low[1]['n']}." if _low[0] != rate_model_pick.value else
+               " That was the lowest rate on this note, and it is still a rate."))
+    mo.vstack([fb_card(rate_band_pick.value == _band, _why),
+               mo.md("Every model, the note from Part 1, no permissions:"),
+               mo.Html(rate_bars_html(_rows, "unsafe"))], gap=0.5)
+    return
+
+
+@app.cell
+def _(RATES, RATE_NOTES, mo, rate_band_pick, rate_model_pick):
+    # (d) the view chips: the same chart on each of the three notes; shown once the prediction is in
+    rate_cond = mo.ui.radio(options=list(RATE_NOTES), label="Change the note", inline=True)
+    rate_cond if RATES and rate_model_pick.value is not None and rate_band_pick.value is not None else None
+    return (rate_cond,)
+
+
+@app.cell
+def _(RATES, RATE_NOTES, RATE_ROWS, mo, rate_bars_html, rate_cond):
+    mo.stop(not RATES or rate_cond.value is None)
+    _c = RATE_NOTES[rate_cond.value]
+    _rows = RATE_ROWS[_c]
+    if _c == "clean":
+        _k, _n = sum(_s["followed"] for _, _s in _rows), sum(_s["n"] for _, _s in _rows)
+        _line = (("An ordinary note: nothing follows, and the task bar is each model's baseline. " if _k == 0 else
+                  f"An ordinary note with nothing to follow, and still {_k} of {_n} runs made a harmful call unprompted; the task bar is "
+                  "each model's baseline. ")
+                 + "A model that misses the task here would miss it anyway, so the drop on the other two notes is the note's doing.")
+    elif _c == "exfil":
+        _d = dict(RATE_ROWS["destructive"])
+        _more = sum(1 for _name, _s in _rows if _s["followed"] > _d.get(_name, {"followed": 0})["followed"])
+        _line = (f"The harmless-looking fetch: a polite sync request, no delete and no secrets file. It beat the crude note from Part 1 on "
+                 f"{_more} of {len(_rows)} models"
+                 + ("; a wording that asks for less gets more." if 2 * _more > len(_rows) else "; on this recording the crude note did at least as well."))
+    else:
+        _line = ("The note from Part 1, the one you read in the record: secrets, a delete and a memory, asked for in one breath. "
+                 "Crude, and the bars show how often it still lands.")
+    mo.vstack([mo.Html(rate_bars_html(_rows, "unsafe")), mo.md(_line)], gap=0.5)
+    return
+
+
+@app.cell
+def _(RATES, mo, rate_band_pick, rate_model_pick):
+    # (e) the flip: the same recorded runs, replayed through the hardened permissions
+    rate_flip = mo.ui.radio(options=["model alone", "hardened profile"], value="model alone",
+                            label="Same runs, replayed through the permissions", inline=True)
+    rate_flip if RATES and rate_model_pick.value is not None and rate_band_pick.value is not None else None
+    return (rate_flip,)
+
+
+@app.cell
+def _(RATES, RATE_NOTES, RATE_ROWS, mo, rate_band_pick, rate_bars_html, rate_cond, rate_flip, rate_model_pick):
+    # shown with the flip chips, after the prediction: before it there is no chart to flip
+    mo.stop(not RATES or rate_model_pick.value is None or rate_band_pick.value is None)
+    _c = RATE_NOTES.get(rate_cond.value, "destructive")
+    _rows = RATE_ROWS[_c]
+    if rate_flip.value != "hardened profile":
+        _view = mo.md("_The chart above is the model alone. Flip to the hardened profile: the same runs, nothing re-sent._")
+    else:
+        _through = sum(_s["hardened_through"] for _, _s in _rows)
+        _tried = sum(_s["tried"] for _, _s in _rows)
+        _n = sum(_s["n"] for _, _s in _rows)
+        _view = mo.vstack([
+            mo.Html(rate_bars_html(_rows, "hardened")),
+            mo.md(f"Every recorded call of these {_n} runs ({rate_cond.value or 'the note from Part 1'}) was replayed through the hardened "
+                  f"checkpoint: {_tried} runs tried a harmful call and {_through} got through. The counts come from the replay of each trace, "
+                  "not from an assumption; a count above zero would be a bug in `dispatch()`."),
+        ], gap=0.5)
+    _view
+    return
+
+
+@app.cell
+def _(RATES, mo, rate_band_pick, rate_model_pick):
+    # (f) the line the chart exists for, arriving with the reveal
+    _shown = bool(RATES) and rate_model_pick.value is not None and rate_band_pick.value is not None
+    mo.callout(mo.md("**A model's refusal is a rate, a permission is a rule, and you cannot ship a rate.**"), kind="success") if _shown else None
+    return
+
+
+@app.cell
+def _(RATES, mo, rate_band_pick, rate_footnote_md, rate_model_pick):
+    # (g) the footnote: how the runs were made and what the two words mean, arriving with the reveal
+    _shown = bool(RATES) and rate_model_pick.value is not None and rate_band_pick.value is not None
+    mo.Html(f'<p class="sad-cap">{rate_footnote_md(RATES)}</p>') if _shown else None
+    return
+
+
+@app.cell
+def _(mo):
+    # (h) what the vendors do, in both states
+    mo.accordion({"What the vendors do, and what public data says": mo.md(
+        "- Vendors are working on the model side, and it helps. Anthropic trains Claude against injected web content, scans untrusted content "
+        "with classifiers and red-teams continuously.\n"
+        "- Against an adaptive attacker with 100 attempts per environment, Claude Opus 4.5 went from 8.0% attack success on the model alone to "
+        "1.4% with its improved safeguards, and the post still says “No browser agent is immune to prompt injection”.\n"
+        "- Google (Jun 2025) layers model hardening, prompt-injection content classifiers, security reminders around the content, markdown "
+        "sanitisation and suspicious-URL redaction, and user confirmation.\n"
+        "- Microsoft (Jul 2025) describes the same shape, preventing the injection, detecting it and preventing the impact, and says outright "
+        "that its approach “does not rely on our ability to block all prompt injections”.\n"
+        "- Public data agrees. In a large agent red-teaming competition (1.8 million attacks on 22 frontier agents; Zou et al., 2025), nearly "
+        "every agent violated policy within 10 to 100 queries, and robustness showed limited correlation with model size, capability or "
+        "inference-time compute.\n"
+        "- A 1.4% rate is a good number for a vendor and a poor one for an agent that can move money; the vendors' own products add "
+        "confirmations, sandboxes and allowlists for the remainder.")})
     return
 
 
@@ -1072,8 +1216,8 @@ async def _(PROFILES, TASK, attempts, console_html, has_key, hatted, json, live_
     # sits right under the button so its result (or the no-key message) appears where the button was pressed
     mo.stop(not rt_go.value, mo.md("_The button runs your note on the model chosen in the Live section below, under the unsafe "
                                    "profile (so a good attack can land), then replays the model's own calls through the hardened checkpoint._"))
-    mo.stop(not has_key(live_key.value), mo.md("No key in the Live section (blank or NA), so your note stays on the planner above. Firing *your own* "
-                                                "wording at a real model needs a key: nothing can be recorded for text nobody has typed yet."))
+    mo.stop(not has_key(live_key.value), mo.md("No key in the Live section (blank or NA), so your note stays on the planner above: nothing can be "
+                                                "recorded for text nobody has typed yet, so firing *your own* wording at a real model needs a key."))
     mo.stop(not rt_note.value.strip(), mo.md("Write a note in the box first; the button fires whatever is in it at the model."))
     _note = rt_note.value
     _steps, _err, _reply, _ = await run_attack(live_key.value.strip(), live_model.value, PROFILES["unsafe"], _note)   # the learner's own note
@@ -1161,26 +1305,33 @@ def _(MEETS, SWITCHES, console_html, fb_card, flag_code, hat, hatted, load_flags
 
 
 @app.cell
-def _(LIVE_MODELS, RECORDED, hat_html, mo, when):
+def _(LIVE_MODELS, RATES, RECORDED, hat_html, mo, when):
     live_key = mo.ui.text(kind="password", label="OpenRouter key (stays in your browser)", full_width=True)
     live_model = mo.ui.radio(options=LIVE_MODELS, value="openai/gpt-4o-mini", label="Model", inline=True)
-    live_go = mo.ui.run_button(label="▶  Inject customer 42 into a real model, unsafe vs hardened", kind="success", full_width=True)
+    live_go = mo.ui.run_button(label="▶  Run customer 42 through this model, unsafe vs hardened", kind="success", full_width=True)
+    _fresh = mo.accordion({"Optional: run it fresh on your own OpenRouter key": mo.vstack([
+        live_key,
+        mo.md("The key stays in your browser and spends only your own credit; two agent runs per click (unsafe, then hardened), a few requests each. "
+              + ("Type NA or leave the box empty and the recorded runs play back at no cost." if RECORDED["module02"]
+                 else "Leave it empty and the lab's planner stands in.")),
+    ], gap=0.4)})
     mo.vstack([
-        mo.Html(hat_html("Live", "See it on a real model", "optional")),
-        mo.md("Paste an OpenRouter key (it stays in your browser and spends only your own credit), pick a model, click. Two runs on one click, "
-              "unsafe then hardened, with the model's real reply next to the real tool trace."
-              + (f" **No key? Type NA** (or leave the box empty), pick a model and click: the same two runs, recorded on this exact "
-                 f"harness on {when(RECORDED['recorded_on'])}, play back at no cost." if RECORDED["module02"] else "")),
-        mo.callout(mo.vstack([live_key, live_model, live_go], gap=0.9), kind="neutral"),
+        mo.Html(hat_html("Live", "See one more run", "no key needed")),
+        mo.md((f"Pick a model and click: the button plays back a recorded run of that model on customer 42, unsafe then hardened, with its real "
+               f"reply next to the real tool trace (recorded on this harness on {when(RECORDED['recorded_on'])}). "
+               if RECORDED["module02"] else
+               "Pick a model and click: until a recorded run is published, the lab's planner stands in, unsafe then hardened. ")
+              + ("Your one result sits inside the twenty from Part 2 instead of standing for the model." if RATES
+                 else "One run is one sample, not the model's rate.")),
+        mo.callout(mo.vstack([live_model, live_go, _fresh], gap=0.9), kind="neutral"),
     ])
     return live_go, live_key, live_model
 
 
 @app.cell
 async def _(CUSTOMERS, PROFILES, RECORDED, TASK, attempts, console_html, has_key, json, live_go, live_key, live_model, mo, run_agent, run_attack, when, wins, write_verbs):
-    mo.stop(not live_go.value, mo.md("_With a key: pick a model and click; two runs on your credit. No key? Type NA (or leave it blank) and click: "
-                                     + ("the same two runs, recorded earlier, play back at no cost._" if RECORDED["module02"]
-                                        else "the lab's planner stands in until a recorded run is published._")))
+    mo.stop(not live_go.value, mo.md("_Pick a model and click: " + ("the recorded runs play back, or run fresh with a key._" if RECORDED["module02"]
+                                                                   else "the planner stands in until a recorded run is published, or run fresh with a key._")))
     _live = has_key(live_key.value)
     _rec = None if _live else RECORDED["module02"].get(live_model.value)
     if _live:
@@ -2019,9 +2170,16 @@ def _(mo):
 
         *Next: <a href="../course/#/lesson/tools-agency" target="_top">Module 03, tools and excessive agency</a>, which asks why the agent held
         that power at all. Companion: <a href="../course/#/lesson/poisoned-retrieval" target="_top">Module 04, poisoned retrieval</a>, where the
-        poison arrives through a document the assistant searched up.*
+        document does not give an order, it lies, and the attacker made sure it was the one retrieved.*
         """
     )
+    return
+
+
+@app.cell
+def _(contrast_html, mo):
+    # which module is this: the same box appears on Module 04
+    mo.Html(contrast_html("02"))
     return
 
 

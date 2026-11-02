@@ -421,7 +421,7 @@ def _():
         {"name": "Prompt injection", "layer": 2, "module": "02", "owasp": "OWASP LLM01:2025 / 2026", "status": "live",
          "desc": "Untrusted text in the input stream is read as a command."},
         {"name": "Poisoned retrieval", "layer": 2, "module": "04", "owasp": "OWASP LLM08:2025 / LLM09:2026", "status": "live",
-         "desc": "A booby-trapped document, retrieved into context, issues orders."},
+         "desc": "The knowledge the assistant searches is wrong, and the attacker chose what it finds."},
         {"name": "Tools & excessive agency", "layer": 1, "module": "03", "owasp": "OWASP LLM06:2025 / LLM03:2026", "status": "live",
          "desc": "The agent's own tools and MCP servers carry, or over-grant, authority."},
         {"name": "Insecure code execution", "layer": 1, "module": "06", "owasp": "OWASP LLM05:2025 / LLM10:2026", "status": "coming",
