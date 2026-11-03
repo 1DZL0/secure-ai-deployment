@@ -7,13 +7,20 @@ app = marimo.App(width="medium", css_file="../course/course.css", app_title="How
 @app.cell
 def _():
     import marimo as mo
-    from koda_lab import LIVE_MODELS, WEATHER_MSGS, WEATHER_TOOL, has_key, hero, mono_panel, when
+    from koda_lab import (LIVE_MODELS, WEATHER_MSGS, WEATHER_TOOL, divider, exercise_html, has_key, hero, mono_panel,
+                          recap_html, terms_html, when)
     from koda_recorded import RECORDED
-    return LIVE_MODELS, RECORDED, WEATHER_MSGS, WEATHER_TOOL, has_key, hero, mo, mono_panel, when
+
+    def fb_card(ok, why, head=None):
+        _h = head or ("&#10003; correct" if ok else "&#10007; not quite")
+        return mo.Html(f'<div class="sad-fb" data-ok="{"true" if ok else "false"}"><b>{_h}</b> &middot; {why}</div>')
+
+    return (LIVE_MODELS, RECORDED, WEATHER_MSGS, WEATHER_TOOL, divider, exercise_html, fb_card, has_key, hero, mo,
+            mono_panel, recap_html, terms_html, when)
 
 
 @app.cell
-def _(hero, mo):
+def _(hero, mo, terms_html):
     mo.vstack([
         mo.Html(hero(
             "Secure AI Deployment &middot; Module 01",
@@ -22,34 +29,36 @@ def _(hero, mo):
             "spot a dangerous one on sight. The gentlest module, and the frame every later one hangs off.",
             meta=("about 25 minutes", "runs in your browser, no key needed", "nothing real is touched"),
         )),
-        mo.md(
-            r"""
-            This is the opening module, about 25 minutes, and the only one with no attack in it. We set the frame first.
-
-            You will meet the moving parts of an agent (and build the smallest possible one, right here), the one principle
-            that every later module rests on, and a two-part test for spotting a risky agent before you have seen a single
-            exploit. It all runs in your browser, no install and no key. One section can optionally call a real model if you
-            paste your own key, but nothing here needs one.
-            """
-        ),
+        mo.Html(terms_html([
+            ("agent", "a model, a set of tools, and a loop that ties them together"),
+            ("tool call", "a request to use a tool, not an action"),
+            ("loop", "send, answer or tool request, your code runs it, repeat"),
+            ("lethal trifecta", "private data, untrusted content and external communication in one agent"),
+            ("boundary", "a limit on the agent's actions, enforced outside the model"),
+        ])),
     ])
+    return
+
+
+@app.cell
+def _(divider, mo):
+    mo.Html(divider(1, "What this course is", "You will do: read the scope. You will have: what is in, and what is out."))
     return
 
 
 @app.cell
 def _(mo):
     mo.Html(
-        '<h3 class="sad-h3">Section 1 &middot; What this course is, and what it is not</h3>'
         '<div class="sad-cols">'
         '<div><h4>It is</h4><ul>'
         '<li><b>Hands-on.</b> You build, break, and bound a real agent in the page.</li>'
         '<li><b>About the agent</b> (the system around the model) and what it is <i>allowed to do</i>.</li>'
         '<li><b>In-browser.</b> No install, no account, nothing leaves your machine.</li>'
-        '<li><b>OWASP-grounded,</b> tied to real incidents, not hypotheticals.</li></ul></div>'
+        '<li><b>OWASP-grounded,</b> tied to real incidents.</li></ul></div>'
         '<div><h4>It is not</h4><ul>'
-        '<li>A <b>prompt-engineering</b> course (writing better prompts).</li>'
+        '<li>A <b>prompt-engineering</b> course.</li>'
         '<li>A <b>model-alignment or jailbreak</b> course (making the model itself refuse).</li>'
-        '<li>A <b>tour of vendor products</b> or a buyer&rsquo;s guide.</li>'
+        '<li>A <b>tour of vendor products</b>.</li>'
         '<li>A promise that a model can be made <b>impossible to fool</b>. It cannot, and that is the whole point.</li></ul></div>'
         '</div>'
     )
@@ -58,22 +67,69 @@ def _(mo):
 
 @app.cell
 def _(mo):
+    mo.callout(
+        mo.md("**Part 1 in a sentence.** The agent around the model and what it is allowed to do, not better prompts."),
+        kind="success")
+    return
+
+
+@app.cell
+def _(divider, mo):
+    mo.Html(divider(2, "What an agent is", "You will do: run one turn of the smallest agent, then ask a real model. "
+                                          "You will have: the loop, and the seam where a request becomes an action."))
+    return
+
+
+@app.cell
+def _(mo):
     mo.md(
         r"""
-        ### Section 2 &middot; What an agent actually is
+        An agent is not a new kind of program. It is a **model**, a set of **tools**, and a **loop** that ties them together:
 
-        An agent is not a new kind of program. It is three things: a **model**, a set of **tools**, and a **loop** that ties
-        them together. The loop is ordinary:
-
-        1. send the conversation so far, plus a menu of tools, to the model,
-        2. the model either writes an answer, or it **asks** to use a tool,
-        3. if it asks, your code decides whether to run that tool and appends the result,
-        4. call the model again, and repeat until it answers.
-
-        That is the whole mechanism. Below is the smallest working version. Ask the agent something and watch one turn of the
-        loop, step by step.
+        - send the conversation so far, plus a menu of tools, to the model,
+        - it either writes an answer, or **asks** to use a tool,
+        - if it asks, your code decides whether to run that tool and appends the result,
+        - repeat until it answers.
         """
     )
+    return
+
+
+@app.cell
+def _():
+    def loop_svg():
+        # the loop as a picture: four boxes, five numbered arrows; the labels sit under it as HTML so they stay 15px on a phone
+        # 14px in a 360-wide viewBox stays at or above 12.8px once the picture is 330px wide on a phone
+        _box = lambda x, t: (f'<rect x="{x}" y="36" width="70" height="40" rx="6" fill="#fafaf9" stroke="#9ca3af" stroke-width="1.5"/>'
+                             f'<text x="{x + 35}" y="61" text-anchor="middle" fill="#1a1a1a" style="font:500 14px system-ui;">{t}</text>')
+        _num = lambda x, y, n, c="#5f6368": f'<text x="{x}" y="{y}" text-anchor="middle" fill="{c}" style="font:600 14px system-ui;">{n}</text>'
+        _g, _b = "#9ca3af", "#1d4ed8"
+        return ('<div class="sad-flowbox"><p class="sad-cap">one turn of the loop</p>'
+                '<svg viewBox="0 0 360 118" width="100%" role="img" aria-label="The agent loop" style="max-width:560px;display:block;margin:0 auto;">'
+                '<defs><marker id="ag" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">'
+                f'<path d="M0 0L10 5L0 10z" fill="{_g}"/></marker>'
+                '<marker id="ab" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">'
+                f'<path d="M0 0L10 5L0 10z" fill="{_b}"/></marker></defs>'
+                + _box(1, "you") + _box(97, "model") + _box(193, "your code") + _box(289, "tool")
+                + f'<line x1="71" y1="50" x2="97" y2="50" stroke="{_g}" stroke-width="1.5" marker-end="url(#ag)"/>' + _num(84, 30, 1)
+                + f'<line x1="167" y1="50" x2="193" y2="50" stroke="{_g}" stroke-width="1.5" marker-end="url(#ag)"/>' + _num(180, 30, 2)
+                + f'<line x1="263" y1="50" x2="289" y2="50" stroke="{_b}" stroke-width="2.5" marker-end="url(#ab)"/>' + _num(276, 30, 3, _b)
+                + f'<path d="M324 76V94H150V78" fill="none" stroke="{_g}" stroke-width="1.5" marker-end="url(#ag)"/>' + _num(237, 90, 4)
+                + f'<path d="M114 76V110H36V78" fill="none" stroke="{_g}" stroke-width="1.5" marker-end="url(#ag)"/>' + _num(75, 106, 5)
+                + '</svg>'
+                '<ol class="sad-ul" style="font-size:15px;line-height:1.5;margin-top:4px;">'
+                '<li>you send the question, plus the menu of tools the model may ask for</li>'
+                '<li>the model asks to call a tool: a request, with no answer yet</li>'
+                '<li style="color:#1d4ed8;font-weight:500;">your code runs the tool: nothing happens until it chooses to</li>'
+                '<li>the result goes back to the model</li>'
+                '<li>now it has the result, so it writes the reply</li></ol></div>')
+
+    return (loop_svg,)
+
+
+@app.cell
+def _(loop_svg, mo):
+    mo.Html(loop_svg())
     return
 
 
@@ -131,10 +187,18 @@ def _():
 
 
 @app.cell
+def _(exercise_html, mo):
+    mo.Html(exercise_html("2.1", "Run one turn of the loop",
+                          "Ask the smallest working agent a question and read the trace row by row.", minutes=3,
+                          passes="you can point to the row where a request becomes an action."))
+    return
+
+
+@app.cell
 def _(mo):
-    ask = mo.ui.dropdown(
+    ask = mo.ui.radio(
         options=["What's the weather in Nicosia?", "What's the weather in Larnaca?", "How cold is Troodos right now?"],
-        value="What's the weather in Nicosia?", label="Ask the agent:",
+        value="What's the weather in Nicosia?", label="Ask the agent:", inline=True,
     )
     ask
     return (ask,)
@@ -150,12 +214,12 @@ def _(ask, loop_trace_html, mo, run_loop):
 def _(mo):
     mo.md(
         r"""
-        Look at the third row. A tool call is a request, not an action. The model never reaches out and runs anything
-        itself; it can only *ask*. Your code is the one thing that turns that request into a real action, and that single
-        decision point, the seam, is where everything in this course happens. Hold onto it: whether the agent reads a file,
-        sends an email, or wipes a table is never up to the model. It is up to your code at that seam.
+        Look at the third row.
 
-        People call agents in a few different ways, but it is the **same loop** underneath. The seam just moves:
+        - A tool call is a request, not an action. The model can only *ask*.
+        - Your code turns that request into a real action, and that seam is where everything in this course happens.
+
+        Raw API, SDK or MCP server: the **same loop** underneath. The seam just moves:
         """
     )
     return
@@ -165,7 +229,7 @@ def _(mo):
 def _(mo):
     mo.ui.tabs({
         "Raw API tool-calling": mo.md(
-            "You write the loop yourself and call the model's API directly.\n\n"
+            "You write the loop yourself.\n\n"
             "```python\n"
             "reply = model.chat(messages, tools=TOOLS)   # reply has .content AND .tool_calls\n"
             "for call in reply.tool_calls:\n"
@@ -173,51 +237,48 @@ def _(mo):
             "    messages.append(tool_result(result))\n"
             "# loop until there are no more tool_calls\n"
             "```\n\n"
-            "The clearest view of the seam: you see every tool call before it runs."
+            "You see every tool call before it runs."
         ),
         "An SDK / framework": mo.md(
-            "LangChain, LlamaIndex, the OpenAI Agents SDK and others run this exact loop for you.\n\n"
+            "LangChain, LlamaIndex, the OpenAI Agents SDK and others run the loop for you.\n\n"
             "```python\n"
             "agent = Agent(model, tools=[get_weather, send_email])\n"
             "agent.run(\"What's the weather?\")   # the SDK runs the loop internally\n"
             "```\n\n"
-            "Convenient, but the seam where a tool call becomes an action is now **inside the framework**, not in front of "
-            "you. You have to go looking for it."
+            "The seam is now **inside the framework**; you have to go looking for it."
         ),
         "An MCP server": mo.md(
-            "MCP (Model Context Protocol) is a standard way to **expose** tools to any agent.\n\n"
+            "MCP (Model Context Protocol) **exposes** tools to any agent.\n\n"
             "```python\n"
             "server = connect(\"mcp://company-tools\")\n"
             "tools = server.list_tools()   # get_invoice, send_email, ... defined elsewhere\n"
             "# the loop is identical; only the tool plumbing is remote\n"
             "```\n\n"
-            "The loop does not change. What changes is that the tool definitions now arrive from somewhere else, which is "
-            "its own risk (Module 03)."
+            "The tool definitions arrive from somewhere else, which is its own risk (Module 03)."
         ),
     })
     return
 
 
 @app.cell
-def _(mo):
-    mo.md(
-        "Same loop, different plumbing. Wherever that seam lives, in your own code, inside an SDK, or behind an MCP server, "
-        "it is the one place a request becomes a real action. That is where security lives."
-    )
+def _(RECORDED, exercise_html, mo, when):
+    mo.Html(exercise_html("2.2", "See the same reply from a real model",
+                          "Press the button: a real reply with <code>content</code> empty and a <code>tool_call</code> "
+                          "filled in, like the stand-in above"
+                          + (f" (no key needed: NA replays a reply recorded on {when(RECORDED['recorded_on'])})."
+                             if RECORDED["module01"] else " (optional: it needs a key of your own)."),
+                          minutes=2, passes="the reply carries a request and no answer."))
     return
 
 
 @app.cell
-def _(LIVE_MODELS, RECORDED, mo, when):
+def _(LIVE_MODELS, RECORDED, mo):
     live_key = mo.ui.text(kind="password", label="OpenRouter key (optional, stays in your browser)", full_width=True)
-    live_model = mo.ui.dropdown(options=LIVE_MODELS, value="openai/gpt-4o-mini", label="model")
+    live_model = mo.ui.radio(options=LIVE_MODELS, value="openai/gpt-4o-mini", label="model", inline=True)
     live_go = mo.ui.run_button(label="▶  Ask a real model (one tool-calling turn)")
     mo.vstack([
-        mo.md("Optional: see the same two-field reply from a real model. No key is needed to learn any of this. If you "
-              "have an OpenRouter key, paste it and run one turn: you will see the real reply come back with its `content` "
-              "empty and a `tool_call` filled in, exactly like the stand-in above."
-              + (f" No key? Type NA (or leave the box empty) and press the button: a reply recorded from that model on "
-                 f"{when(RECORDED['recorded_on'])} plays back instead." if RECORDED["module01"] else "")),
+        mo.md("Paste an OpenRouter key and run one turn."
+              + (" No key? Type NA (or leave the box empty) and press the button." if RECORDED["module01"] else "")),
         mo.callout(mo.vstack([live_key, live_model, live_go], gap=0.8), kind="neutral"),
     ])
     return live_go, live_key, live_model
@@ -275,9 +336,16 @@ async def _(RECORDED, WEATHER_MSGS, WEATHER_TOOL, has_key, live_go, live_key, li
 @app.cell
 def _(mo):
     mo.callout(
-        mo.md("**Section 2 in a sentence.** An agent is a model plus tools plus a loop, and the only place anything actually "
-              "happens is the seam where *your* code decides to turn a tool request into a real action."),
+        mo.md("**Part 2 in a sentence.** A model plus tools plus a loop; the only place anything happens is the seam where "
+              "*your* code turns a tool request into a real action."),
         kind="success")
+    return
+
+
+@app.cell
+def _(divider, mo):
+    mo.Html(divider(3, "The one principle", "You will do: add a “treat as data” line to what the model receives. "
+                                           "You will have: the sentence every later module rests on."))
     return
 
 
@@ -285,13 +353,38 @@ def _(mo):
 def _(mo):
     mo.md(
         r"""
-        ### Section 3 &middot; The one principle this course rests on
+        The system prompt, your request, a retrieved document, and every tool result arrive at the model as
+        **one flat stream of tokens**. No typed channel marks which part is a command and which is data. So:
 
-        Here is the single idea everything else builds on. When you call a model, the system prompt, your request, a retrieved
-        document, and every tool result all arrive as **one flat stream of tokens**. There is no typed channel marking which
-        part is a command and which is data. Look at what the model actually receives:
+        - the model can always be talked into treating data as a command,
+        - you never rely on the model behaving: you bound the action outside it.
         """
     )
+    return
+
+
+@app.cell
+def _(mo):
+    mo.Html(
+        '<div class="sad-cols">'
+        '<div><p class="sad-kind">Before: nothing bounds the action</p><h4>The model, fooled</h4><ul>'
+        '<li>a document in the stream says “send the file”</li>'
+        '<li>the model reads it as a command and <b>asks</b> to send</li>'
+        '<li>your code runs it: the file goes out</li></ul></div>'
+        '<div><p class="sad-kind">After: the action is bounded</p><h4>The same model, fooled</h4><ul>'
+        '<li>the same document, the same stream</li>'
+        '<li>the model still <b>asks</b> to send</li>'
+        '<li>a boundary outside the model refuses; the attack&rsquo;s wording cannot reach it</li></ul></div>'
+        '</div>'
+    )
+    return
+
+
+@app.cell
+def _(exercise_html, mo):
+    mo.Html(exercise_html("3.1", "Add a “treat as data” line",
+                          "Flip the switch and watch what the model receives.", minutes=2,
+                          passes="you can say why the added line is not a boundary."))
     return
 
 
@@ -325,8 +418,8 @@ def _(mo, stream_extra):
             '<div class="sad-flowbox"><p class="sad-cap">What the model receives: one continuous token stream &rarr;</p>'
             f'<div class="sad-blks">{_items}</div></div>'
         ),
-        mo.md(f"> {_note}"),
-        mo.md("_This is not an attack, just a look at what the model is handed. Module 02 turns exactly this into one._"),
+        mo.Html(f'<div class="sad-fb" data-ok="{"true" if stream_extra.value else "none"}">{_note}</div>'),
+        mo.md("_Not an attack yet: Module 02 turns exactly this into one._"),
     ])
     return
 
@@ -334,11 +427,17 @@ def _(mo, stream_extra):
 @app.cell
 def _(mo):
     mo.callout(
-        mo.md("**The one principle.** A model takes instructions and data as a single stream of tokens, so it can always be "
-              "talked into treating data as a command: it is **foolable by construction**. You therefore never rely on the "
-              "model behaving. You bound what the agent is allowed to do, outside the model, where the wording of an "
-              "attack cannot reach. Every later module is one instance of this move."),
-        kind="warn")
+        mo.md("**Part 3 in a sentence, the one principle.** A model takes instructions and data as a single stream of tokens, "
+              "so it is **foolable by construction**: bound what the agent is allowed to do outside the model, where the "
+              "wording of an attack cannot reach. Every later module is one instance of this move."),
+        kind="success")
+    return
+
+
+@app.cell
+def _(divider, mo):
+    mo.Html(divider(4, "Spot a dangerous agent", "You will do: flip three switches and read the verdict. "
+                                                "You will have: the lethal trifecta and the Rule of Two."))
     return
 
 
@@ -346,23 +445,26 @@ def _(mo):
 def _(mo):
     mo.md(
         r"""
-        ### Section 4 &middot; Spotting a dangerous agent before any attack
+        Two tests judge the risk from the design alone, before you have seen an exploit.
 
-        You do not need to see an exploit to judge the risk. Two well-known tests do it from the design alone.
-
-        **The lethal trifecta** (Simon Willison,
-        <a href="https://simonwillison.net/2025/Jun/16/the-lethal-trifecta/" target="_blank" rel="noopener">16 June 2025</a>).
-        An agent is one crafted input away from leaking data when it has **all three** of: access to *private data*, exposure
-        to *untrusted content*, and the ability to *communicate externally*. Take away any one leg and there is no
-        straight-through path from the injection to the exit.
-
-        **Meta&rsquo;s Agents Rule of Two**
-        (<a href="https://ai.meta.com/blog/practical-ai-agent-security/" target="_blank" rel="noopener">Oct 2025</a>).
-        The same three properties, turned into a design rule: until prompt injection can be reliably stopped, an agent should
-        satisfy **no more than two** of them in a single session, or run with a human in the loop. Flip the switches and read
-        the verdict.
+        - **The lethal trifecta** (Simon Willison,
+          <a href="https://simonwillison.net/2025/Jun/16/the-lethal-trifecta/" target="_blank" rel="noopener">16 June 2025</a>).
+          An agent is one crafted input away from leaking data when it has **all three** of: access to *private data*,
+          exposure to *untrusted content*, and the ability to *communicate externally*.
+        - **Meta&rsquo;s Agents Rule of Two**
+          (<a href="https://ai.meta.com/blog/practical-ai-agent-security/" target="_blank" rel="noopener">Oct 2025</a>).
+          Until prompt injection can be reliably stopped, an agent should satisfy **no more than two** of the three in a
+          single session, or run with a human in the loop.
         """
     )
+    return
+
+
+@app.cell
+def _(exercise_html, mo):
+    mo.Html(exercise_html("4.1", "Cut one leg",
+                          "Start with all three legs on, then switch legs off until the verdict changes.", minutes=2,
+                          passes="one switch is enough to take the agent out of the trifecta."))
     return
 
 
@@ -381,7 +483,7 @@ def _(mo, tf_ext, tf_priv, tf_unt):
     _on = sum(1 for _, _v in _legs if _v)
     _chips = "".join(f'<span class="sad-leg" data-on="{"true" if _v else "false"}">{_n}</span>' for _n, _v in _legs)
     if _on == 3:
-        _verdict = ('<div class="sad-vline" data-k="bad">All three legs present: the lethal trifecta.</div>'
+        _verdict = ('<div class="sad-vline" data-k="bad">✗ All three legs present: the lethal trifecta.</div>'
                     '<div class="sad-sub2 sad-gap">One crafted input can now steer '
                     'the agent into reading private data and sending it out. This is the highest-risk shape. Drop any one leg '
                     'and the exfiltration path is cut, or put a human in the loop for the action.</div>')
@@ -396,18 +498,31 @@ def _(mo, tf_ext, tf_priv, tf_unt):
 
 @app.cell
 def _(mo):
+    mo.callout(
+        mo.md("**Part 4 in a sentence.** All three legs in one agent is one crafted input away from a leak; keep it to two "
+              "per session, or put a human in the loop."),
+        kind="success")
+    return
+
+
+@app.cell
+def _(divider, mo):
+    mo.Html(divider(5, "The map", "You will do: hover the points on the course map. "
+                                  "You will have: where every attack enters, and what the course defends."))
+    return
+
+
+@app.cell
+def _(mo):
     mo.md(
         r"""
-        ### Section 5 &middot; The whole picture, one map
-
-        Here is where every attack in the course enters, and where the defence sits. Think of the agent as an onion:
+        Think of the agent as an onion:
 
         - the **outer** layer is what comes in from the world: your inputs and the documents it retrieves,
         - the **middle** layer is the agent itself: its framework, its tools, its memory,
         - the **core** is what you are protecting: the agent&rsquo;s permissions and the assets behind them.
 
-        Each attack vector is a point on the layer it enters through, filled or hollow by whether its module is live yet. **Hover a
-        point** for its OWASP id, a one-line description, and the module that covers it. This is the map of the whole course.
+        **Hover a point** for its OWASP id, a one-line description, and the module that covers it (filled when live).
         """
     )
     return
@@ -528,12 +643,28 @@ def _(map_legend_html, mo, onion_svg):
 
 @app.cell
 def _(mo):
+    mo.callout(
+        mo.md("**Part 5 in a sentence.** Attacks enter through the outer or middle layer; the core, the agent's permissions "
+              "and assets, is what every module defends."),
+        kind="success")
+    return
+
+
+@app.cell
+def _(divider, mo):
+    mo.Html(divider(6, "Spot the risk", "You will do: judge three agents by their shape, then answer three questions. "
+                                        "You will have: the three questions you ask of any agent."))
+    return
+
+
+@app.cell
+def _(mo):
     mo.md(
         r"""
-        ### Section 6 &middot; Spot the risk
+        Now you try it, not by breaking anything, but by *recognising* the shape.
 
-        Now you try it, not by breaking anything, but by *recognising* the shape. Three agents are described below. For each,
-        decide whether it has the lethal trifecta, then check the answer and the action worth watching.
+        **Worked example: the weather agent from Part 2.** Legs: no private data, no untrusted content (only your typed
+        question), no external send. Verdict: 0 of 3, not the trifecta.
         """
     )
     return
@@ -591,6 +722,14 @@ def _():
 
 
 @app.cell
+def _(exercise_html, mo):
+    mo.Html(exercise_html("6.1", "Count the legs on three agents",
+                          "Decide whether each agent has the lethal trifecta; the verdict appears under your pick.", minutes=4,
+                          passes="all three cards show ✓."))
+    return
+
+
+@app.cell
 def _(mo):
     spot1 = mo.ui.radio(options=["Yes, all three", "No"], label="1. Support triage bot, lethal trifecta?")
     spot2 = mo.ui.radio(options=["Yes, all three", "No"], label="2. PDF summariser, lethal trifecta?")
@@ -607,64 +746,104 @@ def _(SCENARIOS, mo, spot1, spot2, spot3, spot_feedback):
 
 
 @app.cell
+def _(exercise_html, mo):
+    mo.Html(exercise_html("6.2", "Knowledge check",
+                          "Pick an answer before the explanation shows. The gated checkpoint is in the course page around "
+                          "this notebook.", minutes=3,
+                          passes="three ✓, or you know which Part to reread."))
+    return
+
+
+@app.cell
+def _(mo):
+    kc1 = mo.ui.radio(
+        options=["A model, a system prompt and a memory", "A model, a set of tools, and a loop", "A framework, an MCP server and a sandbox"],
+        label="Q1. What are the three parts of an agent?", inline=True)
+    kc1
+    return (kc1,)
+
+
+@app.cell
+def _(fb_card, kc1, mo):
+    mo.stop(kc1.value is None, mo.md("_Guess first._"))
+    _why = {"A model, a set": "the loop sends the conversation plus a tool menu to the model; the model answers or asks for a "
+                             "tool; your code decides whether to run it and feeds the result back (Part 2).",
+            "A model, a system": "a prompt and a memory are things the model reads, not the parts that make it an agent. It "
+                                "is a model, a set of tools, and a loop (Part 2).",
+            "A framework": "a framework, an MCP server and a sandbox are plumbing around the same loop. It is a model, a set "
+                           "of tools, and a loop (Part 2)."}
+    fb_card(kc1.value.startswith("A model, a set"), next(_w for _k, _w in _why.items() if kc1.value.startswith(_k)))
+    return
+
+
+@app.cell
+def _(mo):
+    kc2 = mo.ui.radio(
+        options=["Attackers can read the system prompt", "The model was not trained to refuse",
+                 "Instructions and data reach the model as one token stream"],
+        label="Q2. Why can an agent always be fooled by a malicious input?", inline=True)
+    kc2
+    return (kc2,)
+
+
+@app.cell
+def _(fb_card, kc2, mo):
+    mo.stop(kc2.value is None, mo.md("_Guess first._"))
+    _why = {"Instructions": "there is no typed channel separating command from data, so any text it reads can be read as an "
+                            "instruction. The fix is not a better model; it is to bound the action outside the model (Part 3).",
+            "Attackers": "the system prompt is not the reason. Instructions and data reach the model as one token stream, with "
+                         "no typed channel between them (Part 3).",
+            "The model": "training is not the reason, and a better model is not the fix. Instructions and data reach the model "
+                         "as one token stream, so the action has to be bounded outside it (Part 3)."}
+    fb_card(kc2.value.startswith("Instructions"), next(_w for _k, _w in _why.items() if kc2.value.startswith(_k)))
+    return
+
+
+@app.cell
+def _(mo):
+    kc3 = mo.ui.radio(
+        options=["Yes, the web pages are untrusted", "No, only one leg is present", "Yes, any agent on the web counts"],
+        label="Q3. An agent reads public web pages, holds no private data, and can only return text to you. Lethal trifecta?",
+        inline=True)
+    kc3
+    return (kc3,)
+
+
+@app.cell
+def _(fb_card, kc3, mo):
+    mo.stop(kc3.value is None, mo.md("_Guess first._"))
+    _why = {"No": "only untrusted input is present. With no private data to reach and no external channel to leak through, an "
+                  "injection has nothing to steal and nowhere to send it (Part 4).",
+            "Yes, the web": "untrusted input is one leg, not three. With no private data and no external channel, an injection "
+                            "has nothing to steal and nowhere to send it (Part 4).",
+            "Yes, any": "the trifecta is three specific legs, not a kind of agent. Here only untrusted input is present (Part 4)."}
+    fb_card(kc3.value.startswith("No"), next(_w for _k, _w in _why.items() if kc3.value.startswith(_k)))
+    return
+
+
+@app.cell
 def _(mo):
     mo.callout(
-        mo.md("**Section 6 in a sentence.** Count the legs before you worry about any exploit: an agent with all three of "
-              "untrusted input, private data, and an external channel is the dangerous shape, and the action to bound first "
-              "is the irreversible or outbound one."),
+        mo.md("**Part 6 in a sentence.** Count the legs before you worry about any exploit, and bound the irreversible or "
+              "outbound action first."),
         kind="success")
     return
 
 
 @app.cell
-def _(mo):
-    mo.md(
-        r"""
-        ### Section 7 &middot; Knowledge check
-
-        Answer each in a sentence before expanding. If you cannot, reread the linked section. The gated checkpoint for this
-        lesson is in the course page around this notebook.
-        """
-    )
-    return
-
-
-@app.cell
-def _(mo):
-    mo.accordion({
-        "**Q1.** What are the three parts of an agent, and what does the loop do?":
-            mo.md("A **model**, a set of **tools**, and a **loop**. The loop sends the conversation plus a tool menu to the "
-                  "model; the model answers or asks for a tool; your code decides whether to run it and feeds the result "
-                  "back, repeating until the model answers (Section 2)."),
-        "**Q2.** Why can an agent always be fooled by a malicious input?":
-            mo.md("Instructions and data reach the model as **one token stream** with no typed channel separating command "
-                  "from data, so any text it reads can be read as an instruction. The fix is not a better model; it is to "
-                  "bound the action outside the model (Section 3)."),
-        "**Q3.** An agent reads public web pages, holds no private data, and can only return text to you. Is it in the lethal trifecta?":
-            mo.md("No. Only one leg is present (untrusted input). With no private data to reach and no external channel to "
-                  "leak through, an injection has nothing to steal and nowhere to send it (Section 4)."),
-    })
-    return
-
-
-@app.cell
-def _(mo):
-    mo.md(
-        r"""
-        ### You now have the frame
-
-        Everything from here is one instance of a single move: bound what the agent is allowed to do, outside the model.
-
-        - Next, Module 02, Prompt injection. It takes the exact loop you built and shows what a poisoned input does to it,
-          then builds the checkpoint that holds.
-        - Then Module 03, Tools and excessive agency, the seam you saw move into SDKs and MCP servers: why the agent held that authority at all,
-          and how to size, scope and check it.
-        - The rest (data leakage, sandboxing, memory, multi-agent, monitoring and governance) each take one point from the
-          map above. Use the course sidebar to see what is live.
-
-        **The fix is a permission, not a prompt. You cannot stop a model being fooled, so you limit what a fooled agent can reach.**
-        """
-    )
+def _(mo, recap_html):
+    mo.vstack([
+        mo.Html(recap_html("You now have the frame", [
+            "An agent is a model plus tools plus a loop; anything that happens, happens at the seam where your code turns "
+            "a tool request into a real action.",
+            "A model takes instructions and data as one stream of tokens, so it is foolable by construction. The fix is a "
+            "permission, not a prompt.",
+            "Count the legs before any exploit: private data, untrusted content and an external channel together are the "
+            "dangerous shape.",
+        ], artefact="the three questions you ask of any agent before any attack")),
+        mo.md("**Next: Module 02, Prompt injection.** It takes the loop you built, shows what a poisoned input does to it, "
+              "then builds the checkpoint that holds."),
+    ])
     return
 
 

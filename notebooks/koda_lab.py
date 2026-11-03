@@ -697,11 +697,17 @@ def rate_table(rates, condition):
     return rows
 
 def rate_bars_html(rows, mode):
-    """The rate chart, same markup as bars_html. mode "unsafe": dark = followed the note, light = stuck to the task.
-    mode "hardened": dark = got through the permissions (normally none: a 1px sliver), outlined = tried."""
+    """The rate chart: ONE stacked bar per model, segments sum to n, the count sits inside each segment.
+    mode "unsafe": dark = followed the note, light = stuck to the task, the rest of the track = other (error, no reply).
+    mode "hardened": dark = got through the permissions (normally none, so no segment), outlined = tried and was refused."""
     pct = lambda k, n: (100.0 * k / n) if n else 0.0
+    def seg(k, n, cls):
+        if not k:
+            return ""
+        label = str(k) if pct(k, n) >= 8 else ""
+        return f'<div class="sad-bar sad-seg {cls}" style="width:{pct(k, n):.1f}%;"><span>{label}</span></div>'
     if mode == "hardened":
-        legend = '<span><i></i>got through the permissions</span><span><i class="is-outline"></i>tried</span>'
+        legend = '<span><i></i>got through the permissions</span><span><i class="is-outline"></i>tried, refused</span>'
     else:
         legend = '<span><i></i>followed the note</span><span><i class="is-light"></i>stuck to the task</span>'
     out = f'<div class="sad-bars is-rates"><div class="sad-legend">{legend}</div>'
@@ -709,17 +715,16 @@ def rate_bars_html(rows, mode):
         n = s["n"]
         if mode == "hardened":
             through, tried = s["hardened_through"], s["tried"]
-            first = f'<div class="sad-bar" style="width:{pct(through, n):.0f}%;"></div>' if through else '<div class="sad-bar" style="width:1px;"></div>'
-            second = f'<div class="sad-bar is-outline" style="width:{max(pct(tried, n), 1):.0f}%;"></div>'
-            val = f"{through}/{n} got through, {tried}/{n} tried"
+            segs = seg(through, n, "") + seg(tried, n, "is-outline")
+            val = (f"{through} of {n} got through" if through else f"0 of {n} got through") + (f", {tried} tried" if tried else ", nothing tried")
         else:
             followed, task = s["followed"], s["task"]
-            first = f'<div class="sad-bar" style="width:{max(pct(followed, n), 1):.0f}%;"></div>'
-            second = f'<div class="sad-bar is-light" style="width:{max(pct(task, n), 1):.0f}%;"></div>'
-            val = f"followed {followed}/{n}"
+            segs = seg(followed, n, "") + seg(task, n, "is-light")
+            other = n - followed - task
+            val = f"{followed} of {n} followed" + (f", {other} other" if other else "")
         out += ('<div class="sad-bar-row">'
                 f'<span class="sad-bar-name">{name}</span>'
-                f'<div class="sad-bar-track">{first}{second}</div>'
+                f'<div class="sad-bar-track sad-stack">{segs}</div>'
                 f'<span class="sad-bar-val">{val}</span></div>')
     return out + '</div>'
 
@@ -934,8 +939,9 @@ if __name__ == "__main__":
     _crafted = [("gpt-4o-mini", {"n": 20, "followed": 14, "tried": 14, "task": 5, "errors": 0, "hardened_through": 0}),
                 ("claude-haiku-4.5", {"n": 20, "followed": 0, "tried": 0, "task": 20, "errors": 0, "hardened_through": 0})]
     _u, _hd = rate_bars_html(_crafted, "unsafe"), rate_bars_html(_crafted, "hardened")
-    assert "followed 14/20" in _u and "followed 0/20" in _u and 'class="sad-bar is-light" style="width:25%;"' in _u and "followed the note" in _u
-    assert "0/20 got through, 14/20 tried" in _hd and 'class="sad-bar is-outline" style="width:70%;"' in _hd and "width:1px" in _hd
+    assert "14 of 20 followed, 1 other" in _u and "0 of 20 followed" in _u and "followed the note" in _u
+    assert 'is-light" style="width:25.0%;"><span>5</span>' in _u and _u.count("sad-seg") == 3, "no segment is drawn for a zero count"
+    assert "0 of 20 got through, 14 tried" in _hd and 'is-outline" style="width:70.0%;"><span>14</span>' in _hd and "width:1px" not in _hd
     for _h in (_u, _hd):
         assert _h.count('class="sad-bar-row"') == 2 and _h.count("sad-legend") == 1 and _h.startswith('<div class="sad-bars')
     assert [rate_band(k, 20) for k in (0, 1, 5, 6, 15, 16, 20)] == ["0", "1 to 5", "1 to 5", "6 to 15", "6 to 15", "16 to 20", "16 to 20"]
