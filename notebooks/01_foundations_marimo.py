@@ -7,7 +7,7 @@ app = marimo.App(width="medium", css_file="../course/course.css", app_title="How
 @app.cell
 def _():
     import marimo as mo
-    from koda_lab import (LIVE_MODELS, WEATHER_MSGS, WEATHER_TOOL, divider, exercise_html, has_key, hero, mono_panel,
+    from koda_lab import (LIVE_MODELS, PROVIDERS, WEATHER_MSGS, key_mismatch, post_for, recorded_id, WEATHER_TOOL, divider, exercise_html, has_key, hero, mono_panel,
                           recap_html, terms_html, when)
     from koda_recorded import RECORDED
 
@@ -15,7 +15,7 @@ def _():
         _h = head or ("&#10003; correct" if ok else "&#10007; not quite")
         return mo.Html(f'<div class="sad-fb" data-ok="{"true" if ok else "false"}"><b>{_h}</b> &middot; {why}</div>')
 
-    return (LIVE_MODELS, RECORDED, WEATHER_MSGS, WEATHER_TOOL, divider, exercise_html, fb_card, has_key, hero, mo,
+    return (LIVE_MODELS, PROVIDERS, RECORDED, key_mismatch, post_for, recorded_id, WEATHER_MSGS, WEATHER_TOOL, divider, exercise_html, fb_card, has_key, hero, mo,
             mono_panel, recap_html, terms_html, when)
 
 
@@ -272,20 +272,29 @@ def _(RECORDED, exercise_html, mo, when):
 
 
 @app.cell
-def _(LIVE_MODELS, RECORDED, mo):
-    live_key = mo.ui.text(kind="password", label="OpenRouter key (optional, stays in your browser)", full_width=True)
-    live_model = mo.ui.radio(options=LIVE_MODELS, value="openai/gpt-4o-mini", label="model", inline=True)
-    live_go = mo.ui.run_button(label="▶  Ask a real model (one tool-calling turn)")
+def _(PROVIDERS, RECORDED, mo):
+    live_provider = mo.ui.radio(options={_v["label"]: _k for _k, _v in PROVIDERS.items()}, value=PROVIDERS["OpenRouter"]["label"],
+                                label="provider", inline=True)
+    live_key = mo.ui.text(kind="password", label="API key (optional, stays in your browser)", full_width=True)
     mo.vstack([
-        mo.md("Paste an OpenRouter key and run one turn."
+        mo.md("Paste a key from OpenRouter, OpenAI (ChatGPT) or Anthropic (Claude) and run one turn."
               + (" No key? Type NA (or leave the box empty) and press the button." if RECORDED["module01"] else "")),
-        mo.callout(mo.vstack([live_key, live_model, live_go], gap=0.8), kind="neutral"),
+        mo.callout(mo.vstack([live_provider, live_key], gap=0.8), kind="neutral"),
     ])
-    return live_go, live_key, live_model
+    return live_key, live_provider
 
 
 @app.cell
-async def _(RECORDED, WEATHER_MSGS, WEATHER_TOOL, has_key, live_go, live_key, live_model, mo, mono_panel, when):
+def _(PROVIDERS, live_provider, mo):
+    _ms = PROVIDERS[live_provider.value]["models"]
+    live_model = mo.ui.radio(options=_ms, value="openai/gpt-4o-mini" if "openai/gpt-4o-mini" in _ms else _ms[0], label="model", inline=True)
+    live_go = mo.ui.run_button(label="▶  Ask a real model (one tool-calling turn)")
+    mo.vstack([live_model, live_go], gap=0.8)
+    return live_go, live_model
+
+
+@app.cell
+async def _(RECORDED, WEATHER_MSGS, WEATHER_TOOL, has_key, key_mismatch, live_go, live_key, live_model, live_provider, mo, mono_panel, post_for, recorded_id, when):
     _saved = mo.Html(mono_panel(
         "saved example: a real reply",
         'reply.content: <b>null</b>'
@@ -295,7 +304,7 @@ async def _(RECORDED, WEATHER_MSGS, WEATHER_TOOL, has_key, live_go, live_key, li
     if not live_go.value:
         _view = mo.vstack([mo.md("_Not clicked. Here is a saved reply so the point lands with no key:_"), _saved])
     elif not has_key(live_key.value):
-        _rec = RECORDED["module01"].get(live_model.value)
+        _rec = RECORDED["module01"].get(recorded_id(live_provider.value, live_model.value))
         if _rec:
             import html as _html
             _calls = ", ".join(f'{_c["name"]}({_html.escape(_c.get("arguments") or "")})' for _c in _rec["tool_calls"]) or "(none)"
@@ -307,18 +316,15 @@ async def _(RECORDED, WEATHER_MSGS, WEATHER_TOOL, has_key, live_go, live_key, li
             ])
         else:
             _view = mo.vstack([mo.md("Paste a key above (nothing is recorded for this model yet), or just read the saved example:"), _saved])
+    elif key_mismatch(live_provider.value, live_key.value):
+        _view = mo.md(key_mismatch(live_provider.value, live_key.value))
     else:
         import json as _json
-        import pyodide.http as _ph
         try:
-            _resp = await _ph.pyfetch(
-                "https://openrouter.ai/api/v1/chat/completions", method="POST",
-                headers={"Authorization": f"Bearer {live_key.value.strip()}", "Content-Type": "application/json"},
-                body=_json.dumps({"model": live_model.value, "messages": WEATHER_MSGS, "tools": WEATHER_TOOL, "temperature": 0}),
-            )
-            _data = await _resp.json()
+            _data = await post_for(live_provider.value)(
+                live_key.value.strip(), {"model": live_model.value, "messages": WEATHER_MSGS, "tools": WEATHER_TOOL, "temperature": 0})
             if "choices" not in _data:
-                _view = mo.md(f"OpenRouter returned an error:\n\n```\n{_json.dumps(_data)[:400]}\n```")
+                _view = mo.md(f"{live_provider.value} returned an error:\n\n```\n{_json.dumps(_data)[:400]}\n```")
             else:
                 _m = _data["choices"][0]["message"]
                 _content = _m.get("content") or "null"
