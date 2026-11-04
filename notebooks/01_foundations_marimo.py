@@ -7,16 +7,16 @@ app = marimo.App(width="medium", css_file="../course/course.css", app_title="How
 @app.cell
 def _():
     import marimo as mo
-    from koda_lab import (LIVE_MODELS, PROVIDERS, WEATHER_MSGS, key_mismatch, post_for, recorded_id, WEATHER_TOOL, divider, exercise_html, has_key, hero, mono_panel,
-                          recap_html, terms_html, when)
+    from koda_lab import (PROVIDERS, WEATHER_MSGS, WEATHER_TOOL, divider, exercise_html, has_key, hero, key_mismatch, mono_panel,
+                          post_for, recap_html, short_model, terms_html, when)
     from koda_recorded import RECORDED
 
     def fb_card(ok, why, head=None):
         _h = head or ("&#10003; correct" if ok else "&#10007; not quite")
         return mo.Html(f'<div class="sad-fb" data-ok="{"true" if ok else "false"}"><b>{_h}</b> &middot; {why}</div>')
 
-    return (LIVE_MODELS, PROVIDERS, RECORDED, key_mismatch, post_for, recorded_id, WEATHER_MSGS, WEATHER_TOOL, divider, exercise_html, fb_card, has_key, hero, mo,
-            mono_panel, recap_html, terms_html, when)
+    return (PROVIDERS, RECORDED, WEATHER_MSGS, WEATHER_TOOL, divider, exercise_html, fb_card, has_key, hero, key_mismatch, mo,
+            mono_panel, post_for, recap_html, short_model, terms_html, when)
 
 
 @app.cell
@@ -75,23 +75,15 @@ def _(mo):
 
 @app.cell
 def _(divider, mo):
-    mo.Html(divider(2, "What an agent is", "You will do: run one turn of the smallest agent, then ask a real model. "
+    mo.Html(divider(2, "What an agent is", "You will do: run one turn of the smallest agent, then read what five real models sent back. "
                                           "You will have: the loop, and the seam where a request becomes an action."))
     return
 
 
 @app.cell
 def _(mo):
-    mo.md(
-        r"""
-        An agent is not a new kind of program. It is a **model**, a set of **tools**, and a **loop** that ties them together:
-
-        - send the conversation so far, plus a menu of tools, to the model,
-        - it either writes an answer, or **asks** to use a tool,
-        - if it asks, your code decides whether to run that tool and appends the result,
-        - repeat until it answers.
-        """
-    )
+    mo.md("An agent is not a new kind of program. It is a **model**, a set of **tools**, and a **loop** that ties them "
+          "together. One turn of that loop:")
     return
 
 
@@ -212,73 +204,63 @@ def _(ask, loop_trace_html, mo, run_loop):
 
 @app.cell
 def _(mo):
-    mo.md(
-        r"""
-        Look at the third row.
-
-        - A tool call is a request, not an action. The model can only *ask*.
-        - Your code turns that request into a real action, and that seam is where everything in this course happens.
-
-        Raw API, SDK or MCP server: the **same loop** underneath. The seam just moves:
-        """
-    )
-    return
-
-
-@app.cell
-def _(mo):
-    mo.ui.tabs({
-        "Raw API tool-calling": mo.md(
-            "You write the loop yourself.\n\n"
-            "```python\n"
-            "reply = model.chat(messages, tools=TOOLS)   # reply has .content AND .tool_calls\n"
-            "for call in reply.tool_calls:\n"
-            "    result = run_tool(call.name, call.args)  # <- your code, your decision\n"
-            "    messages.append(tool_result(result))\n"
-            "# loop until there are no more tool_calls\n"
-            "```\n\n"
-            "You see every tool call before it runs."
-        ),
-        "An SDK / framework": mo.md(
-            "LangChain, LlamaIndex, the OpenAI Agents SDK and others run the loop for you.\n\n"
-            "```python\n"
-            "agent = Agent(model, tools=[get_weather, send_email])\n"
-            "agent.run(\"What's the weather?\")   # the SDK runs the loop internally\n"
-            "```\n\n"
-            "The seam is now **inside the framework**; you have to go looking for it."
-        ),
-        "An MCP server": mo.md(
-            "MCP (Model Context Protocol) **exposes** tools to any agent.\n\n"
-            "```python\n"
-            "server = connect(\"mcp://company-tools\")\n"
-            "tools = server.list_tools()   # get_invoice, send_email, ... defined elsewhere\n"
-            "# the loop is identical; only the tool plumbing is remote\n"
-            "```\n\n"
-            "The tool definitions arrive from somewhere else, which is its own risk (Module 03)."
-        ),
-    })
+    mo.md("Look at the third row: the model only **asked**, and your code **acted**. That seam, where a request becomes an "
+          "action, is where everything in this course happens.")
     return
 
 
 @app.cell
 def _(RECORDED, exercise_html, mo, when):
-    mo.Html(exercise_html("2.2", "See the same reply from a real model",
-                          "Press the button: a real reply with <code>content</code> empty and a <code>tool_call</code> "
-                          "filled in, like the stand-in above"
-                          + (f" (no key needed: NA replays a reply recorded on {when(RECORDED['recorded_on'])})."
-                             if RECORDED["module01"] else " (optional: it needs a key of your own)."),
-                          minutes=2, passes="the reply carries a request and no answer."))
+    mo.Html(exercise_html("2.2", "Read five real replies",
+                          "Five real models were sent the weather question above, with the same tool menu"
+                          + (f", on {when(RECORDED['recorded_on'])}" if RECORDED["module01"] else "")
+                          + ". Read what each one sent back, then answer the question under it.",
+                          minutes=2, passes="you can name what all five replies have in common."))
     return
 
 
 @app.cell
-def _(PROVIDERS, RECORDED, mo):
+def _(RECORDED, mo, mono_panel, short_model):
+    import html as _html
+    _rows = [(short_model(_m), _r["content"], ", ".join(f'{_c["name"]}({_c.get("arguments") or ""})' for _c in _r["tool_calls"]))
+             for _m, _r in RECORDED["module01"].items()]
+    if not _rows:
+        _rows = [("example", "", 'get_weather({"city": "Nicosia"})')]
+    _w = max(len(_n) for _n, _, _ in _rows) + 2
+    mo.Html(mono_panel("the same request, real replies",
+                       "\n".join(f'{_html.escape(_n).ljust(_w)}content: <b>{_html.escape(_c or "(empty)")}</b>   '
+                                  f'tool_calls: {_html.escape(_t or "(none)")}' for _n, _c, _t in _rows)))
+    return
+
+
+@app.cell
+def _(mo):
+    real_q = mo.ui.radio(options=["Each answered with the weather in Nicosia", "Each asked for get_weather and gave no answer",
+                                  "Each refused the question"],
+                         label="What do all five replies have in common?")
+    real_q
+    return (real_q,)
+
+
+@app.cell
+def _(fb_card, mo, real_q):
+    mo.stop(real_q.value is None, mo.md("_Answer to see the explanation._"))
+    fb_card(real_q.value.startswith("Each asked"),
+            "none of them knows the weather, so each one asked your code to fetch it, exactly like the stand-in. "
+            'To send this request yourself, on a practice model or your own key, open '
+            '<a href="../course/#/practice/1.3" target="_top">practice 1.3</a>.' if real_q.value.startswith("Each asked") else
+            "look again at the content column: it is empty in every reply. Each model asked for get_weather instead of answering.")
+    return
+
+
+@app.cell
+def _(PROVIDERS, mo):
     live_provider = mo.ui.radio(options={_v["label"]: _k for _k, _v in PROVIDERS.items()}, value=PROVIDERS["OpenRouter"]["label"],
                                 label="provider", inline=True)
     live_key = mo.ui.text(kind="password", label="API key (optional, stays in your browser)", full_width=True)
     mo.vstack([
-        mo.md("Paste a key from OpenRouter, OpenAI (ChatGPT) or Anthropic (Claude) and run one turn."
-              + (" No key? Type NA (or leave the box empty) and press the button." if RECORDED["module01"] else "")),
+        mo.md("**Optional: ask a real model now.** Paste a key from OpenRouter, OpenAI (ChatGPT) or Anthropic (Claude) and "
+              "send the same request yourself."),
         mo.callout(mo.vstack([live_provider, live_key], gap=0.8), kind="neutral"),
     ])
     return live_key, live_provider
@@ -294,32 +276,16 @@ def _(PROVIDERS, live_provider, mo):
 
 
 @app.cell
-async def _(RECORDED, WEATHER_MSGS, WEATHER_TOOL, has_key, key_mismatch, live_go, live_key, live_model, live_provider, mo, mono_panel, post_for, recorded_id, when):
-    _saved = mo.Html(mono_panel(
-        "saved example: a real reply",
-        'reply.content: <b>null</b>'
-        '<span class="sad-dim">   &larr; no answer yet</span>\n'
-        'reply.tool_calls: [ get_weather({"city": "Nicosia"}) ]'
-        '<span class="sad-dim">   &larr; a request</span>'))
+async def _(WEATHER_MSGS, WEATHER_TOOL, has_key, key_mismatch, live_go, live_key, live_model, live_provider, mo, mono_panel, post_for):
     if not live_go.value:
-        _view = mo.vstack([mo.md("_Not clicked. Here is a saved reply so the point lands with no key:_"), _saved])
+        _view = mo.md("_Optional. Without a key, the five recorded replies above are the real thing._")
     elif not has_key(live_key.value):
-        _rec = RECORDED["module01"].get(recorded_id(live_provider.value, live_model.value))
-        if _rec:
-            import html as _html
-            _calls = ", ".join(f'{_c["name"]}({_html.escape(_c.get("arguments") or "")})' for _c in _rec["tool_calls"]) or "(none)"
-            _view = mo.vstack([
-                mo.md(f"_No key, so this is a recorded reply: `{live_model.value}` was sent this exact request on "
-                      f"{when(_rec['recorded_on'])} and answered:_"),
-                mo.Html(mono_panel(f"recorded reply from {live_model.value}",
-                                   f'reply.content: <b>{_html.escape(_rec["content"] or "null")[:160]}</b>\nreply.tool_calls: {_calls}')),
-            ])
-        else:
-            _view = mo.vstack([mo.md("Paste a key above (nothing is recorded for this model yet), or just read the saved example:"), _saved])
+        _view = mo.md("Paste a key first. Without one, the five recorded replies above show exactly what a real model sends back.")
     elif key_mismatch(live_provider.value, live_key.value):
         _view = mo.md(key_mismatch(live_provider.value, live_key.value))
     else:
         import json as _json
+        _x = lambda t: t.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
         try:
             _data = await post_for(live_provider.value)(
                 live_key.value.strip(), {"model": live_model.value, "messages": WEATHER_MSGS, "tools": WEATHER_TOOL, "temperature": 0})
@@ -327,15 +293,29 @@ async def _(RECORDED, WEATHER_MSGS, WEATHER_TOOL, has_key, key_mismatch, live_go
                 _view = mo.md(f"{live_provider.value} returned an error:\n\n```\n{_json.dumps(_data)[:400]}\n```")
             else:
                 _m = _data["choices"][0]["message"]
-                _content = _m.get("content") or "null"
-                _calls = _m.get("tool_calls") or []
-                _calltxt = ", ".join(f'{c["function"]["name"]}({c["function"].get("arguments","")})' for c in _calls) or "(none)"
-                _view = mo.Html(mono_panel(
-                    f"real reply from {live_model.value}",
-                    f'reply.content: <b>{_content[:160]}</b>\nreply.tool_calls: {_calltxt}'))
+                _calls = ", ".join(f'{_c["function"]["name"]}({_c["function"].get("arguments", "")})' for _c in (_m.get("tool_calls") or []))
+                _view = mo.Html(mono_panel(f"real reply from {live_model.value}, just now",
+                                           f'content: <b>{_x((_m.get("content") or "(empty)")[:160])}</b>   '
+                                           f'tool_calls: {_x(_calls or "(none)")}'))
         except Exception as _e:
-            _view = mo.vstack([mo.md(f"The request failed (`{_e}`). The saved example makes the same point:"), _saved])
+            _view = mo.md(f"The request failed (`{_e}`). The five recorded replies above make the same point.")
     _view
+    return
+
+
+@app.cell
+def _(mo):
+    mo.md(
+        """
+        **Every agent runs this loop; only the seam moves.**
+
+        - **Raw API.** You write the loop and see every tool request before it runs.
+          <a href="../course/#/practice/1.4" target="_top">Practice 1.4</a> has you write one.
+        - **A framework** such as LangChain or the OpenAI Agents SDK. The loop runs inside the library, so you have to go
+          looking for the seam. <a href="../course/#/practice/1.6" target="_top">Practice 1.6</a> finds it in three.
+        - **An MCP server.** The tools are defined somewhere else and arrive over the wire, which is its own risk (Module 03).
+        """
+    )
     return
 
 
@@ -658,8 +638,8 @@ def _(mo):
 
 @app.cell
 def _(divider, mo):
-    mo.Html(divider(6, "Spot the risk", "You will do: judge three agents by their shape, then answer three questions. "
-                                        "You will have: the three questions you ask of any agent."))
+    mo.Html(divider(6, "Spot the risk", "You will do: judge three agents by their shape. "
+                                        "You will have: the habit of counting legs before anything else."))
     return
 
 
@@ -752,82 +732,6 @@ def _(SCENARIOS, mo, spot1, spot2, spot3, spot_feedback):
 
 
 @app.cell
-def _(exercise_html, mo):
-    mo.Html(exercise_html("6.2", "Knowledge check",
-                          "Pick an answer before the explanation shows. The gated checkpoint is in the course page around "
-                          "this notebook.", minutes=3,
-                          passes="three ✓, or you know which Part to reread."))
-    return
-
-
-@app.cell
-def _(mo):
-    kc1 = mo.ui.radio(
-        options=["A model, a system prompt and a memory", "A model, a set of tools, and a loop", "A framework, an MCP server and a sandbox"],
-        label="Q1. What are the three parts of an agent?", inline=True)
-    kc1
-    return (kc1,)
-
-
-@app.cell
-def _(fb_card, kc1, mo):
-    mo.stop(kc1.value is None, mo.md("_Guess first._"))
-    _why = {"A model, a set": "the loop sends the conversation plus a tool menu to the model; the model answers or asks for a "
-                             "tool; your code decides whether to run it and feeds the result back (Part 2).",
-            "A model, a system": "a prompt and a memory are things the model reads, not the parts that make it an agent. It "
-                                "is a model, a set of tools, and a loop (Part 2).",
-            "A framework": "a framework, an MCP server and a sandbox are plumbing around the same loop. It is a model, a set "
-                           "of tools, and a loop (Part 2)."}
-    fb_card(kc1.value.startswith("A model, a set"), next(_w for _k, _w in _why.items() if kc1.value.startswith(_k)))
-    return
-
-
-@app.cell
-def _(mo):
-    kc2 = mo.ui.radio(
-        options=["Attackers can read the system prompt", "The model was not trained to refuse",
-                 "Instructions and data reach the model as one token stream"],
-        label="Q2. Why can an agent always be fooled by a malicious input?", inline=True)
-    kc2
-    return (kc2,)
-
-
-@app.cell
-def _(fb_card, kc2, mo):
-    mo.stop(kc2.value is None, mo.md("_Guess first._"))
-    _why = {"Instructions": "there is no typed channel separating command from data, so any text it reads can be read as an "
-                            "instruction. The fix is not a better model; it is to bound the action outside the model (Part 3).",
-            "Attackers": "the system prompt is not the reason. Instructions and data reach the model as one token stream, with "
-                         "no typed channel between them (Part 3).",
-            "The model": "training is not the reason, and a better model is not the fix. Instructions and data reach the model "
-                         "as one token stream, so the action has to be bounded outside it (Part 3)."}
-    fb_card(kc2.value.startswith("Instructions"), next(_w for _k, _w in _why.items() if kc2.value.startswith(_k)))
-    return
-
-
-@app.cell
-def _(mo):
-    kc3 = mo.ui.radio(
-        options=["Yes, the web pages are untrusted", "No, only one leg is present", "Yes, any agent on the web counts"],
-        label="Q3. An agent reads public web pages, holds no private data, and can only return text to you. Lethal trifecta?",
-        inline=True)
-    kc3
-    return (kc3,)
-
-
-@app.cell
-def _(fb_card, kc3, mo):
-    mo.stop(kc3.value is None, mo.md("_Guess first._"))
-    _why = {"No": "only untrusted input is present. With no private data to reach and no external channel to leak through, an "
-                  "injection has nothing to steal and nowhere to send it (Part 4).",
-            "Yes, the web": "untrusted input is one leg, not three. With no private data and no external channel, an injection "
-                            "has nothing to steal and nowhere to send it (Part 4).",
-            "Yes, any": "the trifecta is three specific legs, not a kind of agent. Here only untrusted input is present (Part 4)."}
-    fb_card(kc3.value.startswith("No"), next(_w for _k, _w in _why.items() if kc3.value.startswith(_k)))
-    return
-
-
-@app.cell
 def _(mo):
     mo.callout(
         mo.md("**Part 6 in a sentence.** Count the legs before you worry about any exploit, and bound the irreversible or "
@@ -839,14 +743,12 @@ def _(mo):
 @app.cell
 def _(mo, recap_html):
     mo.vstack([
-        mo.Html(recap_html("You now have the frame", [
-            "An agent is a model plus tools plus a loop; anything that happens, happens at the seam where your code turns "
-            "a tool request into a real action.",
-            "A model takes instructions and data as one stream of tokens, so it is foolable by construction. The fix is a "
-            "permission, not a prompt.",
-            "Count the legs before any exploit: private data, untrusted content and an external channel together are the "
-            "dangerous shape.",
-        ], artefact="the three questions you ask of any agent before any attack")),
+        mo.Html(recap_html("The three questions to ask of any agent", [
+            "<b>Where is the seam?</b> Which tool requests does its code turn into real actions, and what may each one do?",
+            "<b>What can untrusted text reach?</b> If an email, a page or a document steered the model, which of those actions "
+            "would it trigger, and is anything outside the model there to refuse?",
+            "<b>How many legs?</b> Private data, untrusted content and a way out: all three in one session is the shape to fix first.",
+        ], artefact="three questions you can ask of any agent before any attack")),
         mo.md("**Next: Module 02, Prompt injection.** It takes the loop you built, shows what a poisoned input does to it, "
               "then builds the checkpoint that holds."),
     ])
