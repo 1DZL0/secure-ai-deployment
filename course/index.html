@@ -48,6 +48,14 @@ const MODULES = [
     blurb: "What an agent actually is, the one principle every later module rests on, and how to spot a dangerous agent before any attack.",
     url: "../foundations/",
     minutes: 25,
+    practice: [   // hands-on sub-pages: one notebook, ?part=N picks the page
+      { num: "1.1", title: "Call a model", minutes: 6 },
+      { num: "1.2", title: "Memory is the list you send", minutes: 6 },
+      { num: "1.3", title: "Describe a tool", minutes: 8 },
+      { num: "1.4", title: "Write the loop", minutes: 11 },
+      { num: "1.5", title: "Let it run code", minutes: 9 },
+      { num: "1.6", title: "Frameworks, and your own machine", minutes: 20 },
+    ],
     quiz: [
       { q: "What are the three parts of an AI agent?",
         options: [
@@ -254,6 +262,13 @@ const MODULES = [
   },
 ];
 const LIVE = MODULES.filter(m => !m.coming);
+const PRACTICE = MODULES.flatMap(m => (m.practice || []).map((p, i) => ({ ...p, parent: m, part: i + 1,
+  id: "practice:" + p.num, url: "../foundations-practice/?part=" + (i + 1) })));
+const practiceRows = (m, currentId, done) => (m.practice ? PRACTICE.filter(p => p.parent === m).map(p =>
+  `<a class="lrow sub ${done.has(p.id)?"done":""} ${p.id===currentId?"active":""}" href="#/practice/${p.num}">
+     <div class="num">${done.has(p.id)?"&#10003;":p.num}</div>
+     <div class="meta"><b>${esc(p.title)}</b></div>
+   </a>`).join("") : "");
 // pages that are tools, not lessons: no number, no quiz, no progress
 const TOOLS = {
   benchmark: { title: "Model benchmark", short: "Run the attack set on your own model",
@@ -301,7 +316,7 @@ function renderSidebar(currentId){
     return `<a class="lrow ${d?"done":""} ${m.id===currentId?"active":""}" href="#/lesson/${m.id}">
        <div class="num">${d?"&#10003;":m.num}</div>
        <div class="meta"><b>${esc(m.title)}</b><span>${esc(m.subtitle)}</span></div>
-     </a>`;
+     </a>` + practiceRows(m, currentId, done);
   }).join("");
 }
 
@@ -325,7 +340,8 @@ function renderHome(){
             <div class="n">${d?"&#10003;":m.num}</div>
             <div class="b"><b>${esc(m.title)}</b><p>${esc(m.blurb)}</p></div>
             <div class="t">${d?"Completed":"~"+m.minutes+" min"}</div>
-          </a></li>`;
+          </a>${m.practice ? `<p class="practice-line"><span>Hands-on practice:</span> ${PRACTICE.filter(p => p.parent === m).map(p =>
+            `<a href="#/practice/${p.num}">${p.num} ${esc(p.title)}</a>`).join(" &middot; ")}</p>` : ""}</li>`;
        }).join("")}
      </ol>`;
 }
@@ -343,11 +359,42 @@ function renderLesson(id){
        <iframe src="${l.url}" title="${esc(l.title)}" onload="document.getElementById('load')?.classList.add('gone')"></iframe>
      </div>
      <div class="openlink"><a href="${l.url}" target="_blank" rel="noopener">Open this lesson full-screen &rsaquo;</a></div>
+     ${l.practice ? `<div class="practice-box"><h2>Hands-on practice</h2>
+        <p class="qp">Optional. Six short pages where you write and run the code behind this lesson, on a practice model or your own key.</p>
+        <ol>${PRACTICE.filter(p => p.parent === l).map(p => `<li><a href="#/practice/${p.num}"><b>${p.num}</b> ${esc(p.title)}</a>
+          <span>${isDone(p.id) ? "&#10003; done" : "~" + p.minutes + " min"}</span></li>`).join("")}</ol></div>` : ""}
      ${quizHtml(l)}
      <div class="nav">
        <a class="btn" ${prev?`href="#/lesson/${prev.id}"`:"disabled"}>&larr; ${prev?esc(prev.title):"Back"}</a>
        <span id="donestate">${isDone(l.id)?'<span class="done-badge">&#10003; Lesson complete</span>':""}</span>
        <a class="btn primary" ${next?`href="#/lesson/${next.id}"`:'href="#/"'}>${next?"Next: "+esc(next.title)+" &rarr;":"Finish &rarr;"}</a>
+     </div>`;
+  document.querySelector("main").scrollTop = 0; window.scrollTo(0,0);
+}
+
+function renderPractice(num){
+  const i = PRACTICE.findIndex(p => p.num === num); if (i < 0) { location.hash = "#/"; return; }
+  const p = PRACTICE[i], parent = p.parent;
+  renderSidebar(p.id);
+  const prev = PRACTICE[i-1], next = PRACTICE[i+1];
+  const after = LIVE[liveIdx(parent.id) + 1];
+  const prevHref = prev ? `#/practice/${prev.num}` : `#/lesson/${parent.id}`;
+  const prevLabel = prev ? `${prev.num} ${esc(prev.title)}` : esc(parent.title);
+  const nextHref = next ? `#/practice/${next.num}` : (after ? `#/lesson/${after.id}` : "#/");
+  const nextLabel = next ? `Next: ${next.num} ${esc(next.title)}` : (after ? `Next: ${esc(after.title)}` : "Finish");
+  document.getElementById("view").innerHTML =
+    `<p class="crumbs"><a href="#/">Course</a> &rsaquo; <a href="#/lesson/${parent.id}">${esc(parent.title)}</a> &rsaquo; ${p.num} ${esc(p.title)}</p>
+     <p class="frame-note">Hands-on practice for ${esc(parent.title)}. Give it a few seconds to boot, then run the code boxes.</p>
+     <div class="framebox">
+       <div class="loading" id="load">Loading the practice page&hellip;</div>
+       <iframe src="${p.url}" title="${esc(p.title)}" onload="document.getElementById('load')?.classList.add('gone')"></iframe>
+     </div>
+     <div class="openlink"><a href="${p.url}" target="_blank" rel="noopener">Open this page full-screen &rsaquo;</a></div>
+     <div class="nav">
+       <a class="btn" href="${prevHref}">&larr; ${prevLabel}</a>
+       <span id="donestate">${isDone(p.id) ? '<span class="done-badge">&#10003; Practice done</span>'
+         : `<button type="button" class="btn" onclick="markDone('${p.id}'); renderPractice('${p.num}')">Mark this practice done</button>`}</span>
+       <a class="btn primary" href="${nextHref}">${nextLabel} &rarr;</a>
      </div>`;
   document.querySelector("main").scrollTop = 0; window.scrollTo(0,0);
 }
@@ -417,6 +464,8 @@ function toggleMenu(force){
 function route(){
   toggleMenu(false);   // close the phone menu after any navigation
   const h = location.hash || "#/";
+  const pr = h.match(/^#\/practice\/(.+)$/);
+  if (pr) { renderPractice(decodeURIComponent(pr[1])); return; }
   const t = h.match(/^#\/tool\/(.+)$/);
   if (t) { renderTool(decodeURIComponent(t[1])); return; }
   const m = h.match(/^#\/lesson\/(.+)$/);
