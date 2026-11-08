@@ -15,3 +15,6 @@ _site/
 # the course shell and its companion pages (the case library) are hand-written static HTML, not notebook exports, so keep them
 !course/*.html
 !course/*/*.html
+
+# personal Claude Code notes (CLAUDE.md is shared, this one stays local)
+CLAUDE.local.md
