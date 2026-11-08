@@ -205,9 +205,9 @@ const MODULES = [
     id: "poisoned-retrieval",
     title: "Poisoned retrieval",
     subtitle: "When the knowledge is the attack",
-    blurb: "The assistant answers from whatever its search picks, and an attacker can choose what gets picked. Plant a document that ranks first and lies, then bound it at ingestion, retrieval and the answer.",
+    blurb: "The assistant answers from whatever its search picks, and an attacker can choose what gets picked. Follow one document from its source to the answer: what the parser reads that the reviewer never saw, the warning a chunk leaves behind, copies and blockers in the prompt, answers that drift from their source, and an index that outlives what it copied.",
     url: "../",
-    minutes: 25,
+    minutes: 60,
     quiz: [
       { q: "The assistant gave a false password-reset procedure with full confidence. No tool was called and no permission refused anything. Where did the attack act?",
         options: [
@@ -230,6 +230,20 @@ const MODULES = [
           "Module 04 only applies when the model is small" ],
         answer: 1,
         why: "A retrieved document that gives an order is Module 02's bug through a new door, and Module 02's permission still answers it. Module 04 covers what no permission can: the answer itself." },
+      { q: "A reviewer approved a partner's PDF, and the assistant now quotes a sentence from it that the reviewer never saw. How?",
+        options: [
+          "The model invented the sentence",
+          "The parser extracted text the screen did not show, such as white text or text outside the page, and the index holds what the parser extracted",
+          "The reviewer approved the wrong file" ],
+        answer: 1,
+        why: "The index holds the parser's output, not the reviewer's view. Compare the two before indexing, and index only what someone saw." },
+      { q: "A document was deleted from the source last week, and the assistant still answers from it. Which control covers the most?",
+        options: [
+          "Re-run the embedding model",
+          "Check access against the live source at query time, and clear cached answers that cite a removed source",
+          "Tell the model in its prompt to ignore deleted documents" ],
+        answer: 1,
+        why: "A deleted source allows nothing, so a live check stops its chunks; the cache answers before retrieval runs, so it needs clearing too. Delete by source id as well, for the backups and exports no live check reads." },
     ],
   },
   {

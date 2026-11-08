@@ -12,6 +12,7 @@ python notebooks/koda_lab.py               # the browser course's lab (shared by
 OPENROUTER_API_KEY=... python tools/record_live_runs.py   # refresh the recorded real-model runs the pages replay when the key box says NA, including module 02's rate study (20 runs per model per note; --dry-run prints the plan and a rough cost)
 python notebooks/koda_toolbox.py           # module 03's lab: the ten-tool toolbox, its exercises, model answers and wrong answers
 python notebooks/koda_answer.py            # module 05's lab: the leak grader, the renderer's browser model, its exercises, recorded fingerprints
+python notebooks/koda_retrieval.py         # module 04's lab: one document from source to answer, its exercises, model and wrong answers
 python -m lab.agent --profile unsafe   "Look up customer 42 for me"
 python -m lab.agent --profile hardened "Look up customer 42 for me"
 python -m lab.agent --replay traces/<file>.jsonl   # stage fallback to a video demo

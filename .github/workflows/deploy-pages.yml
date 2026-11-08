@@ -28,6 +28,7 @@ jobs:
       - run: python notebooks/koda_toolbox.py # module 03's engine and exercises: model answers pass, wrong answers fail
       - run: python notebooks/koda_practice.py # Foundations practice: the practice model, starters, answers and graders
       - run: python notebooks/koda_answer.py   # module 05's engine: leak grader, renderer oracle, exercises, recorded fingerprints
+      - run: python notebooks/koda_retrieval.py # module 04's engine: the pipeline stages, model answers pass, wrong answers fail
       - name: Export the interactive modules to _site
         # Run from notebooks/: marimo resolves a notebook's css_file (../course/course.css) against the working directory
         # in an html-wasm export, so exporting from the repo root would silently drop the course stylesheet.

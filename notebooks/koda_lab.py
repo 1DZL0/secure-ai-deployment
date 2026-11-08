@@ -512,8 +512,8 @@ CONTRAST = {
         "Where: upstream, in the documents the assistant searches, before any conversation starts.",
         "What goes wrong: the assistant <b>says</b> something false or harmful with full confidence, and the retriever picked that document on purpose.",
         "Who is hurt: every user who asks, until someone finds the document.",
-        "Ask: who can write to the index, how does a document get picked, and can the user see where an answer came from?",
-        "Fix: provenance at ingestion, authorization at retrieval, citations at the answer."]),
+        "Ask: at each step from source to answer (parse, chunk, rank, assemble, answer), who could change what the user is told, and how long does the index keep it?",
+        "Fix: provenance at ingestion, only reviewed text indexed, authorization at retrieval, answers checked against their source, and an index with a lifecycle."]),
 }
 CONTRAST_BRIDGE = ("When a retrieved document carries an order, that is Module 02's bug through a new door, and Module 02's permission "
                    "still answers it. Module 04 covers what no permission can: the answer itself.")
