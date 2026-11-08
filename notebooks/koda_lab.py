@@ -414,6 +414,18 @@ def hat_html(side, title, note=""):
     return (f'<h3 class="sad-hat"><span class="sad-side">{_t}</span><span>{title}</span>'
             + (f'<span class="sad-hat-note">{note}</span>' if note else "") + "</h3>")
 
+def case_html(date, kind, title, what, bound, links):
+    """A documented-case card (the .sad-case classes): date and kind, a title, what happened, what would have bounded
+    it, and source links that open in a new tab. links = [(label, url), ...]. The text is author-written HTML, so
+    escape anything that is not. Lifted from Module 04's local _case; Module 04 keeps its own copy."""
+    _links = " &middot; ".join(f'<a href="{u}" target="_blank" rel="noopener">{l}</a>' for l, u in links)
+    return ('<div class="sad-case">'
+            f'<div class="sad-case-meta"><span>Documented case &middot; {date}</span><span class="sad-tag">{kind}</span></div>'
+            f'<div class="sad-case-title">{title}</div>'
+            f'<div><b>What happened.</b> {what}</div>'
+            f'<div class="sad-gap"><b>What would have bounded it.</b> {bound}</div>'
+            + (f'<div class="sad-src sad-gap">Sources (open in a new tab): {_links}</div>' if links else "") + '</div>')
+
 TEST_AWARENESS_MD = (
     "**A fair objection: does the model know it is a test?** Frontier models can sense a synthetic environment and "
     "act more cautiously when watched. Three reasons it does not undercut the result: (1) the agent only ever sees "
@@ -709,6 +721,31 @@ async def run_attack(key, model, prof, note, tools=TOOL_SCHEMAS, rounds=6, post=
                          "content": res if res is not None else "BLOCKED by policy."})
     return steps, None, reply, msgs
 
+async def chat_once(key, model, system, user, post=None, temperature=0):
+    """One system + user turn to a real model, no tools. Returns (reply, err) and never raises: reply is the model's
+    text ("" when it said nothing), err the provider's error body or {"error": str}. post and temperature work as in
+    run_attack: post_openrouter by default, and temperature None sends no temperature at all."""
+    post = post or post_openrouter
+    body = {"model": model, "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}]}
+    if temperature is not None:
+        body["temperature"] = temperature
+    try:
+        data = await post(key, body)
+    except Exception as e:
+        return None, {"error": str(e)[:300]}
+    if not isinstance(data, dict):
+        return None, {"error": str(data)[:300]}
+    if "choices" not in data:
+        return None, data
+    try:
+        m = data["choices"][0]["message"]
+    except (IndexError, KeyError, TypeError):
+        return None, {"error": "the response carried no message"}
+    if not isinstance(m, dict):                       # {"message": null, "finish_reason": "error"} and the like
+        why = data["choices"][0].get("finish_reason") if isinstance(data["choices"][0], dict) else None
+        return None, {"error": "the response carried no message" + (f" (finish_reason: {why})" if why else "")}
+    return (m.get("content") or m.get("refusal") or ""), None
+
 OUTCOMES = ("read secrets", "deleted data", "poisoned memory", "leaked PII")
 
 def step_is_win(s, rec=None, planted=None):
@@ -981,7 +1018,7 @@ if __name__ == "__main__":
     # the recorded runs behind the no-key path: shape only; the pages recompute every verdict from the steps
     import koda_recorded as _kr
     _R = _kr.RECORDED
-    assert set(_R) == {"recorded_on", "module01", "module02", "benchmark", "rates"}, list(_R)
+    assert set(_R) == {"recorded_on", "module01", "module02", "benchmark", "rates", "module05"}, list(_R)
     _step_keys = {"tool", "args", "result", "blocked"}
     for _m, _r in _R["rates"].items():
         assert _r["samples"] >= 1 and _r["runs"] and "temperature" in _r, _m
@@ -1001,6 +1038,10 @@ if __name__ == "__main__":
         when(_r["recorded_on"])
     for _m, _r in _R["module01"].items():
         assert "tool_calls" in _r and "content" in _r, _m
+        when(_r["recorded_on"])
+    # Module 05's single-turn runs: shape only here; koda_answer's self-check checks every fingerprint
+    for _m, _r in _R["module05"].items():
+        assert _r["runs"] and all({"variant", "attack", "fp", "error", "reply"} <= set(_run) for _run in _r["runs"]), _m
         when(_r["recorded_on"])
     assert _R["recorded_on"] is None or when(_R["recorded_on"])
     assert not has_key(" NA ") and not has_key("") and not has_key("n/a") and not has_key(None) and has_key("sk-or-v1-x")
@@ -1145,4 +1186,36 @@ if __name__ == "__main__":
     _aio.run(run_attack("", "stub/model", U, _note, post=_stub_post, temperature=None))
     _aio.run(run_attack("", "stub/model", U, _note, post=_stub_post))
     assert "temperature" not in _seen[0] and _seen[1]["temperature"] == 0 and _seen[0]["model"] == "stub/model", _seen
+    # chat_once: one turn, no tools; the reply comes back, a provider error passes through, nothing raises
+    _seen.clear()
+    assert _aio.run(chat_once("k", "stub/model", "sys", "hello", post=_stub_post)) == ("hi", None)
+    assert _seen[0]["messages"] == [{"role": "system", "content": "sys"}, {"role": "user", "content": "hello"}]
+    assert "tools" not in _seen[0] and _seen[0]["temperature"] == 0
+    _aio.run(chat_once("k", "stub/model", "sys", "hello", post=_stub_post, temperature=None))
+    assert "temperature" not in _seen[1], "temperature None sends none"
+    async def _err_post(key, body):
+        return {"error": {"code": 401, "message": "bad key"}}
+    async def _raise_post(key, body):
+        raise OSError("offline")
+    async def _empty_post(key, body):
+        return {"choices": [{"message": {"role": "assistant", "content": None}}]}
+    async def _odd_post(key, body):
+        return {"choices": []}
+    assert _aio.run(chat_once("k", "m", "s", "u", post=_err_post)) == (None, {"error": {"code": 401, "message": "bad key"}})
+    assert _aio.run(chat_once("k", "m", "s", "u", post=_raise_post)) == (None, {"error": "offline"})
+    assert _aio.run(chat_once("k", "m", "s", "u", post=_empty_post)) == ("", None)
+    assert _aio.run(chat_once("k", "m", "s", "u", post=_odd_post))[0] is None
+    async def _null_post(key, body):
+        return {"choices": [{"message": None, "finish_reason": "error"}]}
+    async def _str_post(key, body):
+        return {"choices": [{"message": "hi"}]}
+    assert _aio.run(chat_once("k", "m", "s", "u", post=_null_post)) == (None, {"error": "the response carried no message (finish_reason: error)"})
+    assert _aio.run(chat_once("k", "m", "s", "u", post=_str_post)) == (None, {"error": "the response carried no message"})
+    async def _fake_claude(url, headers, payload):
+        assert "tools" not in payload and payload["system"] == "sys" and payload["messages"] == [{"role": "user", "content": "hi"}]
+        return {"content": [{"type": "text", "text": "Done."}], "stop_reason": "end_turn"}
+    assert _aio.run(chat_once("sk-ant-test", "claude-haiku-5-5", "sys", "hi", post=make_provider_post("Anthropic", _fake_claude))) == ("Done.", None)
+    _card = case_html("Jun 2025", "Vendor advisory", "A title", "It happened.", "A boundary.", [("Source", "https://example.com/a")])
+    assert _card.count('class="sad-case') == 3 and 'target="_blank"' in _card and '<span class="sad-tag">Vendor advisory</span>' in _card
+    assert "sad-src" not in case_html("d", "k", "t", "w", "b", [])
     print("koda_lab: all checks passed")

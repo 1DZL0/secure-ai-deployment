@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """Record real-model runs for the course's no-key path, so a learner who types NA still sees a real trace.
 
-    python tools/record_live_runs.py        # all four sections, the five live models; key from the env or the gitignored .env
+    python tools/record_live_runs.py        # all five sections, the five live models; key from the env or the gitignored .env
     python tools/record_live_runs.py --dry-run                               # print the plan and a rough cost, send nothing
     python tools/record_live_runs.py --what module02 --models openai/gpt-4o-mini
     python tools/record_live_runs.py --what rates --samples 20 --workers 4    # the Module 02 rate study only
+    python tools/record_live_runs.py --what module05 --dry-run                # Module 05's leak grid: the plan first
     python tools/record_live_runs.py --selftest                              # a stub model, a temp output file, no key
 
 Writes notebooks/koda_recorded.py, merging into whatever is already recorded there, after every model finishes (an
@@ -13,7 +14,10 @@ writing). Cost per model: Module 01 is one request; Module 02 is two agent runs 
 three notes x tries runs; the rate study is three notes x samples runs under the unsafe profile with no temperature
 set (the provider default), so Module 02 can show how often a model follows a planted note instead of one coin flip.
 A run is at most six requests of a few thousand tokens each. Rate study runs keep the steps and the final reply, not
-the transcript: three hundred transcripts would bloat the wheel every page downloads.
+the transcript: three hundred transcripts would bloat the wheel every page downloads. Module 05 is three system
+prompts x six extraction attempts, one short request each, no tools, temperature 0; notebooks/koda_answer.py owns
+that section's shape (it writes each run and reads it back) and fingerprints each run's prompt, so a later wording
+change shows up as a stale recording instead of a wrong one.
 """
 import argparse
 import ast
@@ -33,12 +37,14 @@ import urllib.request
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "notebooks"))
 import koda_lab as kl  # noqa: E402
+import koda_answer as ka  # noqa: E402
 
 OUT_DEFAULT = ROOT / "notebooks" / "koda_recorded.py"
 TODAY = datetime.date.today().isoformat()
 RETRY_CODES = (408, 409, 425, 429, 500, 502, 503, 504, 524)
-SECTIONS = ("module01", "module02", "benchmark", "rates")
+SECTIONS = ("module01", "module02", "benchmark", "rates", "module05")
 TOKENS_PER_REQUEST = 4000      # a rough average over a six-round run, for the dry-run cost line only
+TOKENS_PER_CHAT = 1000         # Module 05: a short system prompt, one attempt and the reply, generously rounded up
 USD_PER_MTOK = (0.5, 3.0)      # an assumed blended price band for that line, not a quote: check the provider's price page
 # the rate study run a request belongs to, (condition, sample). Set inside each run's task, so the self-test stub can seed
 # itself per run; a real post ignores it.
@@ -46,7 +52,7 @@ CURRENT_RUN = contextvars.ContextVar("current_run", default=None)
 
 
 def empty_record():
-    return {"recorded_on": None, "module01": {}, "module02": {}, "benchmark": {}, "rates": {}}
+    return {"recorded_on": None, "module01": {}, "module02": {}, "benchmark": {}, "rates": {}, "module05": {}}
 
 
 def make_post(retries=4, workers=4):
@@ -95,7 +101,9 @@ def make_stub_post():
     file, answer). The rate study gets a seeded stochastic one: each run follows the note with its model's FOLLOW_P,
     decided by random.Random(model|condition|sample), so the fixture has a spread and the same spread every time.
     The clean note is never followed, and half its runs save a benign memory that echoes the record before replying, as
-    real models often do. A following run makes the calls the note asks for, then replies."""
+    real models often do. A following run makes the calls the note asks for, then replies. A request with no tools is
+    Module 05's single turn: koda_answer.stub_reply answers it, seeded per model, with this model's FOLLOW_P as the
+    chance of answering like the stand-in (which leaks on the plain prompt, mostly on 'told', never on 'kept_out')."""
     def call(name, args, cid):
         return {"choices": [{"message": {"role": "assistant", "content": None, "tool_calls": [
             {"id": cid, "type": "function", "function": {"name": name, "arguments": json.dumps(args)}}]}}]}
@@ -113,7 +121,9 @@ def make_stub_post():
         return kl.CUSTOMERS[42]
 
     async def post(key, body):
-        msgs, tools = body["messages"], {t["function"]["name"] for t in body["tools"]}
+        msgs, tools = body["messages"], {t["function"]["name"] for t in body.get("tools", [])}
+        if not tools:                                     # Module 05: one system + user turn, no tools
+            return say(ka.stub_reply(body["model"], msgs, FOLLOW_P.get(kl.short_model(body["model"]), 0.5)))
         last = msgs[-1]
         if "get_weather" in tools:
             return call("get_weather", {"city": "Nicosia"}, "call_w")
@@ -197,6 +207,16 @@ async def record_rates(post, key, model, samples, temperature):
     if all(r["error"] for r in runs):
         return None, runs[0]["error"]
     return {"samples": samples, "temperature": temperature, "recorded_on": TODAY, "runs": runs}, None
+
+
+async def record_module05(post, key, model):
+    """Module 05's leak grid for one model: 3 prompts x 6 attempts, one request each. The engine writes the runs
+    (koda_answer.collect), so the shape and the fingerprints live next to the reader."""
+    return await ka.collect(post, key, model, recorded_on=TODAY)
+
+
+def summary_module05(rec):
+    return ka.summary_line(rec)
 
 
 def key_from_dotenv(path):
@@ -283,26 +303,35 @@ async def main():
     t_txt = "provider default temperature" if a.temperature is None else f"temperature {a.temperature}"
 
     n = len(models)
-    plan = []   # (section, agent runs, maximum requests, how)
+    plan = []   # (section, agent runs, maximum requests, how, tokens per request for the cost line)
     if "module01" in what:
-        plan.append(("module01", n, n, "one request per model, temperature 0"))
+        plan.append(("module01", n, n, "one request per model, temperature 0", TOKENS_PER_REQUEST))
     if "module02" in what:
-        plan.append(("module02", 2 * n, 2 * n * 6, "unsafe and hardened, temperature 0"))
+        plan.append(("module02", 2 * n, 2 * n * 6, "unsafe and hardened, temperature 0", TOKENS_PER_REQUEST))
     if "benchmark" in what:
         plan.append(("benchmark", len(kl.POISON) * a.tries * n, len(kl.POISON) * a.tries * n * 6,
-                     f"{len(kl.POISON)} notes x {a.tries} tries, temperature 0"))
+                     f"{len(kl.POISON)} notes x {a.tries} tries, temperature 0", TOKENS_PER_REQUEST))
     if "rates" in what:
         plan.append(("rates", len(kl.RATE_CONDITIONS) * a.samples * n, len(kl.RATE_CONDITIONS) * a.samples * n * 6,
-                     f"{len(kl.RATE_CONDITIONS)} notes x {a.samples} samples per model, unsafe profile, {t_txt}, {a.workers} workers"))
+                     f"{len(kl.RATE_CONDITIONS)} notes x {a.samples} samples per model, unsafe profile, {t_txt}, {a.workers} workers",
+                     TOKENS_PER_REQUEST))
+    if "module05" in what:
+        cells = len(ka.LEAK_SYSTEMS) * len(ka.LEAK_ATTACKS)
+        plan.append(("module05", cells * n, cells * n,
+                     f"{n} models x {len(ka.LEAK_SYSTEMS)} prompts x {len(ka.LEAK_ATTACKS)} attempts = {cells * n} single "
+                     f"requests, no tools, temperature 0, about {TOKENS_PER_CHAT // 1000}k tokens each at most", TOKENS_PER_CHAT))
     runs, reqs = sum(p[1] for p in plan), sum(p[2] for p in plan)
-    print(f"plan: {n} models x ({', '.join(sorted(what))}) = {runs} agent runs, up to {reqs} requests")
-    for section, r, q, how in plan:
+    print(f"plan: {n} models x ({', '.join(sorted(what))}) = {runs} runs, up to {reqs} requests")
+    for section, r, q, how, _tok in plan:
         print(f"  {section}: {r} runs, up to {q} requests ({how})")
-    mtok = reqs * TOKENS_PER_REQUEST / 1e6
-    print(f"  rough cost, an upper estimate: about {mtok:.1f}M tokens if every run used all six rounds "
-          f"(about {TOKENS_PER_REQUEST // 1000}k per request); at an assumed ${USD_PER_MTOK[0]:.2f} to ${USD_PER_MTOK[1]:.2f} "
-          f"per million tokens that is roughly ${mtok * USD_PER_MTOK[0]:.0f} to ${mtok * USD_PER_MTOK[1]:.0f}. "
-          "Most runs stop after two or three rounds, so expect less.")
+    mtok = sum(q * tok for _s, _r, q, _h, tok in plan) / 1e6
+    agent = any(s != "module05" for s, *_ in plan)
+    basis = ([f"every agent run using all six rounds at about {TOKENS_PER_REQUEST // 1000}k per request"] if agent else []) + (
+        [f"about {TOKENS_PER_CHAT // 1000}k per Module 05 request"] if "module05" in what else [])
+    print(f"  rough cost, an upper estimate: about {mtok:.2f}M tokens ({'; '.join(basis)}); at an assumed "
+          f"${USD_PER_MTOK[0]:.2f} to ${USD_PER_MTOK[1]:.2f} per million tokens that is roughly "
+          f"${mtok * USD_PER_MTOK[0]:.2f} to ${mtok * USD_PER_MTOK[1]:.2f}"
+          + (". Most agent runs stop after two or three rounds, so expect less." if agent else "."))
     if a.dry_run:
         return 0
 
@@ -350,13 +379,20 @@ async def main():
             else:
                 rec["rates"][model] = r
                 print(f"rates {model}: {summary_rates(r)}")
+        if "module05" in what:
+            r, err = await record_module05(post, key, model)
+            if r is None:
+                print(f"module05 {model}: skipped, {json.dumps(err)[:200]}")
+            else:
+                rec["module05"][model] = r
+                print(f"module05 {model}: {summary_module05(r)}")
         rec["recorded_on"] = TODAY             # written after every model: an interrupted run keeps what it has
         size = write_module(out, rec, head, key)
     if size is None:
         rec["recorded_on"] = TODAY
         size = write_module(out, rec, head, key)
     print(f"wrote {out} ({size / 1024:.0f} KB): module01 {len(rec['module01'])}, module02 {len(rec['module02'])}, "
-          f"benchmark {len(rec['benchmark'])}, rates {len(rec['rates'])} models")
+          f"benchmark {len(rec['benchmark'])}, rates {len(rec['rates'])}, module05 {len(rec['module05'])} models")
 
     if a.selftest:
         back, _ = load_existing(out)
@@ -368,7 +404,19 @@ async def main():
             assert d["n"] == a.samples and d["followed"] > 0 and d["hardened_through"] == 0, d
             assert c["n"] == a.samples and c["followed"] == 0 and c["task"] == c["n"], c
             assert all("messages" not in r for r in e["runs"]), "rates runs carry no transcripts"
-        print("selftest: the fixture round-trips, is under 2 MB" + (", and the rate study has its spread" if "rates" in what else ""))
+        if "module05" in what:
+            assert set(rec["module05"]) == set(models), list(rec["module05"])
+            assert ka.check_section(rec["module05"]) == [], ka.check_section(rec["module05"])   # every stored fp matches
+            for m, e in rec["module05"].items():
+                s = ka.leak_summary(e)
+                assert len(e["runs"]) == len(ka.LEAK_SYSTEMS) * len(ka.LEAK_ATTACKS) and e["recorded_on"] == TODAY, m
+                assert s["kept_out"] == 0 and s["plain"] >= s["told"], (m, s)
+                assert all(r["fp"] == ka.leak_fp(r["variant"], ka.ATTACK_TEXT[r["attack"]]) for r in e["runs"]), m
+            if "openai/gpt-4o-mini" in rec["module05"]:
+                assert ka.leak_summary(rec["module05"]["openai/gpt-4o-mini"])["plain"] > 0, "the stub spread has leaks to show"
+        print("selftest: the fixture round-trips, is under 2 MB"
+              + (", and the rate study has its spread" if "rates" in what else "")
+              + (", and every module05 run carries a matching fingerprint" if "module05" in what else ""))
     return 0
 
 

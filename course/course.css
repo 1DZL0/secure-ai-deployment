@@ -431,6 +431,9 @@ div:has(> .cm-editor), [class*="cm-theme"] { border-color: transparent !importan
 .sad-table td { padding: 8px 16px 8px 0; border-top: 1px solid var(--sad-line); vertical-align: middle; }
 .sad-table td[data-k=bad] { font-weight: 600; }
 .sad-table td[data-k=warn], .sad-table td[data-k=muted] { color: var(--sad-muted); }
+/* module 05's leak grid: three prompts by six attempts; the glyph columns take only the width they need, so it fits a phone */
+.sad-leakgrid .sad-table { width: auto; }
+.sad-leakgrid .sad-table thead th + th, .sad-leakgrid .sad-table td { text-align: center; padding: 8px 12px; }
 /* generic panel and rows used by tables of results, registers and quizzes */
 .sad-panel { border: 1px solid var(--sad-line); border-radius: var(--sad-radius); padding: 8px 16px; margin: 8px 0; background: #fff; max-width: 900px; }
 .sad-cap { margin: 0 0 4px; font: 400 13px/1.5 var(--sad-font); color: var(--sad-muted); }
@@ -521,7 +524,7 @@ div:has(> .cm-editor), [class*="cm-theme"] { border-color: transparent !importan
 .sad-mp-verdict::before { margin-right: 8px; font-weight: 600; }
 .sad-mp-verdict[data-k=good]::before { content: "✓"; }
 .sad-mp-verdict[data-k=bad]::before { content: "✗"; }
-.sad-mp-verdict[data-k=warn]::before { content: "~"; }
+.sad-mp-verdict[data-k=warn]::before { content: "○"; }
 .sad-mp-verdict[data-k=bad] { font-weight: 600; }
 .sad-mp-foot { padding: 8px 16px; border-top: 1px solid var(--sad-line); font: 400 13px/1.55 var(--sad-font); color: var(--sad-muted); }
 .sad-mp-foot b { font-weight: 500; color: var(--sad-ink); }

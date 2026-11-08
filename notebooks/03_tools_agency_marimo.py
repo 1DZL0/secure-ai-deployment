@@ -440,7 +440,7 @@ def _(hero, kt, mo):
                 '<div class="sad-note"><b>Where this module stops.</b> Module 02 owns how text becomes a command and the six architectures that '
                 "take away the agent&rsquo;s freedom to improvise. This module owns the grant: the tool list, the credential, the object check, the "
                 'approval gate and the tool&rsquo;s own definition. OWASP draws the line the same way: LLM01 is the input-side compromise, and '
-                "Excessive Agency carries the agency-side treatment. Module 04 is the knowledge side (who can write to what the assistant searches, how a document gets picked, what the user can see about the source), the answer path and what leaks is 05, "
+                "Excessive Agency carries the agency-side treatment. Module 04 is the knowledge side (who can write to what the assistant searches, how a document gets picked, what the user can see about the source), the answer path and what leaks is <a href=\"../course/#/lesson/data-leakage\" target=\"_top\">05</a>, "
                 "the code sandbox is 06, memory is 07, peers are 08, and watching it all is 09.</div>"
                 '<p class="sad-prose"><b>Red team</b> sections: you borrow the agent&rsquo;s authority. <b>Blue team</b> sections: you size, scope and check it. '
                 "Documented cases appear as cards beside the part of the lab that bounds them, "
@@ -1775,7 +1775,7 @@ def _(mo):
 
         **Authority is a property of the call, not of the agent.**
 
-        *Next: <a href="../course/#/lesson/poisoned-retrieval" target="_top">Module 04, poisoned retrieval</a>, where the knowledge itself is the attack: a planted document that ranks first and lies. Then Module 05 on what leaks through the answer, and Module 06 on the sandbox that Part 8 kept pointing at.*
+        *Next: <a href="../course/#/lesson/poisoned-retrieval" target="_top">Module 04, poisoned retrieval</a>, where the knowledge itself is the attack: a planted document that ranks first and lies. Then <a href="../course/#/lesson/data-leakage" target="_top">Module 05</a> on what leaks through the answer, and Module 06 on the sandbox that Part 8 kept pointing at.*
         """
     )
     return
