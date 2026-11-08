@@ -462,7 +462,10 @@ def _(mo):
         "- Mark which an outsider can write to.\n"
         "- Decide which tier answers what.\n"
         "- Write what the retrieval filter checks before the model reads.\n"
-        "- Check whether the user can open the source of any answer."
+        "- Check whether the user can open the source of any answer.\n"
+        "- Spot-check that answers say what their cited chunk says: a citation that is present can still be wrong.\n"
+        "- When a source is deleted, delete its embeddings too, and keep index backups at the source's tier. An embedding is not "
+        "anonymised: Vec2Text rebuilt 92% of short (32-token) passages word for word from one open embedding model (2023)."
     )
     return
 
@@ -501,10 +504,25 @@ def _(chip, mo):
 
 @app.cell
 def _(mo):
+    mo.accordion({"Where this module stops: poisoning the model itself": mo.md(
+        "Everything here is **retrieval-time** poisoning: the bad text sits in a store you control, so tiers, filters and re-ingesting "
+        "from a snapshot remove it. **Training-time** poisoning is different. The bad text went into the data a model learned from, and "
+        "no control at retrieval can take it out: Anthropic, the UK AI Security Institute and the Alan Turing Institute found that about "
+        '<a href="https://www.anthropic.com/research/small-samples-poison" target="_blank" rel="noopener">250 poisoned documents</a> '
+        "planted a backdoor (a trigger word that made the model write gibberish) in models from 600 million to 13 billion parameters, "
+        "whatever their size (Oct 2025). For a team building on "
+        "hosted models the control is provenance: know where a model, an adapter or a fine-tuning set came from, and never fine-tune on "
+        "data a stranger could write. The EU AI Act names data poisoning and model poisoning among the attacks a high-risk system must "
+        'be built to resist (<a href="https://eur-lex.europa.eu/eli/reg/2024/1689/oj" target="_blank" rel="noopener">Article 15(5)</a>).')})
+    return
+
+
+@app.cell
+def _(mo):
     mo.md(
         "Standards: OWASP **LLM08:2025** (Vector &amp; Embedding Weaknesses, LLM09:2026), **LLM01** (Prompt Injection, the same number in 2025 "
         "and 2026), **ASI06** (Memory &amp; Context Poisoning).\n\n"
-        "Next: Module 05, data leakage and output handling (coming)."
+        "Next: <a href=\"../course/#/lesson/data-leakage\" target=\"_top\">Module 05, data leakage and output handling</a>."
     )
     return
 

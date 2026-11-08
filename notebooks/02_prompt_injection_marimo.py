@@ -146,7 +146,7 @@ def _(hero, mo, terms_html):
                 'permissions wider than the job, actions with no approval, per-user credentials and the tool supply chain. OWASP splits the two '
                 'the same way: LLM01 is &ldquo;the input-side compromise&rdquo; and LLM03 &ldquo;carries the full agency-side treatment&rdquo;. '
                 'Module 04 is the knowledge side (who can write to what the assistant searches, how a document gets picked, what the user can '
-                'see about the source), the answer path and what leaks is 05, execution is 06, memory is 07, peers are 08, and '
+                'see about the source), the answer path and what leaks is <a href="../course/#/lesson/data-leakage" target="_top">05</a>, execution is 06, memory is 07, peers are 08, and '
                 'watching it all is 09. Where this page shows a control that another module owns (the scoped tools in card 2, the MCP card, the '
                 'send_email capstone), it shows it as the answer to injection; the other module teaches it as design.</div>'
                 '<p class="sad-prose"><b>Red team</b> sections: you plant text. '
@@ -214,7 +214,11 @@ def _(ex, mo):
             "A word on **jailbreaks**. The standards do not all draw the line where this page does: OWASP's LLM01 treats a jailbreak as a "
             "subset of prompt injection, NIST AI 100-2 files both under direct prompting attacks, and Simon Willison, who coined “prompt "
             "injection”, keeps the two apart. What matters for defence is not the label but whether your application's data is in the "
-            "attack: a jailbreak targets the model's own rules, an injection targets your application's trust in what it reads."
+            "attack: a jailbreak targets the model's own rules, an injection targets your application's trust in what it reads. "
+            "Jailbreaks can also be spread over several turns. Microsoft's "
+            '<a href="https://arxiv.org/abs/2404.01833" target="_blank" rel="noopener">Crescendo</a> (2024) '
+            "opens with harmless questions and escalates a step at a time, each step building on the model's last answer, so no single "
+            "message looks like an attack."
         ),
         ex(1, "1.1", "Find the poisoned field", "Read the raw record the agent read and pick the field an outsider can write into.",
            2, "the card under your pick shows ✓ and you can say why that field and not the other two."),
@@ -904,8 +908,12 @@ def _(mo):
     mo.accordion({"What the vendors do, and what public data says": mo.md(
         "- Vendors are working on the model side, and it helps. Anthropic trains Claude against injected web content, scans untrusted content "
         "with classifiers and red-teams continuously.\n"
-        "- Against an adaptive attacker with 100 attempts per environment, Claude Opus 4.5 went from 8.0% attack success on the model alone to "
-        "1.4% with its improved safeguards, and the post still says “No browser agent is immune to prompt injection”.\n"
+        "- Against an adaptive attacker with 100 attempts per environment, Claude Opus 4.5 in Chrome went from 8.0% attack success on the "
+        "model alone to 1.4% with its improved safeguards (Anthropic, 24 Nov 2025), and the post still says “No browser agent is immune "
+        "to prompt injection”.\n"
+        "- The same day's launch post carried an outside benchmark: on Gray Swan's set of very strong attacks on tool-using agents, "
+        "Opus 4.5 with extended thinking was attacked successfully 4.7% of the time at one attempt, 33.6% at ten and 63.0% at a "
+        "hundred. A rate with no attempt count beside it cannot be compared with another.\n"
         "- Google (Jun 2025) layers model hardening, prompt-injection content classifiers, security reminders around the content, markdown "
         "sanitisation and suspicious-URL redaction, and user confirmation.\n"
         "- Microsoft (Jul 2025) describes the same shape, preventing the injection, detecting it and preventing the impact, and says outright "
@@ -1596,7 +1604,7 @@ def _(AMBER, console_html, mo, tool_mode, vcard):
 @app.cell
 def _(mo):
     inv_show = mo.ui.radio(options=["What you see", "What the model receives"], value="What you see", label="The note field:", inline=True)
-    inv_strip = mo.ui.switch(label="Strip Unicode Tags and zero-width characters at ingest")
+    inv_strip = mo.ui.switch(label="Strip Unicode Tags, variation selectors and zero-width characters at ingest")
     mo.vstack([mo.md("### 3. Invisible text"), inv_show, inv_strip], gap=0.6)
     return inv_show, inv_strip
 
@@ -1612,13 +1620,17 @@ def _(AMBER, REDUCER, inv_show, inv_strip, vcard):
     vcard("Note field: what you saw → what the model received",
           f'<span class="sad-dim">you saw:</span>   {_seen}\n<span class="sad-dim">model got:</span> {_stripped if inv_strip.value else _model}',
           None if inv_strip.value else False,
-          "stripping the Unicode Tags block and zero-width characters at ingest removed this wrapper. A reducer: the next payload uses a font "
+          "stripping the Unicode Tags block, variation selectors and zero-width characters at ingest removed this wrapper. A reducer: the next payload uses a font "
           "trick or a paraphrase the normaliser does not know, so the action it carried still needs its boundary." if inv_strip.value else
           (f"the model received {len(_payload)} extra characters that spell an order, and acted on them." if _show else
            f"the box looks clean; the tokeniser reads {len(_payload)} extra characters that spell an order."),
-          f"Unicode Tag characters (U+E0000 to U+E007F) mirror ASCII but render as nothing; zero-width joiners, bidi marks and white 1-px text do the same in HTML and PDFs. "
+          f"Unicode Tag characters (U+E0000 to U+E007F) mirror ASCII but render as nothing; variation selectors (U+FE00 to U+FE0F and U+E0100 to U+E01EF) "
+          f"ride on a visible character and can carry hidden bytes the same way; zero-width joiners, bidi marks and white 1-px text do the same in HTML and PDFs. "
           f"Half the doorways on this page deliver their payload this way. Normalising input is a {REDUCER}: do it, and keep the boundary on the action. "
-          "Real: FireTail showed Gemini following Tag-smuggled text in a Calendar invite and described the same route through email (Oct 2025; Google replied that no action would be taken); Rehberger&rsquo;s Jules demo (2025).")
+          "Real: FireTail showed Gemini following Tag-smuggled text in a Calendar invite and described the same route through email (Oct 2025; Google replied that no action would be taken); Rehberger&rsquo;s Jules demo (2025); the GlassWorm extension worm hid its code in variation selectors (Koi Security, Oct 2025). "
+          "A cousin with no hidden characters at all: Trail of Bits hid instructions in an image that became legible only after the product "
+          "downscaled it (Aug 2025). No filter that runs before the model can strip text that only the model decodes, from an image, audio "
+          "or another language; the bound on the action is the one control that covers every channel.")
     return
 
 
@@ -1781,7 +1793,8 @@ def _(WATCH, mo):
     _rows = [
         ("Rules files, issues, the agent's own settings", "coding-agent writes, its own approval setting", "every write a reviewed diff; policy and CI paths never auto-apply", "Boundary"),
         ("Tool output and error messages", "any tool the agent holds", "capability-scoped tools with typed, validated arguments", "Boundary"),
-        ("Invisible text (Unicode Tags, zero-width, white-on-white)", "whatever the carrying channel reaches", "strip at ingest, then bound the action", "Reducer"),
+        ("Invisible text (Unicode Tags, variation selectors, zero-width, white-on-white)", "whatever the carrying channel reaches", "strip at ingest, then bound the action", "Reducer"),
+        ("Text only the model decodes: an image read after downscaling, audio, a translation", "whatever the model then asks for", "no filter before the model sees it; bound the action", "Boundary"),
         ("Poisoned or rug-pulled tool definitions (MCP)", "the poisoned tool's own reach", "least privilege per tool; pin and verify definitions to detect a swap", "Boundary, plus Detect"),
         ("The rendered reply: an image or link", "exfiltration with zero tool calls", "renderer allowlist with no forwarding hosts, re-verified", "Boundary"),
         ("The approval dialog as cover", "anything the operator approves", "the gate renders and runs the literal action, and stays rare", "Boundary"),

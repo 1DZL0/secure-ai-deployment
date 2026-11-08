@@ -344,6 +344,15 @@ def _(mo):
 
         - the model can always be talked into treating data as a command,
         - you never rely on the model behaving: you bound the action outside it.
+
+        The same bound covers a second threat that needs no attacker. Anthropic's
+        <a href="https://code.claude.com/docs/en/agent-sdk/secure-deployment" target="_blank" rel="noopener">guide to deploying agents</a>
+        says agents can take unintended actions “due to prompt injection ... or model error”, and Google's
+        <a href="https://saif.google/secure-ai-framework/risks" target="_blank" rel="noopener">SAIF</a> defines rogue actions as
+        “accidental or malicious”. In August 2026 the UK AI Security Institute
+        <a href="https://www.aisi.gov.uk/blog/incident-report-unsanctioned-agent-behaviour-during-cyber-testing" target="_blank" rel="noopener">reported</a>
+        that in 10 of 122 runs of a cyber test, agents took 19 actions nobody had sanctioned, on the live internet, with no
+        attacker steering them. A bound that holds against a fooled model holds against a mistaken one.
         """
     )
     return
@@ -525,13 +534,13 @@ def _():
          "desc": "The knowledge the assistant searches is wrong, and the attacker chose what it finds."},
         {"name": "Tools & excessive agency", "layer": 1, "module": "03", "owasp": "OWASP LLM06:2025 / LLM03:2026", "status": "live",
          "desc": "The agent's own tools and MCP servers carry, or over-grant, authority."},
-        {"name": "Insecure code execution", "layer": 1, "module": "06", "owasp": "OWASP LLM05:2025 / LLM10:2026", "status": "coming",
+        {"name": "Insecure code execution", "layer": 1, "module": "06", "owasp": "OWASP Agentic ASI05 / LLM05:2025 (LLM10:2026)", "status": "coming",
          "desc": "Model output run as code escapes its sandbox."},
         {"name": "Memory & persistence", "layer": 1, "module": "07", "owasp": "OWASP Agentic ASI06: Memory and Context Poisoning", "status": "coming",
          "desc": "A planted memory re-fires the attack in later sessions."},
-        {"name": "Multi-agent spread (A2A)", "layer": 1, "module": "08", "owasp": "OWASP Agentic ASI07: Insecure Inter-Agent Communication", "status": "coming",
-         "desc": "One agent's injected output becomes another agent's instruction."},
-        {"name": "Data leakage & output", "layer": 0, "module": "05", "owasp": "OWASP LLM02 / LLM05:2025 (LLM10:2026)", "status": "coming",
+        {"name": "Multi-agent spread (A2A)", "layer": 1, "module": "08", "owasp": "OWASP Agentic ASI07 / ASI08: Inter-Agent Communication, Cascading Failures", "status": "coming",
+         "desc": "One agent's injected output, or its mistake, becomes another agent's instruction."},
+        {"name": "Data leakage & output", "layer": 0, "module": "05", "owasp": "OWASP LLM02 / LLM05:2025 (LLM10:2026)", "status": "live",
          "desc": "Sensitive data crosses the egress boundary in an answer or a URL."},
         {"name": "Monitoring & governance", "layer": 1, "module": "09", "owasp": "NIST AI RMF / EU AI Act", "status": "coming",
          "desc": "Detect, evaluate, respond, and govern, across every layer."},
@@ -598,10 +607,10 @@ def _():
                  ("02", "Prompt injection", "OWASP LLM01:2025 / 2026", "live"),
                  ("03", "Tools & excessive agency", "OWASP LLM06:2025 / LLM03:2026", "live"),
                  ("04", "Poisoned retrieval", "OWASP LLM08:2025 / LLM09:2026", "live"),
-                 ("05", "Data leakage & output handling", "OWASP LLM02 / LLM05:2025 (LLM10:2026)", "coming"),
-                 ("06", "Isolated code execution & sandboxing", "OWASP LLM05:2025 / LLM10:2026", "coming"),
+                 ("05", "Data leakage & output handling", "OWASP LLM02 / LLM05:2025 (LLM10:2026)", "live"),
+                 ("06", "Isolated code execution & sandboxing", "OWASP Agentic ASI05 / LLM05:2025 (LLM10:2026)", "coming"),
                  ("07", "Memory & persistence", "OWASP Agentic ASI06: Memory and Context Poisoning", "coming"),
-                 ("08", "Multi-agent systems", "OWASP Agentic ASI07: Insecure Inter-Agent Communication", "coming"),
+                 ("08", "Multi-agent systems", "OWASP Agentic ASI07 / ASI08: Inter-Agent Communication, Cascading Failures", "coming"),
                  ("09", "Monitoring, evaluation & governance", "NIST AI RMF / EU AI Act", "coming")]
         _body = ""
         for _num, _title, _owasp, _status in _rows:

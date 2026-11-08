@@ -678,7 +678,12 @@ def _(exercise_html, mo, page):
         mo.Html(exercise_html("1.6.3", "Run it on your own machine", "Optional. Follow the three steps above, then tick the box.",
                               minutes=10, passes="you tick the box once your agent answers.")),
         ran_it,
-        mo.callout(mo.md("**Never put a key in code you share or commit.** Read it from an environment variable, as above."),
+        mo.callout(mo.md("**Never put a key in code you share or commit.** Read it from an environment variable, as above.\n\n"
+                         "Then cap what the key can spend, so a leaked key or a runaway loop stops at a limit you chose: "
+                         "OpenRouter takes a credit limit per key, Anthropic a spend limit per workspace, OpenAI a hard spend "
+                         "limit per project. Give each project its own key, so you can revoke one alone.\n\n"
+                         "An environment variable is right for a script on your laptop. Once an agent runs code, that code can "
+                         "read the variable too; Module 06 (coming) keeps the key outside the agent entirely."),
                    kind="warn"),
     ])
     return (ran_it,)

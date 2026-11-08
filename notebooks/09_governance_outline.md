@@ -2,9 +2,9 @@
 
 Working title: **Monitoring, evaluation and governance: prove what the agent did, and who answers for it**
 
-Subtitle: You bounded the actions in Modules 02 to 04. This module makes that provable: a log that holds the literal call, a detector you write and then evade, the eval suite in CI, a stop you rehearse, and a one-page register with a name on every open risk.
+Subtitle: You bounded the actions in Modules 02 to 08. This module makes that provable: a log that holds the literal call and keeps secrets out, a detector you write and then evade, the eval suite in CI, a stop you rehearse, and a one-page register with a name on every open risk, from the first deployment to the day the agent is switched off.
 
-Meta line: about 35 minutes · runs in your browser, no key needed · Koda is invented, nothing real is touched
+Meta line: about 45 minutes · runs in your browser, no key needed · Koda is invented, nothing real is touched
 
 Shape: Module 02's arc (see it first, predict, do, check, one sentence per part) at Module 01's pace (nothing longer than a screen, one interaction per section). No live model. Deterministic planner only, so the stage version is safe. Five parts, each with "You will do / You will have", a red or blue hat, one graded exercise, one documented case beside it, and "Part N in a sentence".
 
@@ -22,25 +22,27 @@ The one line to leave on the wall: **The fix is a permission, not a prompt; the 
 3. **Someone's name is on what is still open.** A residual-risk line with an owner, dated, and a stop that was rehearsed.
 
 **In this module** (parts list):
-- Part 1. **What a log must hold.** Rebuild the trace from the thin log and fail; learn the eight fields.
+- Part 1. **What a log must hold, and what must stay out.** Rebuild the trace from the thin log and fail; learn the eight fields and the four things that never go in.
 - Part 2. **Write the detector, then evade it.** A `suspicious()` over trace steps, graded; then beat your own rule.
 - Part 3. **Make it a test.** The repo's real CI eval suite; add a vector, watch it fail, then pass.
 - Part 4. **The stop that wasn't tested.** Three documented incidents, timed; set a stop rule and watch where the run halts.
-- Part 5. **The register.** Your tools, their controls, their tests and the name on each open risk, on one page.
+- Part 5. **The register.** Your tools, their controls, their tests and the name on each open risk, on one page, with the changes that reopen a row and the steps that close the agent down.
 
 **You leave with:** a one-page risk register for your own agent, a detector and a CI test you wrote, and a stop drill you can run quarterly. It builds on the tool register from Module 03 and the residual-risk line from Module 02.
 
-**Where this module stops.** It is not a SIEM product tour and not legal advice. The EU AI Act section is one dated accordion, with a "checked on" line, because it will change; the controls here are the ones that satisfy any of the frameworks named. Modules 05 to 08 own the specific channels (answer path, code, memory, peers); this module owns the evidence.
+**Where this module stops.** It is not a SIEM product tour and not legal advice. The EU AI Act section is one dated accordion, with a "checked on" line, because it will change; the controls here are the ones that satisfy any of the frameworks named. Modules 05 to 08 own the specific channels (answer path, code, memory, peers); this module owns the evidence. The threat here is wider than an attacker: an agent that is simply wrong, or that keeps pursuing its task past what anyone sanctioned, leaves the same trace and needs the same stop (OWASP ASI10 Rogue Agents; Google SAIF's rogue actions).
 
 ---
 
-## Part 1. What a log must hold (blue team)
+## Part 1. What a log must hold, and what must stay out (blue team)
 
-You will do: reconstruct an attack from a thin log, fail, then pick the fields that would have made it possible.
-You will have: the eight fields of a tool-call record, and the rule that refusal reasons go to the log, never back to the model.
+You will do: reconstruct an attack from a thin log, fail, then pick the fields that would have made it possible, and strike the ones that would make the log itself a leak.
+You will have: the eight fields of a tool-call record, the four things that stay out, and the rule that refusal reasons go to the log, never back to the model.
 
 - **Predict first** (radio): "From the thin log alone, which of the three harmful calls can you prove happened?" Answer: none; you can prove tools ran, not what they did.
 - **Exercise** (checkbox batch, graded): tick the fields a tool-call record needs. Eight right answers: run id, timestamp, principal (whose authority), tool, literal arguments, result (size and hash, not the payload), provenance of the text that preceded the call (which document, which field, trusted or not), decision and reason. Four distractors: the model's explanation, the full system prompt per call, the reply text, a risk score.
+- **What stays out** (the hand-off from Module 05, second checkbox batch, graded): full prompts and completions, which LLM observability tools (Langfuse, LangSmith, Datadog LLM Observability) record by default and OWASP LLM02:2026 warns about; raw reasoning traces; credentials, tokens and anything Module 05's redactor would catch; retrieved chunks and personal data beyond an id. The result is already stored as size and hash, which is why it is in the eight. Distractors that must stay in: the literal arguments (redacted, not dropped) and the provenance.
+- **A log the agent can write is not evidence.** Logs go to append-only storage that the agent's own credentials cannot reach. Monitors and traces are targets too: research in 2026 reports agents getting past automated permission monitors and deleting their own traces (open the primary papers at build time).
 - **Why the reason stays out of the reply:** Module 02's rule shown as a log line. A precise denial in the log is evidence; the same denial sent to the model is an oracle.
 - **Documented cases beside it:** Hugging Face recovered "about 17,600 actions" from logs and could say which five datasets were touched (case 29); Asana could only offer "logs on request" and a form (case 6).
 - **Part 1 in a sentence.** If the literal call is not in the log, you can prove what the agent said, not what it did.
@@ -54,6 +56,7 @@ You will have: a working detector, the difference between time to alert and time
 
 - **Exercise** (code editor, graded like Module 02's `allowed()`): steps carry `tool`, `args`, `result`, `blocked`, `provenance`, `t`. Cases: an outbound URL carrying a value the agent just loaded (taint); the fourth email inside a minute (burst); a durable write after untrusted text arrived; a destructive verb in a session that was supposed to be read-only; two benign rows that must pass (a lookup, a reply to the customer's own address).
 - **Red team: beat your own detector.** Base64 the email, split it over two fetches, rename the note. Your rule slips. Same lesson as the keyword filter in 02: a detector buys time and evidence, not safety.
+- **The same idea as a classifier** (second editor, short): `suspicious()` returns a score instead of a verdict. Pick a threshold on a small labelled set and read the two errors off it: attacks missed and honest runs flagged. A team gets a false-positive budget, not a perfect detector. Then the adaptive attacker from Part 3 finds the score just under your threshold. This is where guard classifiers (Prompt Shields, Llama Guard, Lakera and the like) sit: a measured layer under the boundary, and a target in their own right.
 - **Two clocks:** time to alert and time to stop. Show case 30's numbers: alert at 12 minutes, acknowledged at 15, run killed at 2 hours 44, because the automated stop did not fire and nobody was sure they were allowed to pull it by hand.
 - **Part 2 in a sentence.** A detector tells you something happened; only a tested stop makes it stop.
 
@@ -68,6 +71,9 @@ You will have: the shape of an injection eval (plant, run, assert on the trace),
 - **Exercise** (editor, graded): add a vector for a new note. The page runs the policy layer in the browser against the unsafe and the hardened profile. Red first (unsafe lets it through), then green once the matching control is on. The grader requires both: the test must fail on unsafe and pass on hardened, or it is not testing anything.
 - **Predict first** (radio): "A classifier vendor shows 99 percent on its own test set. Which test matters?" Answer: an adaptive attacker with many attempts (The Attacker Moves Second; OWASP 2026 control 11).
 - **The cost column:** report utility beside security, the AgentDojo habit from Module 02 Part 7. A boundary that breaks the real task gets removed by the first person it blocks.
+- **Count attempts, report per task.** One attempt per vector understates a real attacker, who retries; report attack success at 1, 10 and 100 attempts, per task rather than as one average, and count "partly hijacked" separately from "attacker's goal done". NIST CAISI and the WASP benchmark both report this way (numbers to cite at build time).
+- **When the model changes, the suite runs again.** A provider's model update is a new model for this purpose (the UK AI Cyber Security Code of Practice says to treat major updates that way): pin the model version, and make the version an input to the CI job so a change re-runs the suite before traffic moves.
+- **The production versions of what you built:** PyRIT, garak and promptfoo run the same plant, run, assert loop at scale. Name them, do not tour them.
 - **Part 3 in a sentence.** An eval that asserts on the trace, in CI, is the only control that catches the regression nobody noticed.
 
 Reuses: `koda_lab.dispatch`, `replay`, `PROFILES`; the `VECTORS` structure from `test_lab.py` (the browser version imports the same list).
@@ -83,6 +89,7 @@ You will have: a stop drill, and the habit of measuring time to stop.
   - Case 18, the 13-hour Kiro outage: the agent "decided to delete and recreate the environment" under broader permissions than expected. What was the control? (A task-scoped role, second-person approval of the literal destructive plan, change windows.)
 - **Exercise: set the stop rule.** The Module 03 approval stream with a stop panel: choose a rule (stop after the first refused egress; stop after N refused calls; stop when a write follows untrusted text) and the stream shows where the run halts and what still got through before it did. The point lands by itself: a rule that fires on the second bad call still let the first one through, so the stop is a backstop under the boundary, not instead of it.
 - **Rehearse it:** a three-line stop drill to copy (who may stop, how, how you know it worked), scheduled like a fire drill.
+- **Two stops that need no attacker:** a spend ceiling that halts the run when its budget is gone (the hard cap from Module 03, not an alert), and a stop on the agent that is wrong rather than hijacked (case 19 had no adversary at all).
 - **Part 4 in a sentence.** Measure time to stop, not time to alert, and rehearse the stop before the day you need it.
 
 Reuses: Module 03's approval-stream renderer and `needs_approval` plumbing; case cards from `cases.json` rendered with Module 03's card function.
@@ -93,8 +100,9 @@ You will do: lay your tool register onto the frameworks, fill the one-page risk 
 You will have: the deliverable a company would want from this training, and the vocabulary an auditor will use.
 
 - **The frameworks in one table, mapped to what you already built** (no new theory): NIST AI RMF's four functions (Govern, Map, Measure, Manage) as columns; the rows are this course's controls (tool diet, scoped credential, object check, argument check, approval gate, egress allowlist, gated memory, the eval in CI, the log, the stop drill). OWASP's 2026 LLM01 controls c1 to c11 and the Agentic Top 10 ids appear as the second vocabulary, pointing back to the parts that built them.
-- **The EU AI Act, one dated accordion.** What it is (Regulation 2024/1689, applicable from 2 August 2026 with staged exceptions), the two questions a company building agents has to answer (which risk class, and provider or deployer), and the duties that map onto this module (logging, documentation, human oversight, incident reporting). Checked-on date in the first line, like the case library. No legal advice; a pointer to the Commission's page.
-- **Exercise: fill the register** (an `Html.batch` form, prefilled with Koda's tools as the worked example, then blank rows for the learner's own). Columns: tool · action type · control · where it is enforced · the test that proves it · residual risk · owner · review date. The page renders it as a printable page; that is the thing they leave with.
+- **The EU AI Act, one dated accordion.** What it is: Regulation 2024/1689 as amended by the Digital Omnibus on AI (Regulation 2026/1744, in force 27 July 2026). Prohibitions apply from 2 February 2025 (two added by the Omnibus from 2 December 2026), general-purpose model duties from 2 August 2025, and the high-risk duties from 2 December 2027 for Annex III systems and 2 August 2028 for Annex I products. The two questions a company building agents has to answer (which risk class, and provider or deployer), and the duties that map onto this module (logging, documentation, human oversight, incident reporting), with the two deployer duties that land on Parts 1 and 4: keep the system's logs for at least six months (Art 26(6)), and when the system may present a risk, suspend it and inform the provider and the market surveillance authority (Art 26(5)). Checked-on date in the first line (last checked 7 November 2026), like the case library. No legal advice; links to EUR-Lex and the Commission's page.
+- **Exercise: fill the register** (an `Html.batch` form, prefilled with Koda's tools as the worked example, then blank rows for the learner's own). Columns: tool · action type · control · where it is enforced · the test that proves it · residual risk · severity (OWASP AIVSS, still a draft scale) · owner · review date. Two inventory rows sit above the tools: AI services in use that nobody registered (shadow AI), and MCP servers developers connected themselves (MCP09 in the beta OWASP MCP Top 10).
+- **What reopens a row, and how a row closes** (four lines under the register, from the UK AI Cyber Security Code of Practice): a change log for system prompts, tool lists and model versions, because each change reopens the rows it touches; a known-good configuration you can restore; a published way for outsiders to report a vulnerability in the agent; and decommissioning, which for an agent means revoking its credentials and OAuth grants and deleting its memory stores and indexes. MITRE ATLAS warns that resources an agent created can stay usable after its environment is gone, so the decommissioning list includes what the agent made, not only what it was given. The page renders it as a printable page; that is the thing they leave with.
 - **Predict first** (radio): "Who signs the residual-risk line?" Answer: someone who can accept the risk for the business, not the engineer who found it.
 - **Part 5 in a sentence.** Governance is the register plus the names on it: every unbounded action has an owner who accepted it in writing, with a date.
 
@@ -106,7 +114,7 @@ Reuses: the tool-register table from Module 03 Part 9, the c1 to c11 table from 
 
 **You now have the evidence.** Modules 02 to 04 bounded the actions; this module made the bounds provable. Then the one line. Then "Next": the course map, which modules are still coming, and the take-home pack.
 
-**Take it to your own agent** (short, since 02 and 03 already carry the long versions): fill the register for your own tools; put one eval in CI this week; add the eight log fields to your tool wrapper; schedule the stop drill; name the owner and the review date.
+**Take it to your own agent** (short, since 02 and 03 already carry the long versions): fill the register for your own tools; put one eval in CI this week; add the eight log fields to your tool wrapper, and check your observability tool is not storing full prompts; schedule the stop drill; write the decommissioning list; name the owner and the review date.
 
 ## Checkpoint questions for the course shell (draft)
 
@@ -119,6 +127,7 @@ Reuses: the tool-register table from Module 03 Part 9, the c1 to c11 table from 
 ## Build notes
 
 - New code: a log-record renderer over `koda_lab` steps; the `suspicious()` exercise with its case list and oracle; a browser-side runner for `VECTORS` against `PROFILES`; a stop-rule option on the Module 03 stream; the register form and its printable render. Everything else is reuse.
-- Length target: 35 minutes, about 35 cells. Keep every part on one screen before its exercise.
+- Length target: 45 minutes, about 45 cells, after the widenings above (what stays out, the classifier, attempts, model change, end of life). Keep every part on one screen before its exercise.
+- Sources for the widenings: OWASP LLM Top 10 2026 (LLM02, LLM06), the OWASP Agentic Top 10 (ASI08, ASI10), the UK AI Cyber Security Code of Practice, MITRE ATLAS v2026.10 and OWASP AIVSS. Several 2026 figures come from preprints: open the primary source before any number goes into the page.
 - Facts to date-stamp in the text: ATLAS version, OWASP editions, AI Act applicability. Put them in one place so the next fact-check is one edit.
-- Shell: add the quiz, set `minutes: 35`, flip `coming` off, and the Module 01 map's row 09 from "coming" to live.
+- Shell: add the quiz, set `minutes: 45`, flip `coming` off, and the Module 01 map's row 09 from "coming" to live.
