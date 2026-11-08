@@ -106,7 +106,7 @@ You will have: the deliverable a company would want from this training, and the 
 - **Predict first** (radio): "Who signs the residual-risk line?" Answer: someone who can accept the risk for the business, not the engineer who found it.
 - **Part 5 in a sentence.** Governance is the register plus the names on it: every unbounded action has an owner who accepted it in writing, with a date.
 
-Reuses: the tool-register table from Module 03 Part 9, the c1 to c11 table from Module 02 Part 5, the residual-risk step from Module 02 Part 7.
+Reuses: the tool-register table from Module 03 Part 10, the c1 to c11 table from Module 02 Part 5, the residual-risk step from Module 02 Part 7.
 
 ---
 

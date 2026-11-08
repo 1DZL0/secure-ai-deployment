@@ -283,7 +283,7 @@ def _(CASES, KINDS, SUBTYPES, console_html, hat_html, html, itertools, kt, mo, r
     def layer_chip(layer):
         _names = {"toolbox": "tool diet", "scope": "scoped credential", "object check": "object check", "argument check": "argument check",
                   "approval": "approval gate", "pin": "pin", "scanner": "scanner", "allowlist": "allowlist",
-                  "isolation": "isolation (Module 06)"}
+                  "isolation": "isolation (Module 06)", "limit": "limit", "precondition": "precondition check"}
         return chip(_names.get(layer, layer), strong=True)
 
     def fb_card(ok, why, head=None):
@@ -322,9 +322,12 @@ def _(CASES, KINDS, SUBTYPES, console_html, hat_html, html, itertools, kt, mo, r
     # ---- the scenarios, as the user and the assistant would tell them
     USER_SAYS = {"legit": "Reply to Nadia about her invoice.", "dump": "Follow up with Petros about his account.",
                  "deputy": "Follow up with Petros about his account.", "delete": "Follow up with Petros about his account.",
-                 "runaway": "Follow up with Petros about his account.", "exec": "Check the application log for recent errors."}
+                 "runaway": "Follow up with Petros about his account.", "exec": "Check the application log for recent errors.",
+                 "loop": "Follow up with Petros about his account.", "probe": "Follow up with Petros about his account."}
 
     def assistant_reply(sid, steps):
+        if any(s.get("layer") == "limit" for s in steps):
+            return "I could not finish: a limit ended the run, and a person has been alerted."
         if any(s["blocked"] for s in steps):
             return "I did what I could. A few actions were refused by policy, so I left them for a human."
         if sid == "legit":
@@ -402,10 +405,14 @@ def _(hero, kt, mo):
     _parts = [("How it breaks", "Audit the toolbox against one task, then watch four things go wrong with no software bug."),
               ("Flip the four layers", "Turn the tool diet, the credential, the object check and the gate on one at a time, and find the smallest set that "
                                        "holds all four attacks while the real task still works."),
-              ("Scope the credential", "Write the key for one task and one person, then the object check that decides whose account a call may touch."),
+              ("Scope the credential", "Write the key for one task and one person, then the object check that decides whose account a call may "
+                                       "touch, and see what expiry, audience and revocation add."),
               ("Break your own validator", "Slip a flag past the shipped check, write the check that stops you, and see why a typed tool removes the problem."),
-              ("Gate what cannot be undone", "Write the approval gate, then sit on duty for ten calls and see what the card has to show."),
+              ("Gate what cannot be undone", "Write the approval gate, sit on duty for ten calls and see what the card has to show, then tie the "
+                                             "approval to the exact call."),
               ("Your deployment against the attack set", "Wire what you wrote into one deployment, run the attack set and the real task through it, and keep the result as a test."),
+              ("Limits and the stop", "Watch a flood, a loop and a probe get past the four layers, write the limit that ends a run, and have a tool "
+                                      "check a claim before it acts."),
               ("The tools themselves", "Definitions poisoned before and after approval, and the tool supply chain."),
               ("The build order", "See what flips a reducer into a boundary, read the build order, and hear what the vendors say about their own controls."),
               ("Take it to your own agent", "Add this module&rsquo;s columns to your tool register and match nine documented cases to the layer that would have held.")]
@@ -418,7 +425,7 @@ def _(hero, kt, mo):
             "Assume the model will sometimes follow text it should not, or simply get it wrong. This module asks what that costs: which tools the "
             "assistant holds, how wide the key behind them is, and who checks each use. You take Koda&rsquo;s assistant from one admin key to a "
             "deployment that holds four named attacks while the real task still works, and you learn what that deployment still leaves open.",
-            meta=("about 70 minutes", "runs in your browser, no key needed", "Koda is invented, nothing real is touched"),
+            meta=("about 80 minutes", "runs in your browser, no key needed", "Koda is invented, nothing real is touched"),
         )),
         mo.Html('<h2 class="sad-h2">The question after &ldquo;what if the model is fooled?&rdquo;</h2>'
                 '<p class="sad-prose"><a href="../course/#/lesson/prompt-injection" target="_top">Module 02</a> ended on one sentence: only authority the model '
@@ -434,7 +441,8 @@ def _(hero, kt, mo):
                 '<h2 class="sad-h2">In this module</h2>'
                 '<ol class="sad-parts">' + "".join(_row(i + 1, *p) for i, p in enumerate(_parts)) + "</ol>"
                 '<div class="sad-note"><b>You leave with</b> a deployment you built that holds four attacks '
-                "while the real task still works, a tool register for your own agent, and a test that fails if the policy ever slips. "
+                "while the real task still works, a limit that ends a run that will not stop, a tool register for your own agent, and a test that fails "
+                "if the policy ever slips. "
                 'It builds on the agent loop from <a href="../course/#/lesson/foundations" target="_top">Module 01</a>. '
                 'Alongside it: the <a href="../course/#/tool/cases" target="_blank" rel="noopener">case library and attack atlas</a> (54 documented cases, 23 attack classes, 37 controls; opens in a new tab).</div>'
                 '<div class="sad-note"><b>Where this module stops.</b> Module 02 owns how text becomes a command and the six architectures that '
@@ -662,7 +670,7 @@ def _(mo):
         "on something the requester never asked for. The UK NCSC suggests viewing prompt injection as the exploitation of an *inherently confusable deputy*. The fix is to carry who the call is for "
         "and check the object against it.\n"
         "- **The protocol version.** The MCP specification uses the term for an OAuth flaw: a proxy server with a static client id lets an attacker&rsquo;s "
-        "client reuse a user&rsquo;s earlier consent. The fix is per-client consent and exact redirect matching. Part 7 also points at the related token-passthrough problem, where audience checks on tokens are the fix.\n\n"
+        "client reuse a user&rsquo;s earlier consent. The fix is per-client consent and exact redirect matching. Part 8 also points at the related token-passthrough problem, where audience checks on tokens are the fix (Part 3 shows one at work).\n\n"
         "Both are the same shape: a valid credential in the wrong hands, issued without the right person ever deciding."
     )
     return
@@ -805,8 +813,8 @@ def _(kt, mo):
         mo.md("**1. The credential.** The shipped assistant carries one key with every scope and no tenant. Replace it with a key issued *for one task, on behalf of "
               "one person*: only the scopes the task needs, and the tenant the person works for. Two lookups are provided to you:\n\n"
               "| task | what it is | scopes it needs |\n|---|---|---|\n" + _tasks + "\n\n| person | who | tenant |\n|---|---|---|\n" + _staff + "\n\n"
-              "Real credentials also carry an audience and an expiry minutes away (an OAuth access token, a workload identity). The lab leaves them out so the "
-              "layer you are testing stays visible. Finish `mint(task, user)`."),
+              "Real credentials also carry an audience and an expiry minutes away (an OAuth access token, a workload identity). The function you write "
+              "leaves them out so the layer you are testing stays visible; the demonstration after it adds them. Finish `mint(task, user)`."),
         mint_code,
     ])
     return (mint_code,)
@@ -826,6 +834,59 @@ def _(answer, case_card, kt, mint_code, mo, results_table, verdict):
         answer(kt.ANSWERS["mint"]),
         case_card("agentcorruption"),
         mo.accordion({"A second case on the same layer": case_card("exposed")}),
+    ])
+    return
+
+
+@app.cell
+def _(hat, kt, mo):
+    tok_exp = mo.ui.switch(label=f"Expiry, {kt.TOKEN_MINUTES} minutes")
+    tok_aud = mo.ui.switch(label="Audience check")
+    tok_rev = mo.ui.switch(label="Revoke at task end")
+    mo.vstack([
+        hat("red", "What a copy of the key can still do", "the key says what and for whom, not for how long or where"),
+        mo.md("Your key says *what* the task may do and *for whom*. It does not say for how long or where it may be used, and nothing takes it back, "
+              "so a copy from a debug log, a crash report or a tool server it was passed to works as well as the original. Real tokens carry three more "
+              "claims: an expiry (`exp`), the services meant to accept them (`aud`), and an id the issuer can revoke them by (`jti`). OWASP&rsquo;s "
+              '<a href="https://cheatsheetseries.owasp.org/cheatsheets/MCP_Security_Cheat_Sheet.html" target="_blank" rel="noopener">MCP security cheat sheet</a> '
+              "asks for two of them in so many words: &ldquo;Validate that each access token was issued for this MCP server as its intended audience&rdquo; "
+              "and &ldquo;Prefer ephemeral, short-lived tokens over long-lived PATs.&rdquo; Below are three replays of Alice&rsquo;s reply key. Turn the "
+              "checks on one at a time."),
+        mo.hstack([tok_exp, tok_aud, tok_rev], justify="start", gap=0.5, wrap=True),
+    ])
+    return tok_aud, tok_exp, tok_rev
+
+
+@app.cell
+def _(fb_card, html, kt, mo, status_chip, tok_aud, tok_exp, tok_rev):
+    _tok = kt.mint_token("reply", "alice")
+    _on = {"exp": tok_exp.value, "aud": tok_aud.value, "jti": tok_rev.value}
+    _fmt = lambda v: (f'"{v}"' if isinstance(v, str) else "[" + ", ".join(f'"{x}"' for x in v) + "]" if isinstance(v, list) else str(v))
+    _key = "<br>".join(html.escape(f'"{k}": {_fmt(v)}') for k, v in _tok.items() if _on.get(k, True))
+    _rows, _accepted = "", []
+    for _r in kt.REPLAYS:
+        _ok, _why = kt.token_check(_tok, _r, expiry=tok_exp.value, audience=tok_aud.value, revoke=tok_rev.value)
+        if _ok:
+            _accepted.append(_r["id"])
+        _chip = status_chip("&#10007; accepted", "bad") if _ok else status_chip("&#10003; refused", "good")
+        _rows += (f'<div class="sad-row"><div class="sad-grow"><div class="sad-title">{html.escape(_r["label"])}</div></div>'
+                  f'<div class="sad-grow">{_chip} <span class="sad-sub2">{html.escape(_why or "the signature and the scope both check out")}</span></div></div>')
+    if not _accepted:
+        _fb = fb_card(True, "all three refused, and each by a different check. Expiry stops a copy used late, the audience stops a copy used somewhere "
+                            "else, and revocation stops a copy used after the task. None of them covers another&rsquo;s case. A long task does not get a long "
+                            "key: it asks the issuer for a fresh one, and the issuer checks again that Alice still has the right.")
+    elif len(_accepted) == len(kt.REPLAYS):
+        _fb = fb_card(False, "all three replays are accepted. Each is a real key, used for a scope it really carries, so the scope check and the object "
+                             "check both pass. Turn a check on.", head="&#9675; nothing refused yet")
+    else:
+        _left = {"late": "the copy used late", "elsewhere": "the copy used at another service", "after": "the copy used after the task"}
+        _fb = fb_card(False, f"{len(kt.REPLAYS) - len(_accepted)} of 3 refused. Still accepted: " + ", ".join(_left[a] for a in _accepted)
+                             + ". Each check stops one replay and only one.", head="&#9675; not yet")
+    mo.vstack([
+        mo.Html('<div class="sad-panel"><p class="sad-cap">Alice&rsquo;s key for the reply task, with the claims your checks read '
+                f'(exp counts minutes from issue)</p><div class="sad-mono">{_key}</div></div>'),
+        mo.Html(f'<div class="sad-panel"><p class="sad-cap">Three replays of the key</p>{_rows}</div>'),
+        _fb,
     ])
     return
 
@@ -1091,7 +1152,7 @@ def _(mo):
 
 @app.cell
 def _(divider, mo):
-    mo.Html(divider(5, "Gate what cannot be undone", "You will do: write the approval gate, then sit as the person on duty for ten calls and see what the card has to show. You will have: a gate that holds the delete and the flood, and the two numbers that decide whether a gate is a control at all."))
+    mo.Html(divider(5, "Gate what cannot be undone", "You will do: write the approval gate, sit as the person on duty for ten calls and see what the card has to show, then watch an approved call change before it runs. You will have: a gate that holds the delete and the flood, the two numbers that decide whether a gate is a control at all, and an approval bound to the exact call."))
     return
 
 
@@ -1117,7 +1178,7 @@ def _(answer, case_card, gate_code, kt, mo, results_table, verdict):
         mo.md(verdict(_state, _err,
                       "Reads and ordinary replies flow, and the irreversible actions and the flood wait for a person. Two numbers decide whether a gate like this works in "
                       "production: how many approvals a normal task needs (close to none) and how often people say yes (if it is nearly always, nobody is reading). "
-                      "In the runaway scenario nine of the twelve emails wait for a person; a real gate would batch them into one question. "
+                      "In the runaway scenario nine of the twelve emails wait for a person; Part 7 ends that run instead of asking. "
                       "A gate also has to show *what* it is asking about, which is the next demonstration.",
                       "The rows marked ✗ are wrong. Reads and the first three emails must go through, even late in a flood. The delete, the SQL, the shell command, the export "
                       "and the fourth email onwards must be held. `return True` holds everything and `return False` holds nothing; neither is a control.")),
@@ -1219,7 +1280,7 @@ def _(STREAM, case_card, kt, mo, stream_literal, stream_summary):
         _gate_txt += (f"It does not show {_say(_missed[0])}: that was only the third email of the afternoon, and a count does not read the recipient. "
                       + (f"It holds call {_extra[0]} (&ldquo;{STREAM[_extra[0] - 1][2]}&rdquo;) instead, an ordinary reminder. " if _extra else "")
                       + "A count catches a flood, not a thief. The literal card above already shows what the count cannot, the destination flagged as outside; "
-                        "bounding where mail can go is the next control, and Part 7 builds it.")
+                        "bounding where mail can go is a later control, and Part 8 builds it.")
     _both = ""
     if _ds == 10 and _dl == 10:
         _both = f"\n\nSame ten calls, same person. The bad calls were {_say(_bad[0])}, and {_say(_bad[1])}."
@@ -1237,8 +1298,49 @@ def _(STREAM, case_card, kt, mo, stream_literal, stream_summary):
 
 
 @app.cell
+def _(hat, mo):
+    bind_sw = mo.ui.switch(label="Bind the approval to the exact call")
+    mo.vstack([
+        hat("red", "Approve one call, run another", "the card fixes what the person sees, not what runs afterwards"),
+        mo.md("A literal card fixes what the person sees. It does not fix what runs. While the person decides, the framework pauses the run, and when "
+              "they click it resumes from the paused state. If anything changes that state in between, the approval covers whatever is queued now. "
+              "Below, Alice approves the reply to Nadia, and before the run resumes the queued call is changed to another address."),
+        bind_sw,
+    ])
+    return (bind_sw,)
+
+
+@app.cell
+def _(bind_sw, html, kt, mo, status_chip):
+    _lit = lambda c: c[0] + "(" + ", ".join(f"{k}={v!r}" for k, v in c[1].items()) + ")"
+    _a, _p = kt.APPROVED_CALL, kt.CHANGED_CALL
+    _ran, _why = kt.run_approved(_a, _p, bind=bind_sw.value)
+    _row = lambda cap, c, extra="": (f'<div class="sad-row"><div class="sad-grow"><div class="sad-sub2">{cap}</div>'
+                                     f'<code class="sad-lit">{html.escape(_lit(c))}</code></div>'
+                                     f'<div><span class="sad-sub2">digest {kt.call_digest(*c)[:12]}</span>{extra}</div></div>')
+    _out = (status_chip("&#10007; ran, to audit@finance-mirror.example", "bad") if _ran else status_chip("&#10003; refused, back to Alice", "good"))
+    _say = ("**It ran.** Alice approved a reply to Nadia, and the email went to `audit@finance-mirror.example`. Nothing she saw was false; it was "
+            "simply not what ran. Turn the binding on." if _ran else
+            "**Refused, and back to Alice.** The digest of the queued call does not match the digest she approved, so her approval does not cover it. "
+            "The same reply, unchanged, still runs without a second question: binding costs the honest path nothing.")
+    mo.vstack([
+        mo.Html('<div class="sad-panel"><p class="sad-cap">One approval, two moments</p>'
+                + _row("What Alice approved", _a) + _row("What is queued when the run resumes", _p, " " + _out) + "</div>"),
+        mo.md(_say),
+        mo.md("This failure is documented. A September 2026 preprint, "
+              '<a href="https://arxiv.org/abs/2609.21081" target="_blank" rel="noopener">Loopjacking</a>, reproduced runs where a person approved one '
+              "operation and another one ran: in Agno AgentOS and LangGraph Agent Server by changing the paused state after the approval, and in OpenClaw "
+              "through an approval view that left part of the operation out. The OpenAI Agents SDK, tested as the control, kept each approval bound to its "
+              "exact call and refused the changed one. The defences the paper names are the three on this page: render the whole call when you ask, "
+              "compare it exactly when you run it, and let nothing edit a call that is waiting for a person. Part 8 applies the same rule to a "
+              "tool&rsquo;s definition, where the MCPoison card shows an approval attached to a name instead of to the content."),
+    ])
+    return
+
+
+@app.cell
 def _(mo):
-    mo.callout(mo.md("**Part 5 in a sentence.** Gate only what cannot be undone or counted, keep it rare, and show the literal call: a card that shows the model&rsquo;s summary gates nothing."), kind="success")
+    mo.callout(mo.md("**Part 5 in a sentence.** Gate only what cannot be undone or counted, keep it rare, show the literal call, and run only the call that was approved: a card that shows the model&rsquo;s summary gates nothing."), kind="success")
     return
 
 
@@ -1319,8 +1421,8 @@ def _(attack_table, chip, kt, mine_tools, mo, my_dep, my_pass, my_status, status
                 "already smaller than that request.\n\n"
                 "**What this deployment still leaves open.** It holds the four attacks in this set, not every attack. Mail can still go to any address: the gate counts "
                 "emails and does not read where they are going, so one injected instruction to send a record to `audit@finance-mirror.example` would leave as an ordinary first "
-                "email. Searches and exports sit outside the object check in this lab, the flags string stays free until Part 4, and the tools themselves are Part 7, "
-                "which also shows the control for the destination.")
+                "email. Searches and exports sit outside the object check in this lab, the flags string stays free until Part 4, and the tools themselves are Part 8, "
+                "which also shows the control for the destination. And nothing here ends a run that will not stop, which is the next Part.")
     elif not _ok:
         _msg = ("**The real task is broken.** A deployment that refuses Alice&rsquo;s reply is not secure, it is switched off. Look at the reason the real task "
                 "was refused and fix that layer; a check that fails closed on the legitimate call is the commonest mistake.")
@@ -1392,7 +1494,224 @@ def _(mo):
 
 @app.cell
 def _(divider, mo):
-    mo.Html(divider(7, "The tools themselves", "You will do: load a third-party tool three ways and try to catch it with a pin, a scanner and an allowlist. "
+    mo.Html(divider(7, "Limits and the stop", "You will do: watch three runs the four layers handle badly, write the limit that ends a run, and see a tool check a claim before it acts. You will have: a graded limit, what it does not cover, and the claim-check-act rule."))
+    return
+
+
+@app.cell
+def _(kt, layer_chip, status_chip):
+    # what a run did as a whole: calls made, emails out, refusals, questions to a person, and where a limit ended it
+    def run_facts(steps):
+        _stop = steps[-1] if steps and steps[-1].get("layer") == "limit" else None
+        _made = len(steps) - (1 if _stop else 0)
+        _sent = sum(1 for s in steps if s["tool"] == "send_email" and not s["blocked"])
+        _asked = sum(1 for s in steps if s.get("layer") == "approval")
+        _refused = sum(1 for s in steps if s["blocked"] and s.get("layer") not in ("approval", "limit"))
+        _landed = kt.landed(steps)
+        _plural = lambda n, w: f"{n} {w}{'s' if n != 1 else ''}"
+        _bits = [_plural(_made, "call") + " made"]
+        if _sent:
+            _bits.append(_plural(_sent, "email") + " sent")
+        if _refused:
+            _bits.append(f"{_refused} refused")
+        if _asked:
+            _bits.append(f"{_asked} held for a person")
+        if _stop:
+            _bits.append(f"then stopped, {_plural(_stop['stopped'], 'planned call')} never made")
+        if _landed:
+            _chip = status_chip("LANDED", "bad") + f' <span class="sad-sub2">{kt.OUTCOMES[_landed[0]]}</span>'
+        elif _stop:
+            _chip = status_chip("stopped", "good") + " " + layer_chip("limit")
+        elif _asked:
+            _chip = status_chip(f"asks a person {_asked} times", "warn")
+        else:
+            _chip = status_chip("held", "good")
+        return {"landed": _landed, "stopped": _stop is not None, "asked": _asked}, ", ".join(_bits), _chip
+
+    def runs_table(columns, title):
+        # one row per run; each cell names its deployment, so the row still reads when a phone stacks the cells
+        _names = {"runaway": "The flood", "loop": "The loop", "probe": "The probe"}
+        _rows = ""
+        for _sid in ("runaway", "loop", "probe"):
+            _cells = ""
+            for _head, _dep in columns:
+                _f, _txt, _chip = run_facts(kt.run_scenario(_sid, _dep))
+                _cells += f'<div class="sad-grow"><div class="sad-sub2">{_head}</div>{_chip}<div class="sad-sub2">{_txt}</div></div>'
+            _rows += (f'<div class="sad-row"><div class="sad-grow"><div class="sad-title">{_names[_sid]}</div>'
+                      f'<div class="sad-sub2">{kt.SCENARIOS[_sid]["gist"]}</div></div>{_cells}</div>')
+        return f'<div class="sad-panel"><p class="sad-cap">{title}</p>{_rows}</div>'
+    return run_facts, runs_table
+
+
+@app.cell
+def _(hat, mo):
+    run_pick = mo.ui.radio(options={"The flood": "runaway", "The loop": "loop", "The probe": "probe"}, value="The flood", inline=True,
+                           label="Show the run for:")
+    mo.vstack([
+        hat("red", "Three runs the four layers handle badly", "each call is one they can judge; the trouble is the run as a whole"),
+        mo.md("Your deployment judges one call at a time, and some trouble only shows across a run. Below, the reference version of the Part 6 "
+              "deployment meets three runs. **The flood** is the runaway from the attack set, held by asking a person nine times. **The loop** reads "
+              "the same account thirty times, waiting for a change that never comes: no single read is wrong, and an agent can get stuck like this "
+              "with no attacker at all. **The probe** is refused three times and then tries a door the deployment left open."),
+        run_pick,
+    ])
+    return (run_pick,)
+
+
+@app.cell
+def _(kt, mo, run_pick, runs_table, scenario_html):
+    _html, _steps = scenario_html(run_pick.value, kt.reference_deployment(), "the Part 6 deployment, four layers")
+    mo.vstack([
+        mo.Html(runs_table([("Four layers", kt.reference_deployment())], "The Part 6 deployment against three runs")),
+        mo.Html(_html),
+        mo.md("Count what each run cost before it ended. The flood put nine questions to a person in a few seconds, at a rate nobody reads. The loop "
+              "made thirty-one calls, and in production each one is tokens, time and money. The probe&rsquo;s first three tries were refused, and nothing "
+              "noticed that three refusals in a row is not how an honest task behaves; the fourth went out through the gap Part 6 named, mail to any address."),
+    ])
+    return
+
+
+@app.cell
+def _(kt, mo):
+    stop_code = mo.ui.code_editor(theme="dark", value=kt.STARTERS["should_stop"], language="python", debounce=True)
+    mo.vstack([
+        mo.md("**4. The limit.** A gate asks a person about one call. A limit ends the run: no more calls of any kind, and one alert to a person "
+              "instead of one question per call. OWASP&rsquo;s 2026 list asks for this under "
+              '<a href="https://github.com/GenAI-Security-Project/GenAI-LLM-Top10/blob/main/2026/final/LLM06_UnboundedConsumption.md" target="_blank" rel="noopener">LLM06:2026 Unbounded Consumption</a>: '
+              "&ldquo;Enforce step limits, recursion depth limits, time limits, and per-run cost ceilings on all agent executions.&rdquo; "
+              "Finish `should_stop(call, run)` with three rules: stop before a fourth email, stop once the run has made ten calls of any kind, and "
+              "stop after two refusals in a row. The engine asks it before every call and keeps the counts for you."),
+        stop_code,
+    ])
+    return (stop_code,)
+
+
+@app.cell
+def _(answer, kt, mo, results_table, stop_code, verdict):
+    _rows, _state, _err = kt.grade_function(stop_code.value, "should_stop", kt.EXERCISE_CASES["should_stop"], kt.EXERCISE_NS)
+    mo.vstack([
+        mo.Html(results_table(f"your should_stop() run on {len(kt.EXERCISE_CASES['should_stop'])} moments in a run", _rows)) if _rows else mo.md(""),
+        mo.md(verdict(_state, _err,
+                      "The limit ends a run where the gate would have asked again, and it does not count reads against the email rule. The three numbers "
+                      "are this lab&rsquo;s: no task here needs more than three calls. In production, set them from what an honest run of the task uses, "
+                      "with room to spare, and keep them outside the model, where it cannot talk its way past them.",
+                      "The rows marked ✗ are wrong. The real task and the first three emails must run; the fourth email, a call after ten calls of any "
+                      "kind, and a call after two refusals in a row must not. Use `>=`: a ceiling holds for every number past it, not only the one it "
+                      "names. One refusal is not a streak.")),
+        answer(kt.ANSWERS["should_stop"]),
+    ])
+    return
+
+
+@app.cell
+def _(hat, mo):
+    run_pick_mine = mo.ui.radio(options={"The flood": "runaway", "The loop": "loop", "The probe": "probe"}, value="The probe", inline=True,
+                                label="Show the run for:")
+    mo.vstack([
+        hat("blue", "Your limit against the three runs", "the same deployment, with should_stop() asked before every call"),
+        run_pick_mine,
+    ])
+    return (run_pick_mine,)
+
+
+@app.cell
+def _(kt, mo, run_pick_mine, runs_table, scenario_html, stop_code):
+    _rows, _state, _err = kt.grade_function(stop_code.value, "should_stop", kt.EXERCISE_CASES["should_stop"], kt.EXERCISE_NS)
+    _fn = kt.compile_function(stop_code.value, "should_stop", kt.EXERCISE_NS)[0] if _state in ("pass", "fail") else None
+    mo.stop(_fn is None, mo.md("Write `should_stop()` above and this fills in: the same three runs, with your limit asked before every call."))
+    _base = kt.reference_deployment()
+    _mine = dict(_base, should_stop=_fn)
+    _legit = kt.completed(kt.run_scenario("legit", _mine))
+    _ended = all(not kt.landed(_st) and not any(_x.get("layer") == "approval" for _x in _st)
+                 for _st in (kt.run_scenario(_sid, _mine) for _sid in ("runaway", "loop", "probe")))
+    _html, _steps = scenario_html(run_pick_mine.value, _mine, "with your limit")
+    if not _legit:
+        _msg = ("**The real task is broken.** Your limit ended Alice&rsquo;s two-call reply. A limit that stops honest work gets switched off by the "
+                "first person it blocks, so find the STOPPED step in the real task and loosen the rule that fired.")
+    elif _ended and _state == "pass":
+        _msg = ("**All three runs end early, and the real task still works.** The flood stops at its fourth email with no question to a person, "
+                "the loop at its eleventh call, and the probe after its second refusal in a row, before it reaches the email.")
+    elif _ended:
+        _msg = "**The three runs end early, but rows above still fail.** These runs try only a few moments; the rows try the rest."
+    else:
+        _msg = ("**Some runs still get through, or still ask a person.** Read the row that shows LANDED or asks a person: it names the rule your "
+                "function does not apply yet.")
+    mo.vstack([
+        mo.Html(runs_table([("Four layers", _base), ("With your limit", _mine)], "The same three runs, before and after your limit")),
+        mo.md(_msg),
+        mo.Html(_html),
+    ])
+    return
+
+
+@app.cell
+def _(mo):
+    _text = (
+        "**What the limit does not cover.** The probe was stopped because two refusals came before its email. Send that email first, with nothing "
+        "refused before it, and it leaves as before: the breaker bounds how many doors get tried, not where mail can go. The control for the "
+        "destination is in the next Part. The flood still sent three emails inside the company, because three is what an honest task may send. "
+        "A limit bounds volume and says nothing about the first call.\n\n"
+        "In production a run needs the same kind of ceiling on time, tokens and money, and OWASP&rsquo;s LLM06:2026 adds two details worth copying. "
+        "A loop is easiest to catch by its state: &ldquo;Use state hashing to detect recursive loops.&rdquo; The loop above repeats the same call and "
+        "gets the same answer, so a hash of the call and its result seen twice marks a loop. And a spending cap must be one of the &ldquo;enforcement "
+        "mechanisms that halt inference when exceeded, rather than alerting thresholds that fast-accumulating workloads can outpace.&rdquo; The cap "
+        "on the key itself, from <a href='../course/#/practice/1.6' target='_top'>practice page 1.6</a>, is the last line under all of these."
+    )
+    mo.md(_text)
+    return
+
+
+@app.cell
+def _(hat, mo):
+    claim_sw = mo.ui.switch(label="The tool checks the claim before it deletes")
+    mo.vstack([
+        hat("blue", "Check the claim, then act", "the state an action depends on comes from the records, never from the model"),
+        mo.md("A limit counts, and some mistakes are not a matter of count. Here Alice runs a cleanup task that really does hold `delete_account`, "
+              "and the person on duty approves the literal call `delete_account(id=102)`: the card showed exactly what would run, as Part 5 asked. "
+              "The call rests on a claim, *this account is a duplicate*, which came from the note in Petros&rsquo;s record. The card cannot show "
+              "whether that is true. The tool can: a duplicate is another account in the same tenant with the same email, and that is one query."),
+        claim_sw,
+    ])
+    return (claim_sw,)
+
+
+@app.cell
+def _(AMBER, claim_sw, console_html, html, kt, mo):
+    _steps = kt.run_scenario("delete", kt.cleanup_deployment(claim_sw.value))
+    _held = kt.layers_that_held(_steps) == ["precondition"]
+    _note = ('<div class="sad-panel"><p class="sad-cap">In Petros&rsquo;s account notes, written by a stranger</p>'
+             f'<div class="sad-mono">{AMBER(html.escape(kt.SCENARIOS["delete"]["planted"]))}</div></div>')
+    _reply = ("I could not delete account 102: the records show no duplicate of it." if _held else
+              "Done. I removed the duplicate account for Petros.")
+    _console = console_html(_steps, 0, "cleanup task, delete approved by a person",
+                            user="Go through Larnaca Marine's accounts and clean up the duplicates.", reply=_reply)
+    _say = ("**Held, before anyone was asked.** The tool read the records, found no other account with Petros&rsquo;s email, and refused. The cheap "
+            "check of the state goes before the person, so the person only sees calls whose premise is true." if _held else
+            "**Deleted.** The person approved a call that was exactly what it said, and it was still wrong: a gate checks what will run, not whether "
+            "the reason for it is true. Turn the check on.")
+    mo.vstack([
+        mo.Html(_note + _console),
+        mo.md(_say),
+        mo.md("OWASP&rsquo;s "
+              '<a href="https://github.com/GenAI-Security-Project/GenAI-LLM-Top10/blob/main/2026/final/LLM07_Misinformation.md" target="_blank" rel="noopener">LLM07:2026 Misinformation</a> '
+              "entry names the pattern: &ldquo;Implement Claim-Check-Act Patterns: Separate generation from execution and verify claims before "
+              "acting.&rdquo; The model generates the claim, the tool checks it against the records, and only then does anything act. The same entry "
+              "describes a claim at the other end of a run, work reported that never happened: &ldquo;An agent reports that a nightly database backup "
+              "completed when it never ran, and a later restore fails because no backup exists.&rdquo; The test you kept in Part 6 reads the tool "
+              "trace, never the reply, which is the same rule applied to a claim of completion."),
+    ])
+    return
+
+
+@app.cell
+def _(mo):
+    mo.callout(mo.md("**Part 7 in a sentence.** A gate asks a person about one call; a limit ends the run before a flood, a loop or a streak of refusals gets far, and the tool checks the state a claim rests on before it acts."), kind="success")
+    return
+
+
+@app.cell
+def _(divider, mo):
+    mo.Html(divider(8, "The tools themselves", "You will do: load a third-party tool three ways and try to catch it with a pin, a scanner and an allowlist. "
                                                "You will have: a matrix of what each control catches, and the doorways around it."))
     return
 
@@ -1524,14 +1843,14 @@ def _(case_card, mo):
 
 @app.cell
 def _(mo):
-    mo.callout(mo.md("**Part 7 in a sentence.** A tool definition is input: pin it, diff it, and above all bound what it can reach, because the control that does not read "
+    mo.callout(mo.md("**Part 8 in a sentence.** A tool definition is input: pin it, diff it, and above all bound what it can reach, because the control that does not read "
                      "the description is the one the description cannot talk past."), kind="success")
     return
 
 
 @app.cell
 def _(divider, mo):
-    mo.Html(divider(8, "The build order", "You will do: see what flips each reducer into a boundary, read the build order, and hear what the vendors say about their own controls. You will have: a build order for adding an agent with tools, and the vendors&rsquo; own words on what their controls are not."))
+    mo.Html(divider(9, "The build order", "You will do: see what flips each reducer into a boundary, read the build order, and hear what the vendors say about their own controls. You will have: a build order for adding an agent with tools, and the vendors&rsquo; own words on what their controls are not."))
     return
 
 
@@ -1570,7 +1889,7 @@ def _(mo):
                 "| 1 | Cut the tool surface, then type what is left. Remove tools from the registry, not from the prompt. | no free string where an id or an enum would do |\n"
                 "| 2 | Fix identity: run as the user or as a governed agent identity, with short-lived credentials the tool holds. | every call carries a person or a per-agent identity, and the data layer decides |\n"
                 "| 3 | Build the single enforcement point: default deny, one log line per call, tests in CI. Start new rules in log-only, then enforce. | all tool traffic passes it |\n"
-                "| 4 | Add limits and the stop: budgets keyed to identity, a circuit breaker on streaks of refusals, a kill switch that reaches every enforcement point. | a drill has measured how many calls ran after &ldquo;stop&rdquo; |\n"
+                "| 4 | Add limits and the stop: budgets keyed to identity, a circuit breaker on streaks of refusals, a kill switch that reaches every enforcement point. Part 7 builds the first two. | a drill has measured how many calls ran after &ldquo;stop&rdquo; |\n"
                 "| 5 | Contain execution: sandbox any code or shell tool, default-deny egress, path scope enforced by the kernel. (Module 06.) | the sandbox fails closed |\n"
                 "| 6 | Add human gates only for what is irreversible or external, with a literal card. Measure the approval rate. | approvals per ordinary task are low and measured |\n"
                 "| 7 | Harden third-party tools: server allowlist, pinned definitions, one gateway. | an unapproved or changed tool cannot connect |\n"
@@ -1636,14 +1955,14 @@ def _(mo):
 
 @app.cell
 def _(mo):
-    mo.callout(mo.md("**Part 8 in a sentence.** The credential, the object check and the gate bound the damage; blanket prompts, classifiers and scanners only change the odds, "
+    mo.callout(mo.md("**Part 9 in a sentence.** The credential, the object check and the gate bound the damage; blanket prompts, classifiers and scanners only change the odds, "
                      "and the log only tells you after."), kind="success")
     return
 
 
 @app.cell
 def _(divider, mo):
-    mo.Html(divider(9, "Take it to your own agent", "You will do: add this module's columns to your tool register, score each tool on what it can do, whose authority "
+    mo.Html(divider(10, "Take it to your own agent", "You will do: add this module's columns to your tool register, score each tool on what it can do, whose authority "
                                                     "it uses and what pins it, and match nine documented cases to the layer that would have held. You will have: a tool "
                                                     "register for your own agent and five things to attack next."))
     return
@@ -1775,7 +2094,7 @@ def _(mo):
 
         **Authority is a property of the call, not of the agent.**
 
-        *Next: <a href="../course/#/lesson/poisoned-retrieval" target="_top">Module 04, poisoned retrieval</a>, where the knowledge itself is the attack: a planted document that ranks first and lies. Then <a href="../course/#/lesson/data-leakage" target="_top">Module 05</a> on what leaks through the answer, and Module 06 on the sandbox that Part 8 kept pointing at.*
+        *Next: <a href="../course/#/lesson/poisoned-retrieval" target="_top">Module 04, poisoned retrieval</a>, where the knowledge itself is the attack: a planted document that ranks first and lies. Then <a href="../course/#/lesson/data-leakage" target="_top">Module 05</a> on what leaks through the answer, and Module 06 on the sandbox that Part 9 kept pointing at.*
         """
     )
     return
@@ -1783,7 +2102,7 @@ def _(mo):
 
 @app.cell
 def _(mo):
-    mo.callout(mo.md("**Part 9 in a sentence.** The deliverable is the register: for every tool, what it can do, whose authority it uses, what checks it outside the model, "
+    mo.callout(mo.md("**Part 10 in a sentence.** The deliverable is the register: for every tool, what it can do, whose authority it uses, what checks it outside the model, "
                      "and what pins its definition."), kind="success")
     return
 

@@ -145,9 +145,9 @@ const MODULES = [
     id: "tools-agency",
     title: "Tools & excessive agency",
     subtitle: "The agent's own tools as the risk",
-    blurb: "Why did the assistant hold that power at all? Audit a toolbox, write the credential, the object check and the approval gate yourself, break a log tool's flag check, and meet the tool supply chain, with documented cases beside every layer.",
+    blurb: "Why did the assistant hold that power at all? Audit a toolbox, write the credential, the object check, the approval gate and a limit that ends a runaway run yourself, break a log tool's flag check, and meet the tool supply chain, with documented cases beside every layer.",
     url: "../tools-agency/",
-    minutes: 70,
+    minutes: 80,
     quiz: [
       { q: "An assistant is asked to reply to one customer. It holds ten tools and a key with nine scopes. What is the first fix?",
         options: [
@@ -170,6 +170,13 @@ const MODULES = [
           "Approvals are slower than a classifier, so replace them with one" ],
         answer: 0,
         why: "A gate is only a control while it is rare and readable. A model-written summary of a steered call reads like all the others." },
+      { q: "An agent has sent three emails and now wants to send nine more, each one held for a person. What is the better control?",
+        options: [
+          "Keep asking: a person should see every email",
+          "A limit outside the model that ends the run and sends one alert",
+          "A line in the system prompt saying to send at most three emails" ],
+        answer: 1,
+        why: "Nine questions in a row teach people to click yes. A limit ends the run whatever the model was told, and costs the honest task nothing." },
       { q: "A log-search tool is protected by a check that refuses the text '--exec'. Why does it fail?",
         options: [
           "The tool's parser accepts abbreviations and bundled short options, so the dangerous option has other spellings",

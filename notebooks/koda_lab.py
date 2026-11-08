@@ -265,6 +265,9 @@ def console_html(steps, customer_id, profile, user=None, reply=None, planted=Non
         if s["blocked"] and s.get("layer") == "approval":
             _kind, _label = "held", "HELD"             # nothing ran: it waits for a person, who may still approve it
             _body = f'waits for a person &middot; {_h.escape(s["blocked"])}'
+        elif s["blocked"] and s.get("layer") == "limit":
+            _kind, _label = "blocked", "STOPPED"        # Module 03's limit: the whole run ends here, not only this call
+            _body = f'the run ends here &middot; {_h.escape(s["blocked"])}'
         elif s["blocked"]:
             _kind, _label = "blocked", "BLOCKED"
             _body = f'policy refused &middot; {_h.escape(s["blocked"])}'
