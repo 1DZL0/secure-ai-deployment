@@ -234,7 +234,7 @@ def _(PROVIDERS, RECORDED, hat_html, mo):
 def _(PROVIDERS, live_provider, mo):
     # the model list follows the provider; a separate cell so typing the key never resets the model you picked
     _ms = PROVIDERS[live_provider.value]["models"]
-    live_model = mo.ui.radio(options=_ms, value="openai/gpt-4o-mini" if "openai/gpt-4o-mini" in _ms else _ms[0], label="Model", inline=True)
+    live_model = mo.ui.radio(options=_ms, value="google/gemini-2.5-flash" if "google/gemini-2.5-flash" in _ms else _ms[0], label="Model", inline=True)
     mo.vstack([live_model, mo.md(f"_Requests go to `{PROVIDERS[live_provider.value]['host']}`. A {live_provider.value} key starts "
                                  f"`{PROVIDERS[live_provider.value]['key_hint']}`._")])
     return (live_model,)
@@ -619,8 +619,9 @@ def _(case_html, esc, mo):
 
 @app.cell
 def _(mo):
-    mo.md("The same rule reaches training. A model can repeat what it was fine-tuned on, so a fine-tuning set is part of what the "
-          "model saw: keep secrets out of it, and never fine-tune a model that other customers talk to on one customer's records.")
+    _text = ("The same rule reaches training. A model can repeat what it was fine-tuned on, so a fine-tuning set is part of what the "
+             "model saw: keep secrets out of it, and never fine-tune a model that other customers talk to on one customer's records.")
+    mo.md(_text)
     return
 
 
