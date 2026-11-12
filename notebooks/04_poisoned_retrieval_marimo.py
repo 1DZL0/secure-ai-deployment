@@ -414,7 +414,7 @@ def _(answer, kr, mo, results_table, unseen_code, verdict):
 
 @app.cell
 def _(mo):
-    _text = ("**Documented.** OWASP&rsquo;s 2025 list opened its vector and embedding entry with this case (<a href='https://genai.owasp.org/llmrisk/llm082025-vector-and-embedding-weaknesses/' target='_blank' rel='noopener'>LLM08:2025</a>, scenario 1): a resume with &ldquo;hidden text, such as white text on a white background&rdquo;, sent to a screening system that uses retrieval. In July 2025 <a href='https://asia.nikkei.com/business/technology/artificial-intelligence/positive-review-only-researchers-hide-ai-prompts-in-papers' target='_blank' rel='noopener'>Nikkei Asia</a> found prompts aimed at AI reviewers hidden in 17 arXiv preprints from 14 institutions in eight countries, &ldquo;concealed from human readers using tricks such as white text or extremely small font sizes&rdquo;. The 2026 edition asks for hidden text such as &ldquo;white-on-white text&rdquo; to be stripped at extraction.")
+    _text = ("**Documented.** OWASP&rsquo;s 2025 list opened its vector and embedding entry with this case (<a href='https://genai.owasp.org/llmrisk/llm082025-vector-and-embedding-weaknesses/' target='_blank' rel='noopener'>LLM08:2025</a>, scenario 1): a resume with &ldquo;hidden text, such as white text on a white background&rdquo;, sent to a screening system that uses retrieval. The trick is in real documents too: <a href='../course/#/lesson/prompt-injection' target='_top'>Module 02</a> (Part 4, &ldquo;Also watch for&rdquo;, hidden text in screened documents) has the arXiv preprints of July 2025 (<a href='https://asia.nikkei.com/business/technology/artificial-intelligence/positive-review-only-researchers-hide-ai-prompts-in-papers' target='_blank' rel='noopener'>Nikkei Asia</a>), where the hidden text was an order to an AI reviewer. The 2026 edition asks for hidden text such as &ldquo;white-on-white text&rdquo; to be stripped at extraction.")
     mo.md(_text)
     return
 
@@ -733,7 +733,7 @@ def _(mo):
              ("the attacker ranks first, or fills the top k", "trust-weighted ranking, show the conflict (Parts 2, 6)", "ranking and assembly; the gate still decides", "reduce"),
              ("a blocker silences questions", "the tier gate, and a refusal-rate alert (Part 6)", "before the prompt, and in monitoring", "bound, then detect"),
              ("the answer changes what the source said", "check the answer against its chunk (Part 7)", "after generation, before showing", "reduce"),
-             ("another tenant's document returned", "authorization at retrieval", "the filter reads the user's credential, before the model reads anything", "bound"),
+             ("another tenant's document returned", "authorization at retrieval (the object check from <a href='../course/#/lesson/tools-agency' target='_top'>Module 03</a>, Part 3, applied to search)", "the filter reads the user's credential, before the model reads anything", "bound"),
              ("a stale document still answers", "live access check, cache purge, delete by source (Part 9)", "at query time, and in every copy", "bound"),
              ("the document gives an order", '<a href="../course/#/lesson/prompt-injection" target="_top">Module 02</a>: a permission on the action',
               "the same bug through a new door", "bound")]
@@ -743,6 +743,7 @@ def _(mo):
         mo.md("**The action to control table**, yours to keep:"),
         mo.Html('<div class="sad-tablebox"><table class="sad-table"><tr><th>what goes wrong</th><th>the control</th><th>where it sits</th><th>kind</th></tr>'
                 + _body + "</table></div>"),
+        mo.md("Reduce, bound and detect are the three kinds sorted in <a href='../course/#/lesson/prompt-injection' target='_top'>Module 02</a> (Part 5)."),
         mo.Html('<div class="sad-cols">'
                 + _col("Reduce the odds", ["trust-weighted ranking", "context carried into chunks", "show conflicts", "check answers against chunks"])
                 + _col("Bound the impact", ["tiers at ingestion", "index only reviewed text", "authorization at retrieval, checked live", "secrets never in the index"])
@@ -984,7 +985,8 @@ def _(chip, mo):
                 [("PromptArmor", "https://promptarmor.substack.com/p/data-exfiltration-from-slack-ai-via")])
         + _case("published 11 Jun 2025", "Disclosed vulnerability", "EchoLeak, Microsoft 365 Copilot, CVE-2025-32711",
                 "One crafted email, retrieved by Copilot as context for the victim's question. The CVE record (CVSS 9.3) credits an unauthorized "
-                "attacker: the writer needed no account. For this module: inbound email is a source a stranger can write to, and retrieval picked it.",
+                "attacker: the writer needed no account. For this module: inbound email is a source a stranger can write to, and retrieval picked it. "
+                "How the data then left is <a href='../course/#/lesson/prompt-injection' target='_top'>Module 02</a> (Part 4, card 5).",
                 "A provenance tier: an external email never answers an internal question.",
                 [("CVE-2025-32711", "https://cveawg.mitre.org/api/cve/CVE-2025-32711")])
     )

@@ -353,7 +353,7 @@ div:has(> .cm-editor), [class*="cm-theme"] { border-color: transparent !importan
 .sad-meta { margin: 0; font: 400 14px/1.5 var(--sad-font); color: var(--sad-muted); }
 /* prose blocks built from HTML */
 .sad-prose { font: 400 17px/1.6 var(--sad-font); color: var(--sad-ink); max-width: var(--sad-prose); margin: 0 0 16px; }
-.sad-prose a, .sad-note a, .sad-case a, .sad-term a { color: var(--sad-accent); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 2px; }
+.sad-prose a, .sad-note a, .sad-case a, .sad-term a, .sad-cap a, .sad-table a { color: var(--sad-accent); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 2px; }
 .sad-prose b, .sad-prose strong { font-weight: 500; }
 .sad-h2 { font: 600 22px/1.3 var(--sad-font); color: var(--sad-ink); margin: 48px 0 8px; }
 .sad-h3 { font: 600 18px/1.35 var(--sad-font); color: var(--sad-ink); margin: 32px 0 8px; }

@@ -720,7 +720,7 @@ def _(mo):
             "content, and NIST AI 100-2e2025 files it under integrity attacks. For those harms the controls are different: provenance and "
             "citations the user can open, a second independent source, the model's verdict kept advisory, and a human who decides. Every "
             "verdict on this page grades tool calls only, so a passing row means “nothing bad was done”, not “nothing bad was said”. "
-            "That answer-side harm is Module 04's subject."), kind="warn"),
+            "That answer-side harm is <a href='../course/#/lesson/poisoned-retrieval' target='_top'>Module 04</a>'s subject."), kind="warn"),
     ])
     return
 
