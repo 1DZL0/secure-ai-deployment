@@ -899,6 +899,102 @@ def grade_function(code, fname, cases, ns=None):
     return rows, ("pass" if all(r[2] is not False for r in rows) else "fail"), None
 
 
+# ---------------------------------------------------------------- the page's exercises, key terms and recap
+# The notebook draws one card per entry, at the top of the cell that holds the control. "3.0.1" sits before Part 1.
+EXERCISE_LIST = [
+    {"num": "3.0.1", "title": "Predict what the assistant did", "minutes": 1,
+     "goal": "Guess what the shipped assistant does with a stranger's note, before you see the run.", "passes": "you have guessed."},
+    {"num": "3.1.1", "title": "Audit the toolbox", "minutes": 2,
+     "goal": "Tick the tools one reply needs, and see how much of the register is left over.",
+     "passes": "you have ticked the two tools the reply needs and no others."},
+    {"num": "3.1.2", "title": "Four notes, four failures", "minutes": 3,
+     "goal": "Pick each note a stranger could leave and read what the shipped deployment does with it.",
+     "passes": "you have read all four runs."},
+    {"num": "3.1.3", "title": "Find the borrowed authority", "minutes": 1,
+     "goal": "Three calls ran. Pick the one that spent authority Alice does not hold.", "passes": "you have picked the call."},
+    {"num": "3.2.1", "title": "Find the smallest set that holds", "minutes": 3,
+     "goal": "Turn the layers on one at a time and find the smallest set that holds all four attacks while the real task still works.",
+     "passes": "no attack lands, the real task works, and only three switches are on."},
+    {"num": "3.3.1", "title": "Mint the credential", "minutes": 4,
+     "goal": "Finish mint(task, user): a key for one task and one person, with only the scopes the task needs.",
+     "passes": "every row passes."},
+    {"num": "3.3.2", "title": "Replay a copy of the key", "minutes": 2,
+     "goal": "Three copies of Alice's key are used late, somewhere else and after the task. Turn on the check that refuses each.",
+     "passes": "all three replays are refused."},
+    {"num": "3.3.3", "title": "Write the object check", "minutes": 4,
+     "goal": "Finish can_access(cred, acct): allow a call only when the account belongs to the tenant the credential names.",
+     "passes": "every row passes."},
+    {"num": "3.4.1", "title": "Get a command past the check", "minutes": 3,
+     "goal": "The log search tool ships with one check. Type a flags string that gets a command past it.",
+     "passes": "the check allows your string and the tool runs a command."},
+    {"num": "3.4.2", "title": "Write the flags rule", "minutes": 4,
+     "goal": "Finish valid_flags(flags): refuse every attempt to run a command and keep the harmless calls working.",
+     "passes": "every row passes."},
+    {"num": "3.4.3", "title": "Break the rule you wrote", "minutes": 2,
+     "goal": "Type flags strings against the rule you wrote and see whether the tool's parser can still be made to run a command.",
+     "passes": "your rule holds against a bundle, an abbreviation and a value attached with an equals sign."},
+    {"num": "3.4.4", "title": "Give the tool typed arguments", "minutes": 1,
+     "goal": "Give the tool typed arguments and send the same hostile attempt again.",
+     "passes": "the attempt has nothing to land on and the real search still works."},
+    {"num": "3.5.1", "title": "Write the approval gate", "minutes": 4,
+     "goal": "Finish needs_approval(call, sent): hold what cannot be undone, a bulk export, and the fourth email onwards.",
+     "passes": "every row passes."},
+    {"num": "3.5.2", "title": "Sit on duty for ten calls", "minutes": 3,
+     "goal": "Approve or hold ten calls from the model's summary, then the same ten from the literal call, and compare.",
+     "passes": "you have decided all ten calls on both tabs."},
+    {"num": "3.5.3", "title": "Bind the approval to the call", "minutes": 1,
+     "goal": "Alice approves a reply and the queued call changes before it runs. Bind the approval to the exact call.",
+     "passes": "the changed call is refused and goes back to Alice."},
+    {"num": "3.6.1", "title": "Capstone: run what you wrote", "minutes": 3,
+     "goal": "The functions you wrote are now the checkpoint. Run the four attacks and the real task through them.",
+     "passes": "four attacks are held and the real task still works."},
+    {"num": "3.7.1", "title": "A flood, a loop and a probe", "minutes": 2,
+     "goal": "Watch a flood, a loop and a probe meet the Part 6 deployment, and count what each costs before it ends.",
+     "passes": "you have read all three runs."},
+    {"num": "3.7.2", "title": "Write the limit", "minutes": 4,
+     "goal": "Finish should_stop(call, run): end the run before a fourth email, at ten calls, or after two refusals in a row.",
+     "passes": "every row passes."},
+    {"num": "3.7.3", "title": "Run the three again", "minutes": 1,
+     "goal": "Send the flood, the loop and the probe again, with your limit asked before every call.",
+     "passes": "all three runs end early and the real task still works."},
+    {"num": "3.7.4", "title": "Have the tool check the claim", "minutes": 1,
+     "goal": "A person approved a delete that rests on a stranger's claim. Have the tool check the claim first.",
+     "passes": "the delete is held before anyone is asked."},
+    {"num": "3.8.1", "title": "Poison a third-party tool", "minutes": 3,
+     "goal": "Load a weather tool poisoned three ways and try to catch each with a pin, a scanner and an allowlist.",
+     "passes": "you have found a control that holds each poisoning."},
+    {"num": "3.8.2", "title": "Which control holds all three?", "minutes": 1,
+     "goal": "One control holds every poisoning. Pick it, then read the whole matrix.", "passes": "you have picked."},
+    {"num": "3.9.1", "title": "Reducer, boundary or detect?", "minutes": 1,
+     "goal": "Sort one control you will be sold before the page sorts the rest.", "passes": "you have guessed."},
+    {"num": "3.10.1", "title": "Which layer would have held?", "minutes": 4,
+     "goal": "Match nine documented cases to the layer whose absence mattered most.",
+     "passes": "you have picked a layer for all nine cases."},
+]
+for _i, _e in enumerate(EXERCISE_LIST, 1):
+    _e["n"] = _i
+
+TERMS = [
+    ("excessive agency", "the agent holds more tools, wider keys or more freedom than the task needs"),
+    ("scoped credential", "a key issued for one task and one person, with only that task's scopes"),
+    ("confused deputy", "a program with authority of its own, tricked into spending it for someone who has none"),
+    ("object check", "the tool asks whose record a call touches, not only what kind of call it is"),
+    ("approval gate", "a person sees the literal call before something that cannot be undone runs"),
+    ("limit", "ends the whole run, where a gate asks a person about one call"),
+    ("reducer and boundary", "a reducer lowers the odds of harm; a boundary limits the harm whatever the model does"),
+    ("tool poisoning", "a tool's description carries instructions the model obeys"),
+]
+
+RECAP_POINTS = [
+    "Authority is a property of the call, not of the agent: shrink the toolbox, scope the credential to the task and the "
+    "person, and check every use outside the model.",
+    "A gate asks a person about one call, so keep it rare, show the literal call and run only the call that was approved. "
+    "A limit ends the run.",
+    "A tool definition is input: pin it, and bound what it can reach. Only a boundary bounds the damage; a reducer changes "
+    "the odds.",
+]
+
+
 # ---------------------------------------------------------------- self-check: python notebooks/koda_toolbox.py
 if __name__ == "__main__":
     # the flag parser, getopt_long style
@@ -1177,4 +1273,13 @@ if __name__ == "__main__":
     assert state == "fail" and (_LC, ACCOUNTS[101]) == before and verdict("can_access", ANSWERS["can_access"])[1] == "pass"
     assert verdict("valid_flags", "import sys\ndef valid_flags(flags):\n    sys.exit(2)")[1] == "fail"
     assert verdict("valid_flags", "def valid_flags(flags):\n    while True:\n        pass")[1] == "fail"
+    # the exercise list, the key terms and the recap the page draws
+    assert [e["n"] for e in EXERCISE_LIST] == list(range(1, len(EXERCISE_LIST) + 1))
+    assert len({e["num"] for e in EXERCISE_LIST}) == len(EXERCISE_LIST) and all(e["num"].startswith("3.") for e in EXERCISE_LIST)
+    assert [tuple(int(x) for x in e["num"].split(".")) for e in EXERCISE_LIST] == \
+        sorted(tuple(int(x) for x in e["num"].split(".")) for e in EXERCISE_LIST)
+    assert all(e["title"] and e["goal"] and e["passes"] and 1 <= e["minutes"] <= 5 for e in EXERCISE_LIST)
+    assert 6 <= len(TERMS) <= 8 and len(RECAP_POINTS) == 3
+    for text in ([e[k] for e in EXERCISE_LIST for k in ("title", "goal", "passes")] + [x for pair in TERMS for x in pair] + RECAP_POINTS):
+        assert chr(8212) not in text and chr(8211) not in text and "`" not in text, text
     print("koda_toolbox: all checks passed")
