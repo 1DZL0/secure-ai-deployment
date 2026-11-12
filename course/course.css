@@ -429,6 +429,8 @@ div:has(> .cm-editor), [class*="cm-theme"] { border-color: transparent !importan
 .sad-table { border-collapse: collapse; width: 100%; font: 400 15px/1.5 var(--sad-font); color: var(--sad-ink); }
 .sad-table th { text-align: left; font-weight: 500; color: var(--sad-muted); padding: 8px 16px 8px 0; border-bottom: 1px solid var(--sad-line); white-space: nowrap; }
 .sad-table td { padding: 8px 16px 8px 0; border-top: 1px solid var(--sad-line); vertical-align: middle; }
+/* a grid whose row labels are sentences (module 06's filter grid): the labels wrap */
+.sad-table.is-wrap tbody th { white-space: normal; min-width: 11em; }
 .sad-table td[data-k=bad] { font-weight: 600; }
 .sad-table td[data-k=warn], .sad-table td[data-k=muted] { color: var(--sad-muted); }
 /* module 05's leak grid: three prompts by six attempts; the glyph columns take only the width they need, so it fits a phone */

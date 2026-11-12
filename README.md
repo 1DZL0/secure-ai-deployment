@@ -13,6 +13,7 @@ OPENROUTER_API_KEY=... python tools/record_live_runs.py   # refresh the recorded
 python notebooks/koda_toolbox.py           # module 03's lab: the ten-tool toolbox, its exercises, model answers and wrong answers
 python notebooks/koda_answer.py            # module 05's lab: the leak grader, the renderer's browser model, its exercises, recorded fingerprints
 python notebooks/koda_retrieval.py         # module 04's lab: one document from source to answer, its exercises, model and wrong answers
+python notebooks/koda_sandbox.py           # module 06's lab: a model of a sandbox, the scripts run against it, its exercises, model and wrong answers
 python -m lab.agent --profile unsafe   "Look up customer 42 for me"
 python -m lab.agent --profile hardened "Look up customer 42 for me"
 python -m lab.agent --replay traces/<file>.jsonl   # stage fallback to a video demo

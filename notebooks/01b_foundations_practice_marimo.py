@@ -572,7 +572,7 @@ def _(predict5, predict_view):
     predict_view(predict5.value, "No, code can reach the system in ways the rule did not list",
                  "A blocklist catches the wordings you thought of; an attacker writes one you did not, such as "
                  "<code>__import__</code> or <code>getattr</code> tricks. A rule is a start. Real protection runs the code "
-                 "somewhere it cannot do harm, which is Module 06.")
+                 'somewhere it cannot do harm, which is <a href="../course/#/lesson/code-execution" target="_top">Module 06</a>.')
     return
 
 
@@ -685,7 +685,8 @@ def _(exercise_html, mo, page):
                          "OpenRouter takes a credit limit per key, Anthropic a spend limit per workspace, OpenAI a hard spend "
                          "limit per project. Give each project its own key, so you can revoke one alone.\n\n"
                          "An environment variable is right for a script on your laptop. Once an agent runs code, that code can "
-                         "read the variable too; Module 06 (coming) keeps the key outside the agent entirely."),
+                         'read the variable too; <a href="../course/#/lesson/code-execution" target="_top">Module 06</a> keeps the key '
+                         "outside the box that code runs in."),
                    kind="warn"),
     ])
     return (ran_it,)

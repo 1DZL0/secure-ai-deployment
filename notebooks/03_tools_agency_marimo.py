@@ -2225,7 +2225,7 @@ def _(esc, kt, mo, recap_html):
     _text = (
         "You started with one admin key and ten tools. The check that this landed is a short written register of your own agent&rsquo;s tools, "
         "with the gap column filled in honestly. That register, not this notebook, is the deliverable.\n\n"
-        "*Next: <a href=\"../course/#/lesson/poisoned-retrieval\" target=\"_top\">Module 04, poisoned retrieval</a>, where the knowledge itself is the attack: a planted document that ranks first and lies. Then <a href=\"../course/#/lesson/data-leakage\" target=\"_top\">Module 05</a> on what leaks through the answer, and Module 06 on the sandbox that Part 9 kept pointing at.*"
+        "*Next: <a href=\"../course/#/lesson/poisoned-retrieval\" target=\"_top\">Module 04, poisoned retrieval</a>, where the knowledge itself is the attack: a planted document that ranks first and lies. Then <a href=\"../course/#/lesson/data-leakage\" target=\"_top\">Module 05</a> on what leaks through the answer, and <a href=\"../course/#/lesson/code-execution\" target=\"_top\">Module 06</a> on the sandbox that Part 9 kept pointing at.*"
     )
     mo.vstack([
         mo.Html(recap_html("You now have the method", [esc(_p) for _p in kt.RECAP_POINTS],

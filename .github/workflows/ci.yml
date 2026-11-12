@@ -19,3 +19,4 @@ jobs:
       - run: python notebooks/koda_toolbox.py   # module 03's toolbox lab: model answers pass, wrong answers fail
       - run: python notebooks/koda_answer.py    # module 05's engine: leak grader, renderer oracle, exercises, recorded fingerprints
       - run: python notebooks/koda_retrieval.py # module 04's engine: the pipeline stages, model answers pass, wrong answers fail
+      - run: python notebooks/koda_sandbox.py   # module 06's engine: the model of a box, the six payloads, model answers pass, wrong answers fail

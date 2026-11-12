@@ -135,7 +135,7 @@ def _(RECORDED, esc, hero, ka, link, mo, terms_html):
                 "(Part 2, exercises 2.5 to 2.7), the recipient allowlist (3.1), and the first markdown-image leak (Part 4, card 5, the "
                 "EchoLeak channel). This module links to that card and has you build the renderer it calls for. "
                 + link("tools-agency", "Module 03") + " owns whose record the agent may read (Part 3). "
-                + link("poisoned-retrieval", "Module 04") + " owns answers that are false or manipulated. Module 06 (coming) owns running "
+                + link("poisoned-retrieval", "Module 04") + " owns answers that are false or manipulated. " + link("code-execution", "Module 06") + " owns running "
                 "model output as code, and every sandbox. What to keep out of logs is Module 09 (coming).</div>"
                 '<p class="sad-cap">Standards: ' + " ".join(esc(_s) for _s in ka.STANDARDS.values()) + "</p>"),
     ])
@@ -1141,7 +1141,7 @@ def _(esc, ka, link, mo, recap_html):
             "the URL, bind the parameter, pass the variable.",
         ], artefact="a canary test, a field allowlist and a renderer you wrote, and an answer-path register for your own agent")),
         mo.Html(f'<p class="sad-prose"><b>{esc(ka.MODULE_LINE)}</b></p>'),
-        mo.Html('<p class="sad-prose"><i>Next: Module 06, code execution and sandboxing (coming). Companions: '
+        mo.Html('<p class="sad-prose"><i>Next: ' + link("code-execution", "Module 06, isolated code execution") + '. Companions: '
                 + link("prompt-injection", "Module 02&rsquo;s card 5") + ", the markdown-image leak this module built the fix for, and "
                 + link("poisoned-retrieval", "Module 04") + ", where the answer itself is false.</i></p>"),
     ])

@@ -29,11 +29,12 @@ jobs:
       - run: python notebooks/koda_practice.py # Foundations practice: the practice model, starters, answers and graders
       - run: python notebooks/koda_answer.py   # module 05's engine: leak grader, renderer oracle, exercises, recorded fingerprints
       - run: python notebooks/koda_retrieval.py # module 04's engine: the pipeline stages, model answers pass, wrong answers fail
+      - run: python notebooks/koda_sandbox.py   # module 06's engine: the model of a box, the six payloads, model answers pass, wrong answers fail
       - name: Export the interactive modules to _site
         # Run from notebooks/: marimo resolves a notebook's css_file (../course/course.css) against the working directory
         # in an html-wasm export, so exporting from the repo root would silently drop the course stylesheet.
         run: |
-          mkdir -p _site/prompt-injection _site/foundations _site/tools-agency _site/benchmark _site/foundations-practice _site/data-leakage
+          mkdir -p _site/prompt-injection _site/foundations _site/tools-agency _site/benchmark _site/foundations-practice _site/data-leakage _site/code-execution
           cd notebooks
           python -m marimo export html-wasm 04_poisoned_retrieval_marimo.py \
             -o ../_site/index.html --mode run --no-show-code
@@ -49,6 +50,8 @@ jobs:
             -o ../_site/benchmark/index.html --mode run --no-show-code
           python -m marimo export html-wasm 05_data_leakage_marimo.py \
             -o ../_site/data-leakage/index.html --mode run --no-show-code
+          python -m marimo export html-wasm 06_code_execution_marimo.py \
+            -o ../_site/code-execution/index.html --mode run --no-show-code
           cd ..
           grep -q "sad-head" _site/foundations/index.html   # fail the build if the stylesheet was not inlined
           cp -r course _site/course   # the course shell (sidebar, progress, quizzes) and course.css that wrap the modules
