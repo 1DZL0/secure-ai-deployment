@@ -1302,7 +1302,7 @@ def memory_svg():
 
 
 WALK = {
-    1: ("Your code sends the messages and the tool descriptions. That is arrow 1 in the Foundations picture.",
+    1: ("Your code sends the messages and the tool descriptions. That is arrow 1 in the picture.",
         ("client.chat.completions.create(", "client.messages.create(")),
     2: ("The reply is either a tool request or the answer, and this line tells them apart. Arrow 2.",
         ("if not message.tool_calls", 'if reply.stop_reason != "tool_use"')),

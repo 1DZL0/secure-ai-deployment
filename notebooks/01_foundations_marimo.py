@@ -7,16 +7,16 @@ app = marimo.App(width="medium", css_file="../course/course.css", app_title="How
 @app.cell
 def _():
     import marimo as mo
-    from koda_lab import (PROVIDERS, WEATHER_MSGS, WEATHER_TOOL, divider, exercise_html, has_key, hero, key_mismatch, mono_panel,
-                          post_for, recap_html, short_model, terms_html, when)
+    from koda_lab import (PROVIDERS, WEATHER_MSGS, WEATHER_TOOL, divider, exercise_html, has_key, hero, key_mismatch, loop_svg,
+                          mono_panel, post_for, recap_html, short_model, terms_html, when)
     from koda_recorded import RECORDED
 
     def fb_card(ok, why, head=None):
         _h = head or ("&#10003; correct" if ok else "&#10007; not quite")
         return mo.Html(f'<div class="sad-fb" data-ok="{"true" if ok else "false"}"><b>{_h}</b> &middot; {why}</div>')
 
-    return (PROVIDERS, RECORDED, WEATHER_MSGS, WEATHER_TOOL, divider, exercise_html, fb_card, has_key, hero, key_mismatch, mo,
-            mono_panel, post_for, recap_html, short_model, terms_html, when)
+    return (PROVIDERS, RECORDED, WEATHER_MSGS, WEATHER_TOOL, divider, exercise_html, fb_card, has_key, hero, key_mismatch, loop_svg,
+            mo, mono_panel, post_for, recap_html, short_model, terms_html, when)
 
 
 @app.cell
@@ -85,38 +85,6 @@ def _(mo):
     mo.md("An agent is not a new kind of program. It is a **model**, a set of **tools**, and a **loop** that ties them "
           "together. One turn of that loop:")
     return
-
-
-@app.cell
-def _():
-    def loop_svg():
-        # the loop as a picture: four boxes, five numbered arrows; the labels sit under it as HTML so they stay 15px on a phone
-        # 14px in a 360-wide viewBox stays at or above 12.8px once the picture is 330px wide on a phone
-        _box = lambda x, t: (f'<rect x="{x}" y="36" width="70" height="40" rx="6" fill="#fafaf9" stroke="#9ca3af" stroke-width="1.5"/>'
-                             f'<text x="{x + 35}" y="61" text-anchor="middle" fill="#1a1a1a" style="font:500 14px system-ui;">{t}</text>')
-        _num = lambda x, y, n, c="#5f6368": f'<text x="{x}" y="{y}" text-anchor="middle" fill="{c}" style="font:600 14px system-ui;">{n}</text>'
-        _g, _b = "#9ca3af", "#1d4ed8"
-        return ('<div class="sad-flowbox"><p class="sad-cap">one turn of the loop</p>'
-                '<svg viewBox="0 0 360 118" width="100%" role="img" aria-label="The agent loop" style="max-width:560px;display:block;margin:0 auto;">'
-                '<defs><marker id="ag" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">'
-                f'<path d="M0 0L10 5L0 10z" fill="{_g}"/></marker>'
-                '<marker id="ab" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">'
-                f'<path d="M0 0L10 5L0 10z" fill="{_b}"/></marker></defs>'
-                + _box(1, "you") + _box(97, "model") + _box(193, "your code") + _box(289, "tool")
-                + f'<line x1="71" y1="50" x2="97" y2="50" stroke="{_g}" stroke-width="1.5" marker-end="url(#ag)"/>' + _num(84, 30, 1)
-                + f'<line x1="167" y1="50" x2="193" y2="50" stroke="{_g}" stroke-width="1.5" marker-end="url(#ag)"/>' + _num(180, 30, 2)
-                + f'<line x1="263" y1="50" x2="289" y2="50" stroke="{_b}" stroke-width="2.5" marker-end="url(#ab)"/>' + _num(276, 30, 3, _b)
-                + f'<path d="M324 76V94H150V78" fill="none" stroke="{_g}" stroke-width="1.5" marker-end="url(#ag)"/>' + _num(237, 90, 4)
-                + f'<path d="M114 76V110H36V78" fill="none" stroke="{_g}" stroke-width="1.5" marker-end="url(#ag)"/>' + _num(75, 106, 5)
-                + '</svg>'
-                '<ol class="sad-ul" style="font-size:15px;line-height:1.5;margin-top:4px;">'
-                '<li>you send the question, plus the menu of tools the model may ask for</li>'
-                '<li>the model asks to call a tool: a request, with no answer yet</li>'
-                '<li style="color:#1d4ed8;font-weight:500;">your code runs the tool: nothing happens until it chooses to</li>'
-                '<li>the result goes back to the model</li>'
-                '<li>now it has the result, so it writes the reply</li></ol></div>')
-
-    return (loop_svg,)
 
 
 @app.cell
@@ -260,7 +228,9 @@ def _(PROVIDERS, mo):
     live_key = mo.ui.text(kind="password", label="API key (optional, stays in your browser)", full_width=True)
     mo.vstack([
         mo.md("**Optional: ask a real model now.** Paste a key from OpenRouter, OpenAI (ChatGPT) or Anthropic (Claude) and "
-              "send the same request yourself."),
+              "send the same request yourself. The key stays in this page and goes only to the provider you pick. In your own "
+              "code, read a key from an environment variable, never from the code itself, and cap what it can spend with the "
+              "provider; <a href='../course/#/practice/1.6' target='_top'>practice 1.6</a> sets one up on your machine."),
         mo.callout(mo.vstack([live_provider, live_key], gap=0.8), kind="neutral"),
     ])
     return live_key, live_provider
@@ -300,6 +270,22 @@ async def _(WEATHER_MSGS, WEATHER_TOOL, has_key, key_mismatch, live_go, live_key
         except Exception as _e:
             _view = mo.md(f"The request failed (`{_e}`). The five recorded replies above make the same point.")
     _view
+    return
+
+
+@app.cell
+def _(mo):
+    _text = (
+        "**Two facts about every call, which the rest of the course leans on.**\n\n"
+        "- **The model keeps nothing between calls.** It seems to remember because your code sends the whole conversation "
+        "every time. Delete a message and the model never saw it; add one and it believes it. Whoever controls that list "
+        "controls what the model believes. <a href='../course/#/practice/1.2' target='_top'>Practice 1.2</a> has you do both.\n"
+        "- **The model knows a tool only by its description:** a name, one sentence on what it does, and the inputs it needs, "
+        "sent as JSON with the messages. It asks for a tool by that name and fills in the inputs from the conversation, so the "
+        "description is all it knows about your function. <a href='../course/#/practice/1.3' target='_top'>Practice 1.3</a> "
+        "has you write one."
+    )
+    mo.md(_text)
     return
 
 

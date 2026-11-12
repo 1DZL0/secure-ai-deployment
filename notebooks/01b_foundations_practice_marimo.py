@@ -8,7 +8,7 @@ app = marimo.App(width="medium", css_file="../course/course.css", app_title="Fou
 def _():
     import marimo as mo
     import koda_practice as kz
-    from koda_lab import exercise_html, hero, recap_html, terms_html
+    from koda_lab import exercise_html, hero, loop_svg, recap_html, terms_html
 
     def fb_html(ok, head, body):
         return mo.Html(f'<div class="sad-fb" data-ok="{ok}"><b>{head}</b> &middot; {body}</div>')
@@ -36,7 +36,7 @@ def _():
             mo.accordion({f"What went over the wire ({_n} call{'s' if _n != 1 else ''})": mo.Html(kz.wire_html(run.wire))}),
         ])
 
-    return exercise_html, fb_html, hero, hint_view, kz, mo, predict_view, recap_html, show_run, terms_html
+    return exercise_html, fb_html, hero, hint_view, kz, loop_svg, mo, predict_view, recap_html, show_run, terms_html
 
 
 @app.cell
@@ -182,7 +182,8 @@ def _(mo, page):
 def _(get_p1, predict1, predict_view):
     predict_view(predict1.value, "The style and role of the answer",
                  "The system message is just the first entry in the list the model reads, so changing it changes how the model "
-                 "behaves. Foundations Part 3 shows why that matters for security.", ran=bool(get_p1()))
+                 "behaves. The model reads that list as one stream and cannot tell your instructions from text that merely arrived in it, "
+                 "which is the security problem this course is about.", ran=bool(get_p1()))
     return
 
 
@@ -322,7 +323,7 @@ def _(family, kz, mo, page):
             """
             ### The model only ever sees the description
 
-            Foundations showed that a tool call is a request: the model asks, your code acts. The model can only ask for a
+            A tool call is a request: the model asks, your code acts. The model can only ask for a
             tool you have **described** to it. The description is a few lines of JSON sent along with the messages, and it
             is all the model knows about your function.
 
@@ -408,8 +409,8 @@ def _(mo, page):
         """
         ### From the picture to the code
 
-        Foundations Part 2 drew the loop as five numbered arrows and ran a pretend one. Here is the real code. Step through it:
-        the lit lines are the step, and each step names its arrow in that picture.
+        One turn of an agent is five steps: you send, the model asks for a tool, your code runs it, the result goes back, the
+        model answers. Here is the real code. Step through it: the lit lines are the step, and the picture lights the same step.
         """
     )
     return
@@ -424,9 +425,10 @@ def _(mo, page, set_step):
 
 
 @app.cell
-def _(family, get_step, kz, mo, step_back, step_next):
+def _(family, get_step, kz, loop_svg, mo, step_back, step_next):
     _s = get_step()
     mo.vstack([
+        mo.Html(loop_svg(_s)),
         mo.Html(kz.code_walk_html(_s, family)),
         mo.md(f"**Step {_s}.** {kz.WALK[_s][0]}"),
         mo.hstack([step_back, step_next], justify="start", gap=0.6),
@@ -593,8 +595,8 @@ def _(kz, mo, page):
             """
             ### Find your loop inside a framework
 
-            Foundations said a framework runs the loop for you, and that the seam, where a tool request becomes an action,
-            moves inside it. Here you run three frameworks and find that seam in each. Under the new names, every one of them
+            A framework runs the loop for you, so the seam, where a tool request becomes an action, moves inside the
+            library. Here you run three frameworks and find that seam in each. Under the new names, every one of them
             does what you wrote in 1.4.
             """
         ),

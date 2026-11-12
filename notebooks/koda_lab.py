@@ -391,6 +391,42 @@ def mono_panel(title, body, foot="", verdict=None, kind=None):
             + (f'<div class="sad-mp-verdict" data-k="{kind or "good"}">{verdict}</div>' if verdict else "")
             + (f'<div class="sad-mp-foot">{foot}</div>' if foot else "") + '</div>')
 
+def loop_svg(active=None):
+    """The agent loop as a picture: four boxes and five numbered arrows, their meanings listed under it as HTML so they stay
+    15px on a phone. `active` (1 to 5) lights one step, for a page that walks through the loop; without it the seam, step 3,
+    is the one in blue. Module 01 draws it in Part 2 and practice page 1.4 lights each step of the real code."""
+    hot = 3 if active is None else active
+    _g, _b = "#9ca3af", "#1d4ed8"
+    col = lambda n: _b if n == hot else _g
+    wid = lambda n: "2.5" if n == hot else "1.5"
+    mark = lambda n: "url(#ab)" if n == hot else "url(#ag)"
+    # 14px in a 360-wide viewBox stays at or above 12.8px once the picture is 330px wide on a phone
+    _box = lambda x, t: (f'<rect x="{x}" y="36" width="70" height="40" rx="6" fill="#fafaf9" stroke="#9ca3af" stroke-width="1.5"/>'
+                         f'<text x="{x + 35}" y="61" text-anchor="middle" fill="#1a1a1a" style="font:500 14px system-ui;">{t}</text>')
+    _num = lambda x, y, n: (f'<text x="{x}" y="{y}" text-anchor="middle" fill="{_b if n == hot else "#5f6368"}" '
+                            f'style="font:600 14px system-ui;">{n}</text>')
+    _steps = ["you send the question, plus the menu of tools the model may ask for",
+              "the model asks to call a tool: a request, with no answer yet",
+              "your code runs the tool: nothing happens until it chooses to",
+              "the result goes back to the model",
+              "now it has the result, so it writes the reply"]
+    _items = "".join(f'<li style="color:#1d4ed8;font-weight:500;">{t}</li>' if i == hot else f"<li>{t}</li>"
+                     for i, t in enumerate(_steps, 1))
+    return ('<div class="sad-flowbox"><p class="sad-cap">one turn of the loop</p>'
+            '<svg viewBox="0 0 360 118" width="100%" role="img" aria-label="The agent loop" style="max-width:560px;display:block;margin:0 auto;">'
+            '<defs><marker id="ag" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">'
+            f'<path d="M0 0L10 5L0 10z" fill="{_g}"/></marker>'
+            '<marker id="ab" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">'
+            f'<path d="M0 0L10 5L0 10z" fill="{_b}"/></marker></defs>'
+            + _box(1, "you") + _box(97, "model") + _box(193, "your code") + _box(289, "tool")
+            + f'<line x1="71" y1="50" x2="97" y2="50" stroke="{col(1)}" stroke-width="{wid(1)}" marker-end="{mark(1)}"/>' + _num(84, 30, 1)
+            + f'<line x1="167" y1="50" x2="193" y2="50" stroke="{col(2)}" stroke-width="{wid(2)}" marker-end="{mark(2)}"/>' + _num(180, 30, 2)
+            + f'<line x1="263" y1="50" x2="289" y2="50" stroke="{col(3)}" stroke-width="{wid(3)}" marker-end="{mark(3)}"/>' + _num(276, 30, 3)
+            + f'<path d="M324 76V94H150V78" fill="none" stroke="{col(4)}" stroke-width="{wid(4)}" marker-end="{mark(4)}"/>' + _num(237, 90, 4)
+            + f'<path d="M114 76V110H36V78" fill="none" stroke="{col(5)}" stroke-width="{wid(5)}" marker-end="{mark(5)}"/>' + _num(75, 106, 5)
+            + '</svg>'
+            f'<ol class="sad-ul" style="font-size:15px;line-height:1.5;margin-top:4px;">{_items}</ol></div>')
+
 def exercise_html(num, title, goal, minutes=None, passes=""):
     """The header of a numbered exercise: eyebrow "Exercise 2.1 · 3 min", a title, a one-line goal and, optionally,
     the pass condition ("You pass when ..."). The activity's widgets follow in the next cells."""
@@ -1110,6 +1146,8 @@ if __name__ == "__main__":
     assert set(RATE_CONDITIONS) == {"clean", "destructive", "exfil"} and RATE_CONDITIONS["destructive"] == CUSTOMERS[42]["notes"]
     assert contrast_html("04").count("this module") == 1 and "Module 02" in contrast_html("02")
     assert "Exercise 2.1" in exercise_html("2.1", "t", "g", 3, "x") and "You pass when" in exercise_html("2.1", "t", "g", passes="x")
+    assert loop_svg().count('stroke-width="2.5"') == 1 and '<li style="color:#1d4ed8;font-weight:500;">your code runs' in loop_svg()
+    assert '<li style="color:#1d4ed8;font-weight:500;">the result goes back' in loop_svg(4) and loop_svg(4).count('stroke-width="2.5"') == 1
     assert terms_html([("egress", "data leaving")]).count('class="sad-term"') == 1 and "<li>a</li>" in recap_html("R", ["a"])
     # the rate study's graders, on synthetic runs: one that followed the note, one that did the task, one that errored
     _note = RATE_CONDITIONS["destructive"]
