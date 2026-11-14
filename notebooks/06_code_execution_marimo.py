@@ -86,12 +86,12 @@ def _(esc, hero, ks, mo, terms_html):
     _parts = ["run model-written code with no box around it, and see what it reaches",
               "get a secret past a filter that reads the code first",
               "decide which folders the box sees",
-              "decide where the box may send data, and find the two holes in that",
+              "decide where the box may send data, and find the three holes in that",
               "keep the API key outside the box and still call the API",
               "cap time, memory, processes and disk, and give each session its own box",
-              "choose how strong the wall is by who shares the machine",
-              "check what comes back out of the box",
-              "build the whole box and pass twelve checks",
+              "choose how strong the wall is by who shares the machine, and stop running the code as root",
+              "check what comes back out of the box, and which files the box may never write",
+              "build the whole box and pass fourteen checks",
               "run the checklist against your own agent"]
     mo.vstack([
         mo.Html(hero(
@@ -99,7 +99,7 @@ def _(esc, hero, ks, mo, terms_html):
             "Isolated code execution: the box around what the agent runs",
             "An agent that writes code and runs it gives whoever can steer the model a program on your machine. This module builds "
             "the box around that program one wall at a time: files, network, secrets, limits, and what is allowed back out.",
-            meta=("about 60 minutes", "runs in your browser, no key needed", "nothing real is touched"),
+            meta=("about 100 minutes", "runs in your browser, no key needed", "nothing real is touched"),
         )),
         mo.Html(terms_html([(esc(_t), esc(_m)) for _t, _m in ks.TERMS])),
         mo.md("**What you will do**\n\n" + "\n".join(f"- Part {_i}: {_p}." for _i, _p in enumerate(_parts, 1))),
@@ -424,7 +424,7 @@ def _(mo):
 @app.cell
 def _(divider, mo):
     mo.Html(divider(4, "The network wall", "You will do: try four network settings against three scripts, then predict what an "
-                    "allowlist of one host still lets out. You will have: a network wall, and its two known holes."))
+                    "allowlist of one host still lets out. You will have: a network wall, and its three known holes."))
     return
 
 
@@ -518,9 +518,33 @@ def _(ext, mo):
 
 
 @app.cell
+def _(ext, files_box, ks, link, mo, show_run):
+    _text = ("**Documented.** Anthropic's " + ext("https://code.claude.com/docs/en/agent-sdk/secure-deployment", "deployment guidance for agents")
+             + " says this about the proxy in its sandbox runtime: \"By default, the proxy allowlists domains based on the "
+             "client-supplied hostname and doesn't terminate or inspect encrypted traffic. Code running inside the sandbox can "
+             "potentially use domain fronting or similar techniques to reach hosts outside the allowlist.\" Its advice for a "
+             "deployment that needs more: \"use a TLS-terminating proxy that inspects traffic\".")
+    mo.vstack([
+        mo.md("The allowed host has a second weakness, in how the proxy reads a request. Web traffic is encrypted, so a proxy that "
+              "only passes it along sees one thing: the name the connection is opened to. The request inside, which says which "
+              "site it is for, is hidden from the proxy. Many sites sit behind one shared front, such as a content delivery "
+              "network, and the front hands each request to the site named inside it. Assume Koda's API and the attacker's site "
+              "share a front. The script below is a stand-in for the trick, which is called domain fronting. Whether it works "
+              "against a real host depends on the front that host sits behind."),
+        show_run(ks.EXFIL_FRONT, {**files_box, "network": "proxy", "allow": ["api.koda.example"]}),
+        mo.md(_text),
+        mo.md("One more reason to make the proxy the only way out. A box on an open network can reach whatever its host can reach "
+              "on the inside: other services on the company's network and, on a cloud machine, the address that hands out the "
+              "machine's own credentials. Neither is on the proxy's list. The same door, opened by a model that fetches web "
+              "addresses, is in " + link("prompt-injection", "Module 02") + " (Part 2, exercise 2.7)."),
+    ])
+    return
+
+
+@app.cell
 def _(mo):
     mo.callout(mo.md("**Part 4 in a sentence.** Give the box no route out except a proxy with a short allowlist, and remember that "
-                     "an allowed host is still a way out. Part 5 closes that one."), kind="success")
+                     "an allowed host is still a way out, in two ways. Part 5 closes both."), kind="success")
     return
 
 
@@ -598,13 +622,18 @@ def _(answer, ks, mo, outbound_code, results_table, verdict):
 
 
 @app.cell
-def _(ks, link, mo, proxy_box, results_table):
-    _rows = [ks.summary(_s, proxy_box) for _s in (ks.JOB_API, ks.EXFIL, ks.EXFIL_DNS, ks.EXFIL_ALLOWED)]
+def _(ext, ks, link, mo, proxy_box, results_table):
+    _rows = [ks.summary(_s, proxy_box) for _s in (ks.JOB_API, ks.EXFIL, ks.EXFIL_DNS, ks.EXFIL_ALLOWED, ks.EXFIL_FRONT)]
     mo.vstack([
         mo.md("With that rule in the proxy and an empty environment in the box:"),
         mo.Html(results_table("the box so far: two mounts, a proxy that holds the key", _rows)),
-        mo.md("The upload sent to the allowed host now lands in Koda's own account, where the attacker cannot read it. The key the "
-              "proxy holds should still be narrow and short-lived: " + link("tools-agency", "Module 03")
+        mo.md("The upload sent to the allowed host now lands in Koda's own account, where the attacker cannot read it. The request "
+              "with another site inside it is refused: to add the key the proxy has to open each request, so it reads which site "
+              "the request is for and checks that name too. A proxy that only passes encrypted traffic along can do neither. In "
+              "the words of " + ext("https://code.claude.com/docs/en/agent-sdk/secure-deployment", "Anthropic's guidance")
+              + ", it \"only sees an opaque TLS tunnel and can't inject credentials.\" The price is that the box has to trust the "
+              "proxy's certificate."),
+        mo.md("The key the proxy holds should still be narrow and short-lived: " + link("tools-agency", "Module 03")
               + " covers that (Part 3, Scope the credential)."),
     ])
     return
@@ -726,6 +755,17 @@ def _(answer, ks, mo, pickbox_code, results_table, verdict):
 
 
 @app.cell
+def _(ext, mo):
+    _text = ("**Documented.** The hardened container in Anthropic's " + ext("https://code.claude.com/docs/en/agent-sdk/secure-deployment", "deployment guidance for agents")
+             + " sets a memory limit, which \"Limits memory usage to prevent resource exhaustion\", and a limit on processes, which "
+             "\"Limits processes and threads to prevent fork bombs\". Its temporary folder is one \"that's cleared when the "
+             "container stops\". The " + ext("https://cheatsheetseries.owasp.org/cheatsheets/Docker_Security_Cheat_Sheet.html", "OWASP Docker Security Cheat Sheet")
+             + " gives the same advice as its rule 7: \"The best way to avoid DoS attacks is by limiting resources.\"")
+    mo.md(_text)
+    return
+
+
+@app.cell
 def _(mo):
     mo.callout(mo.md("**Part 6 in a sentence.** Cap time, memory, processes and disk separately, and delete the box with the session "
                      "that used it."), kind="success")
@@ -734,8 +774,9 @@ def _(mo):
 
 @app.cell
 def _(divider, mo):
-    mo.Html(divider(7, "How strong the wall is", "You will do: predict what a container still shares with its host, then compare "
-                    "five walls against one kernel bug. You will have: a way to choose the wall by who shares the machine."))
+    mo.Html(divider(7, "How strong the wall is", "You will do: predict what a container still shares with its host, compare "
+                    "five walls against one kernel bug, then write the rule that picks a wall. You will have: a way to choose the "
+                    "wall by who shares the machine, and a box whose code does not run as root."))
     return
 
 
@@ -795,6 +836,104 @@ def _(mo):
 
 
 @app.cell
+def _(ex, ext, ks, mo, stuck):
+    pickwall_code = mo.ui.code_editor(theme="dark", value=ks.STARTERS["pick_wall"], language="python", debounce=True)
+    mo.vstack([
+        mo.md("The third line has two answers, and the machine decides between them. A microVM needs a processor feature, "
+              "hardware virtualisation: " + ext("https://firecracker-microvm.github.io/", "Firecracker's site")
+              + " says it is available on processors \"with support for hardware virtualization\". gVisor does not need it: "
+              + ext("https://gvisor.dev/docs/architecture_guide/platforms/", "its documentation")
+              + " says its default platform \"is a better choice when running inside a VM, or on a machine without virtualization "
+              "support.\" Koda writes its rule down as code."),
+        ex("6.7.2"), pickwall_code,
+        stuck("Decide first whether the machine is shared: `d[\"customers\"] > 1`. If it is, return `\"microvm\"` when `d[\"vms\"]` "
+              "is true and `\"gvisor\"` when it is not. If it is not shared, return `\"os\"` for a laptop and `\"container\"` for "
+              "a server."),
+    ])
+    return (pickwall_code,)
+
+
+@app.cell
+def _(answer, ext, ks, mo, pickwall_code, results_table, verdict):
+    _rows, _state, _err = ks.grade("pick_wall", pickwall_code.value)
+    mo.vstack([
+        mo.Html(results_table(f"your pick_wall() on {len(ks.EXERCISE_CASES['pick_wall'])} deployments", _rows)) if _rows else mo.md(""),
+        mo.md(verdict(_state, _err,
+                      "The rule asks who shares the machine first, and what the machine can run second. Sharing decides that the "
+                      "box needs a kernel of its own. The machine decides which kind.",
+                      "The rows marked ✗ are wrong. More than one customer always means a wall with its own kernel: a microVM "
+                      "where the machine can start one, gVisor where it cannot.")),
+        answer(ks.ANSWERS["pick_wall"]),
+        mo.md("This is Koda's rule, not a ranking of walls. " + ext("https://code.claude.com/docs/en/agent-sdk/secure-deployment", "Anthropic's deployment guidance")
+              + " rates gVisor and virtual machines the same, \"Excellent (with correct setup)\", and says: \"VMs aren't "
+              "automatically 'more secure' than alternatives like gVisor. VM security depends heavily on the hypervisor and "
+              "device emulation code.\" It rates containers \"Setup dependent\". The setup is next."),
+    ])
+    return
+
+
+@app.cell
+def _(esc, ext, mo):
+    sw_plain = mo.ui.switch(label="run the code as an ordinary user")
+    _flags = [("--user 1000:1000", "Runs as a non-root user", "the code is an ordinary user, not root"),
+              ("--cap-drop ALL", "Removes Linux capabilities like NET_ADMIN and SYS_ADMIN that could enable privilege escalation",
+               "takes away the separate powers that root is made of"),
+              ("--security-opt no-new-privileges", "Prevents processes from gaining privileges through setuid binaries",
+               "the code cannot become root again by running a program that is allowed to"),
+              ("--read-only", "Makes the container's root filesystem immutable, preventing the agent from persisting changes",
+               "the box's own system folders cannot be changed")]
+    _table = ('<div class="sad-tablebox"><table class="sad-table"><thead><tr><th>the flag</th><th>what the guidance says it does</th>'
+              "<th>in plain words</th></tr></thead><tbody>"
+              + "".join(f"<tr><td><code>{esc(_f)}</code></td><td data-k='muted'>&quot;{esc(_q)}&quot;</td><td>{esc(_p)}</td></tr>"
+                        for _f, _q, _p in _flags)
+              + '</tbody></table></div><p class="sad-cap">Four flags from the hardened Docker example in '
+              + ext("https://code.claude.com/docs/en/agent-sdk/secure-deployment", "Anthropic's deployment guidance") + ".</p>")
+    mo.vstack([
+        mo.md("The rule picks a wall. How well the wall holds depends on how it is set up, and one default matters most: unless it "
+              "is told otherwise, Docker runs the code in a container as root. Root in a container has fewer powers than root on "
+              "the host, and it is still the user that some escapes need. The hardened example in the guidance takes it away:"),
+        mo.Html(_table),
+        mo.md("In the box on this page one setting, `user`, stands for all four flags: `\"root\"` or `\"plain\"`. The script below "
+              "is a stand-in again, with no exploit code. It stands for a bug in the program that starts containers, one that "
+              "only root inside the box can use. The box is the one built so far, with a container as its wall. Read the run, "
+              "then switch."),
+        sw_plain,
+    ])
+    return (sw_plain,)
+
+
+@app.cell
+def _(ks, mo, proxy_box, show_run, sw_plain):
+    _after = ("The bug is still there, unfixed, and the code can no longer use it. This does not give the box a kernel of its "
+              "own: the kernel bug in the table above works the same for an ordinary user. The setting goes with the choice of "
+              "wall and does not replace it."
+              if sw_plain.value else
+              "The code was root inside the box, the bug needed root, and a container shares the host's kernel. Root inside the "
+              "box became root on the host.")
+    mo.vstack([
+        show_run(ks.ROOTBUG, {**proxy_box, "wall": "container", "user": "plain" if sw_plain.value else "root"},
+                 ok="the bug needs root inside the box, and the code is not root."),
+        mo.md(_after),
+    ])
+    return
+
+
+@app.cell
+def _(ext, mo):
+    _text = ("**Documented.** " + ext("https://genai.owasp.org/resource/owasp-top-10-for-agentic-applications-for-2026/",
+                                     "OWASP's entry for unexpected code execution")
+             + " (ASI05) says it in four words: \"Never run as root.\" The " + ext("https://cheatsheetseries.owasp.org/cheatsheets/Docker_Security_Cheat_Sheet.html", "OWASP Docker Security Cheat Sheet")
+             + " makes the flags into rules: \"Configuring the container to use an unprivileged user is the best way to prevent "
+             "privilege escalation attacks\", and \"The most secure setup is to drop all capabilities `--cap-drop all` and then "
+             "add only required ones.\" The stand-in has a real relative. "
+             + ext("https://github.com/advisories/GHSA-gxmr-w5mj-v8hh", "CVE-2019-5736")
+             + " in runc, the program Docker uses to start containers, let code running as root inside a container overwrite runc "
+             "on the host and so become root there. Docker versions before 18.09.2 were affected.")
+    mo.md(_text)
+    return
+
+
+@app.cell
 def _(ext, mo):
     _text = ("**Documented.** NIST's " + ext("https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-190.pdf", "container security guide")
              + " says containers do not offer as clear and concrete a security boundary as a virtual machine, and the "
@@ -849,15 +988,16 @@ def _(chip, esc, ks, mo):
 
 @app.cell
 def _(mo):
-    mo.callout(mo.md("**Part 7 in a sentence.** Every wall is enforced by something shared; choose the wall by who else shares it."),
-               kind="success")
+    mo.callout(mo.md("**Part 7 in a sentence.** Every wall is enforced by something shared: choose the wall by who else shares "
+                     "it, and do not run the code as root inside it."), kind="success")
     return
 
 
 @app.cell
 def _(divider, mo):
-    mo.Html(divider(8, "What crosses the wall", "You will do: decide which result files the app copies out, then predict where a "
-                    "planted hook runs. You will have: rules for results, and for files that something runs later."))
+    mo.Html(divider(8, "What crosses the wall", "You will do: decide which result files the app copies out, predict where a "
+                    "planted hook runs, then write the rule for paths the box may never write. You will have: rules for results, "
+                    "and for files that something runs later."))
     return
 
 
@@ -949,6 +1089,36 @@ def _(fb_card, hook_pick, mo):
 
 
 @app.cell
+def _(ex, ks, mo, stuck):
+    maywrite_code = mo.ui.code_editor(theme="dark", value=ks.STARTERS["may_write"], language="python", debounce=True)
+    mo.vstack([
+        mo.md("Read-only works when the job never writes there. A coding agent's job is to write in the project folder, so for it "
+              "the rule moves from the folder to the path. Whatever sits between the box and the project folder, the mount table "
+              "or the tool that writes files, refuses a write to any name that something outside the box runs or reads by itself."),
+        ex("6.8.3"), maywrite_code,
+        stuck("Split the lower-cased path on `/`. Refuse the write when any one of the parts is in `PROTECTED`. Compare whole "
+              "parts: `.gitignore` is not `.git`."),
+    ])
+    return (maywrite_code,)
+
+
+@app.cell
+def _(answer, ks, maywrite_code, mo, results_table, verdict):
+    _rows, _state, _err = ks.grade("may_write", maywrite_code.value)
+    mo.vstack([
+        mo.Html(results_table(f"your may_write() on {len(ks.EXERCISE_CASES['may_write'])} paths", _rows)) if _rows else mo.md(""),
+        mo.md(verdict(_state, _err,
+                      "The box can still write the project's code, and none of the names that something outside the box runs or "
+                      "reads by itself. A real check also resolves `..` and links before it compares, and its list is longer "
+                      "than this one.",
+                      "The rows marked ✗ are wrong. Compare every part of the path, in lower case, against the whole names in "
+                      "`PROTECTED`.")),
+        answer(ks.ANSWERS["may_write"]),
+    ])
+    return
+
+
+@app.cell
 def _(ext, mo):
     _text = ("**Documented.** NVIDIA's AI red team "
              + ext("https://developer.nvidia.com/blog/practical-security-guidance-for-sandboxing-agentic-workflows-and-managing-execution-risk/",
@@ -968,6 +1138,25 @@ def _(ext, mo):
 
 
 @app.cell
+def _(ext, mo):
+    _text = ("**Documented.** The file is not always a hook. "
+             + ext("https://www.manifold.security/blog/ai-coding-agents-git-hijack", "Manifold's September 2026 write-up")
+             + " describes coding agents that run `git status` and `git diff` in the background, in a folder whose `.git/config` "
+             "uses the setting `core.fsmonitor` to name a command for git to run. The command runs outside the sandbox, with no "
+             "approval prompt. There the folder arrived with the file already in it, as a zip or a shared folder. A box that can "
+             "write `.git/config` could put it there itself. "
+             + ext("https://www.pillar.security/blog/ill-just-call-you-agent-to-agent-privilege-boundary-failures-in-ci-cd-on-googles-adk-repository",
+                   "Pillar reported in August 2026")
+             + " that an agent in a build workflow, allowed to run only `git` and `gh`, could still run any command, through the "
+             "setting `core.hooksPath` and git aliases. And "
+             + ext("https://research.checkpoint.com/2025/openai-codex-cli-command-injection-vulnerability/", "Check Point found")
+             + " that a project's `.env` file could point OpenAI's Codex CLI at a configuration folder inside the project, and "
+             "the commands listed there ran at startup with no approval (CVE-2025-61260).")
+    mo.md(_text)
+    return
+
+
+@app.cell
 def _(mo):
     mo.callout(mo.md("**Part 8 in a sentence.** Copy out regular files only, treat every result as untrusted data, and keep "
                      "anything that runs later out of the box's reach."), kind="success")
@@ -976,7 +1165,7 @@ def _(mo):
 
 @app.cell
 def _(divider, mo):
-    mo.Html(divider(9, "Capstone: build the box", "You will do: set all nine settings so that twelve checks pass. You will have: "
+    mo.Html(divider(9, "Capstone: build the box", "You will do: set all ten settings so that fourteen checks pass. You will have: "
                     "the action to control table for code execution."))
     return
 
@@ -990,8 +1179,8 @@ def _(ex, ks, mo, stuck):
               "against your settings."),
         ex("6.9.1"), box_code,
         stuck("The line under the table names the first check that fails. Each setting comes from one Part: `mounts` from Part 3, "
-              "`network` and `allow` from Part 4, `env` and `inject` from Part 5, `limits` and `fresh` from Part 6, `wall` from "
-              "Part 7, `collect` from Part 8."),
+              "`network` and `allow` from Part 4, `env` and `inject` from Part 5, `limits` and `fresh` from Part 6, `wall` and "
+              "`user` from Part 7, `collect` from Part 8."),
     ])
     return (box_code,)
 
@@ -1012,21 +1201,28 @@ def _(answer, box_code, ks, md_safe, mo, results_table):
 
 
 @app.cell
-def _(link, mo):
+def _(ext, link, mo):
     _rows = [("the code reads a secret file, or deletes the wrong folder", "two mounts, the input read-only (Part 3)", "the box's mount table", "bound"),
              ("the code reaches the Docker daemon", "never mount a control channel into the box (Part 3)", "the mount table", "bound"),
-             ("data is sent to an attacker's server", "no route out except a proxy with a short allowlist (Part 4)", "the network around the box", "bound"),
+             ("data is sent to an attacker's server, or the code calls an internal address", "no route out except a proxy with a short allowlist (Part 4)",
+              "the network around the box", "bound"),
              ("data leaves inside a name lookup", "no resolver in the box: the proxy looks names up (Part 4)", "the network around the box", "bound"),
              ("an allowed host is used with someone else's key", "the proxy replaces whatever key the box sent (Parts 4, 5)", "the proxy, outside the box", "bound"),
+             ("a request to an allowed name carries another site inside it", "a proxy that opens each request, as it must to add the key (Parts 4, 5)",
+              "the proxy, outside the box", "bound"),
              ("the code reads the API key", "an empty environment; the key lives in the proxy (Part 5)", "the box's environment, and the proxy", "bound"),
              ("a runaway script exhausts the host", "four separate limits: time, memory, processes, disk (Part 6)", "the box's resource limits", "bound"),
              ("something is left behind for the next session", "a new box per session, deleted afterwards (Part 6)", "the box's lifetime", "bound"),
              ("a kernel bug reaches the host", "a wall with its own kernel when strangers share the machine (Part 7)", "what enforces the box", "bound"),
-             ("a result is a link, or a written file runs later", "copy regular files only; hooks and settings out of the mounted folder (Part 8)",
+             ("a bug that only root can use is run inside the box", "an ordinary user, privileges dropped, system folders read-only (Part 7)",
+              "how the box is started", "bound"),
+             ("a result is a link, or a written file runs later", "copy regular files only; no writes to hooks, settings or other paths that run later (Part 8)",
               "the app, and the mount table", "bound"),
              ("the model writes dangerous code at all", link("prompt-injection", "Module 02") + "'s defences, review, and a filter (Part 2)",
               "before the code runs: these help, and are not the wall", "reduce"),
-             ("an attempt goes unnoticed", "log and alert on every refused request and every limit hit", "the proxy, and whatever starts the box", "detect")]
+             ("an attempt goes unnoticed", "log and alert on every refused request and every limit hit", "the proxy, and whatever starts the box", "detect"),
+             ("nobody can say afterwards what a run did", "keep each run's code, its box settings, what was refused and which files came out",
+              "whatever starts the box, and the proxy", "detect")]
     _body = "".join(f"<tr><td>{a}</td><td>{c}</td><td data-k='muted'>{w}</td><td data-k='muted'>{k}</td></tr>" for a, c, w, k in _rows)
     _col = lambda h, items: f"<div><h4>{h}</h4><ul>" + "".join(f"<li>{i}</li>" for i in items) + "</ul></div>"
     mo.vstack([
@@ -1037,17 +1233,32 @@ def _(link, mo):
                 + _col("Reduce the odds", ["injection defences on what the model reads", "a filter or a review of the code", "a small language where one is enough",
                                            "packages only from a registry you chose"])
                 + _col("Bound the impact", ["two mounts", "a proxy with an allowlist, holding the key", "four limits, and a new box per session",
-                                            "a wall with its own kernel", "regular files only on the way out"])
+                                            "a wall with its own kernel", "an ordinary user inside the box", "regular files only on the way out"])
                 + _col("Detect and respond", ["log every refused request and limit hit", "alert on refused outbound requests",
-                                              "a fake key in the box whose use is an alarm", "audit what left through the proxy"])
+                                              "a fake key in the box whose use is an alarm", "audit what left through the proxy",
+                                              "a record of every run: code, settings, refusals, files out"])
                 + "</div>"),
+        mo.md("Two rows of this table lean on things outside the box. The first is approval. Some runs need more than the box "
+              "allows, such as a new host or a write outside the workspace. "
+              + ext("https://genai.owasp.org/resource/owasp-top-10-for-agentic-applications-for-2026/", "OWASP's ASI05 entry")
+              + " says: \"Require human approval for elevated runs; keep an allowlist for auto-execution under version control\". "
+              "NVIDIA's AI red team, in "
+              + ext("https://developer.nvidia.com/blog/practical-security-guidance-for-sandboxing-agentic-workflows-and-managing-execution-risk/",
+                    "its sandboxing guidance")
+              + ", says of an approval that is given once and then reused: \"Allow-once / run-many is not an adequate control.\" "
+              "How to build the gate is in " + link("tools-agency", "Module 03") + " (Part 5, Gate what cannot be undone)."),
+        mo.md("The second is the record. The same ASI05 entry says to \"log and audit all generation and runs\", and "
+              + ext("https://code.claude.com/docs/en/agent-sdk/secure-deployment", "Anthropic's deployment guidance")
+              + " lists: \"Log all traffic at the proxy for audit purposes\". For each run keep four things: the code, the box's "
+              "settings, every refused request and limit hit, and the names of the files copied out. With those you can say "
+              "afterwards what a run did, and what it tried to do."),
     ])
     return
 
 
 @app.cell
 def _(mo):
-    mo.callout(mo.md("**Part 9 in a sentence.** Nine settings, each one answering a specific way the code could hurt you."), kind="success")
+    mo.callout(mo.md("**Part 9 in a sentence.** Ten settings, each one answering a specific way the code could hurt you."), kind="success")
     return
 
 
@@ -1065,11 +1276,14 @@ def _(mo):
         "- Find every place where text becomes code: `eval`, `exec`, a shell, a notebook kernel, a SQL console, a template engine.\n"
         "- For each one, list the files that the process running it can open. Start from what the job needs, not from what is there.\n"
         "- Run `env` inside the box. Anything you would not paste into a chat should not be in the output.\n"
-        "- From inside the box, request a host that is not on your list. Then look up a made-up subdomain of a domain you own, and "
-        "check whether the lookup reached that domain's name server.\n"
+        "- Run `id` inside the box. If the answer is root, find out what the code needs root for.\n"
+        "- From inside the box, request a host that is not on your list, then an address on your own internal network. Then look "
+        "up a made-up subdomain of a domain you own, and check whether the lookup reached that domain's name server.\n"
         "- Go past each limit on purpose: time, memory, processes, disk. Check that the run ends and the host stays healthy.\n"
         "- Name what enforces the box, and who else shares that kernel.\n"
-        "- List what the app copies out of the box, and which files in a mounted folder something outside the box runs later."
+        "- List what the app copies out of the box, and which files in a mounted folder something outside the box runs later.\n"
+        "- Pick one run from last week. Say what code it ran, in which box, and what it sent out. If you cannot, fix the logging "
+        "first."
     )
     mo.md(_text)
     return
@@ -1127,7 +1341,7 @@ def _(mo):
         "your API does it.\n"
         "- Installing a package runs its code. Build the box's image ahead of time, from a registry you chose, and keep installs "
         "out of the run.\n"
-        "- GPU passthrough, timing and other side channels, and agents that drive a browser each need more than these nine settings.\n"
+        "- GPU passthrough, timing and other side channels, and agents that drive a browser each need more than these ten settings.\n"
         "- What an agent remembers between sessions is Module 07, other agents are Module 08, and monitoring is Module 09.")})
     return
 
@@ -1136,7 +1350,7 @@ def _(mo):
 def _(ext, mo):
     _text = ("Standards: " + ext("https://genai.owasp.org/resource/owasp-top-10-for-agentic-applications-for-2026/",
                                  "OWASP's 2026 list for agentic applications")
-             + " names unexpected code execution as **ASI05** and tells builders to ban eval in production agents, never run as root, "
+             + " names unexpected code execution as **ASI05** and tells builders to ban eval in production agents, never run as root (Part 7), "
              "and run generated code in a sandbox with strict limits, including on network access. In the OWASP LLM Top 10 the entry "
              "about model output being run as code is Improper Output Handling, numbered **LLM05** in the 2025 list and LLM10 in the "
              "2026 list.")
@@ -1152,7 +1366,7 @@ def _(mo, recap_html):
             "Build the box one wall at a time: files, network, secrets, limits and lifetime, then choose how strong the wall is by "
             "who shares the machine.",
             "Check what crosses the wall on purpose: the results the app copies out, and the files something outside runs later.",
-        ], "a box configuration that passes twelve checks, and an action to control table for code execution.")),
+        ], "a box configuration that passes fourteen checks, and an action to control table for code execution.")),
         mo.md("Next: Module 07, memory and persistence (coming)."),
     ])
     return

